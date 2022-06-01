@@ -7,8 +7,8 @@ function createNewState(maxCompletedLevel) {
     return {
         ctx,
         pageTitle: {
-            text: null,
-            color: null,
+            text: "Select A Level",
+            color: "#620080",
         },
         game: {
             phase: PHASE_0_LOBBY,
@@ -106,6 +106,10 @@ function runDataLoop() {
         ) {
             const level = nextCmd.args[0];
             state.game.phase = PHASE_1_COUNTDOWN;
+            state.pageTitle = {
+                text: "Get Ready!",
+                color: "#620080",
+            }
             state.buttons = [{
                 type: BUTTON_TYPE_MAIN,
                 text: "Cancel",
@@ -148,11 +152,11 @@ function orientButtons(state) {
     });
 
     if(gridBtns.length) {
+        const gridBtnMargin = 4;
         const gridBtnWidth = 125;
         const gridBtnHeight = 40;
-        const gridBtnCol0XOffset = 30;
-        const gridBtnRow0YOffset = 50;
-        const gridBtnMargin = 4
+        const gridBtnCol0XOffset = state.camera.canvasHalfW - (gridBtnWidth + gridBtnMargin)// 30;
+        const gridBtnRow0YOffset = 70;
         let rowPointer = 0;
         let colPointer = 0;
         const gridMaxRows = Math.min(5, Math.floor(

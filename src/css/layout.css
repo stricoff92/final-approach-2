@@ -1,6 +1,24 @@
 
-.page-cont {
+body {
+    margin:0px;
+}
+
+canvas {
     border: 1px solid #f00;
+}
+
+#page-title {
+    font-family:'Courier New', Courier, monospace;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.5rem;
+    vertical-align: middle;
+    height:100%;
+}
+
+#page-container {
+    display: flex;
+    flex-direction: column;
 }
 
 .skyscraper-slot {
@@ -8,9 +26,19 @@
     height: 600px;
 }
 
+#top-container {
+    width: 100vw;
+    height: 10vh;
+    max-height: 70px;
+}
 #middle-container {
     display: flex;
-    height: 100%;
+    width: 100vw;
+    height: 80vh;
+}
+#bottom-container {
+    width: 100vw;
+    height: 10vh;
 }
 
 #middle-pane-container {

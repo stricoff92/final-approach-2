@@ -5,6 +5,7 @@ function runDisplayLoop() {
     const state = window.readGameState();
     clearCanvas(state);
 
+    drawPageTitle(state);
     drawButtons(state);
 
 
@@ -22,13 +23,13 @@ function drawButtons(state) {
         }
         const rectArgs = boxCoordToRectArgs(btn.boxCoord)
         state.ctx.beginPath();
-        state.ctx.fillStyle = "#000";
+        state.ctx.fillStyle = btn.backgroundColor || "#000";
         state.ctx.rect(...rectArgs);
         state.ctx.fill();
 
         state.ctx.beginPath();
-        state.ctx.font = "28px Arial";
-        state.ctx.fillStyle = "#fff";
+        state.ctx.font = btn.font || "28px Arial";
+        state.ctx.fillStyle = btn.textColor || "#fff";
         state.ctx.textBaseline = "middle";
         state.ctx.textAlign = "center";
         state.ctx.fillText(
@@ -37,4 +38,19 @@ function drawButtons(state) {
             rectArgs[1] + Math.floor(rectArgs[3] / 2),
         );
     });
+}
+
+function drawPageTitle(state) {
+    if(state.pageTitle) {
+        state.ctx.beginPath();
+        state.ctx.fillStyle = state.pageTitle.color;
+        state.ctx.font = "38px Arial";
+        state.ctx.textBaseline = "middle";
+        state.ctx.textAlign = "center";
+        state.ctx.fillText(
+            state.pageTitle.text,
+            state.camera.canvasHalfW,
+            30,
+        );
+    }
 }
