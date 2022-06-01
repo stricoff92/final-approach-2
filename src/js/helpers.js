@@ -1,0 +1,36 @@
+
+function updateStateCamera(state) {
+    const canvas = document.getElementById("game-canvas");
+    state.camera.canvasW = canvas.width;
+    state.camera.canvasH = canvas.height;
+    state.camera.canvasHalfW = Math.round(state.camera.canvasW / 2);
+    state.camera.canvasHalfH = Math.round(state.camera.canvasH / 2);
+    return state;
+}
+
+function boxCoordToRectArgs(boxCoord) {
+    // [X1, Y1, Width, Height]
+    return [
+        boxCoord[0][0],
+        boxCoord[0][1],
+        boxCoord[1][0] - boxCoord[0][0],
+        boxCoord[1][1] - boxCoord[0][1],
+    ];
+}
+
+function coordInsideBoxCoord(coord, boxCoord) {
+    if(!boxCoord) {
+        return false;
+    }
+    const minX = Math.min(boxCoord[0][0], boxCoord[1][0]);
+    const maxX = Math.max(boxCoord[0][0], boxCoord[1][0]);
+    if(coord[0] < minX || coord[0] > maxX) {
+        return false;
+    }
+    const minY = Math.min(boxCoord[0][1], boxCoord[1][1]);
+    const maxY = Math.max(boxCoord[0][1], boxCoord[1][1]);
+    if(coord[1] < minY || coord[1] > maxY) {
+        return false;
+    }
+    return true;
+}
