@@ -8,6 +8,8 @@ function createNewState(cl) {
         ctx,
         game: {
             phase: PHASE_0_LOBBY,
+            maxCountDownFrames: 300,
+            countDownFrames: 0,
             frame: 0,
             completedLevels: cl,
             availableLevels,
@@ -112,7 +114,18 @@ function runDataLoop() {
             console.log("count down!")
         }
         else if(nextCmd.cmd === "quit") {
-            window.setGameState(createNewState())
+            window.setGameState(
+                createNewState(state.game.completedLevels)
+            );
+        }
+    }
+
+    // process count down
+    if(state.game.phase === PHASE_1_COUNTDOWN) {
+        state.game.countDownFrames++;
+        if(state.game.countDownFrames >= state.game.maxCountDownFrames) {
+            state.game.phase === PHASE_2_LIVE
+            // Add control buttons here
         }
     }
 
