@@ -1,17 +1,21 @@
 
-function createNewState(cl) {
+function createNewState(maxCompletedLevel) {
     const canvas = document.getElementById("game-canvas");
     const ctx = canvas.getContext("2d")
-    cl = cl || [];
+    maxCompletedLevel = maxCompletedLevel || 0;
     const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     return {
         ctx,
+        pageTitle: {
+            text: null,
+            color: null,
+        },
         game: {
             phase: PHASE_0_LOBBY,
             maxCountDownFrames: 300,
             countDownFrames: 0,
             frame: 0,
-            completedLevels: cl,
+            maxCompletedLevel,
             availableLevels,
             dataFPS: null,
             lastFrameTS: performance.now(),
@@ -47,6 +51,7 @@ function createNewState(cl) {
                 type: BUTTON_TYPE_GRID,
                 text: `Level ${levelNumber}`,
                 boxCoord: null,
+                disabled: levelNumber >= (maxCompletedLevel + 1),
                 handler: () => {
                     window.addCommand({
                         cmd: "start-level",
@@ -115,7 +120,7 @@ function runDataLoop() {
         }
         else if(nextCmd.cmd === "quit") {
             window.setGameState(
-                createNewState(state.game.completedLevels)
+                createNewState(state.game.maxCompletedLevel)
             );
         }
     }
@@ -146,7 +151,7 @@ function orientButtons(state) {
         const gridBtnWidth = 125;
         const gridBtnHeight = 40;
         const gridBtnCol0XOffset = 30;
-        const gridBtnRow0YOffset = 30;
+        const gridBtnRow0YOffset = 50;
         const gridBtnMargin = 4
         let rowPointer = 0;
         let colPointer = 0;
