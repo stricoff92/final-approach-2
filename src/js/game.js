@@ -151,7 +151,7 @@ function orientButtons(state) {
                 [x1Pointer, 0],
                 [x1Pointer + mainBtnWidth, mainBtnHeight]
             ];
-            x1Pointer -= mainBtnWidth
+            x1Pointer -= mainBtnWidth;
         }
     }
 
