@@ -128,7 +128,7 @@ function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
     const mapDy = mapCoord[1] - cameraPosition[1];
     return [
         mapDx + camera.canvasHalfW,
-        mapDy - camera.canvasHalfH,
+        camera.canvasH - (mapDy + camera.canvasHalfH),
     ];
 }
 
