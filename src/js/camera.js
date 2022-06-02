@@ -162,22 +162,22 @@ function drawGameScene(state) {
             canvasDims[0],
             canvasDims[1],
         );
+    }
 
-        for(let i = 0; i < plane.previousPoints.length; i++) {
-            let [mapCoord, isThrusting] = plane.previousPoints[i];
-            const canvasCoord = mapCoordToCanvasCoord(
-                mapCoord, plane.posMapCoord, state.camera
-            );
-            state.ctx.beginPath();
-            state.ctx.fillStyle = isThrusting ? "#4d4d4d" : "#a6a6a6";
-            state.ctx.arc(
-                canvasCoord[0], canvasCoord[1],
-                isThrusting ? 9 : 5,
-                0, TWO_PI,
-            );
-            state.ctx.fill();
-        }
+    for(let i = 0; i < plane.previousPoints.length; i++) {
+        let [mapCoord, isThrusting] = plane.previousPoints[i];
 
+        let canvasCoord = mapCoordToCanvasCoord(
+            mapCoord, plane.posMapCoord, state.camera
+        );
+        state.ctx.beginPath();
+        state.ctx.fillStyle = isThrusting ? "#4d4d4d" : "#a6a6a6";
+        state.ctx.arc(
+            canvasCoord[0], canvasCoord[1],
+            isThrusting ? 9 : 5,
+            0, TWO_PI,
+        );
+        state.ctx.fill();
     }
 }
 

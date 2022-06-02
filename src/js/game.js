@@ -250,11 +250,11 @@ function runDataLoop() {
         else {
             state = state.plane.adjustPlanePosition(state);
         }
-        if(state.game.frame % 70 === 0) {
-            state.plane.previousPoints.push(
-                [state.plane.posMapCoord, state.plane.thrust]
+        if(state.game.frame % (state.plane.thrust ?  50 : 100) === 0) {
+            state.plane.previousPoints.unshift(
+                deepCopy([state.plane.posMapCoord, state.plane.thrust])
             );
-            state.plane.previousPoints = state.plane.previousPoints.slice(0, 50);
+            state.plane.previousPoints = state.plane.previousPoints.slice(0, 30);
         }
 
         state = checkForGroundContact(state)
@@ -262,7 +262,6 @@ function runDataLoop() {
         window.setGameState(state);
         setTimeout(runDataLoop);
         return;
-
     }
 
     // process commands
