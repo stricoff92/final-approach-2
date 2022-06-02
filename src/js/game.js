@@ -45,6 +45,7 @@ function createNewState(maxCompletedLevel) {
         },
         map: {
             terrain: null,
+            mapUnitsPerMeter: null,
             windXVel: null,
             windVolitility: null,
             windXMin: null,
@@ -208,7 +209,7 @@ function runDataLoop() {
             state.plane.previousPoints = state.plane.previousPoints.slice(0, 50);
         }
 
-        // state = checkForGroundContact(state)
+        state = checkForGroundContact(state)
 
         window.setGameState(state);
         setTimeout(runDataLoop);
@@ -310,6 +311,7 @@ function runDataLoop() {
                 },
             }];
             state = setPlaneProps(state);
+            state = setMapProps(state);
         }
     }
 
@@ -340,11 +342,23 @@ function checkForGroundContact(state) {
         else if(touchdownSpeedMS <= (state.plane.maxTouchdownSpeedMS / 4)) {
             state.plane.touchedDown = true;
             state.plane.yVelMS = 0;
+            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1];
+
         } else if (touchdownSpeedMS > (state.plane.maxTouchdownSpeedMS * 0.75)) {
             state.plane.yVelMS = Math.abs(state.plane.yVelMS) * 1.5;
+            if(state.plane.posMapCoord[1] < state.map.rwP0MapCoord[1]) {
+                state.plane.posMapCoord[1] += ((
+                    state.map.rwP0MapCoord[1] - state.plane.posMapCoord[1]
+                ) * 2);
+            }
+
         } else {
             state.plane.yVelMS = Math.abs(state.plane.yVelMS);
-
+            if(state.plane.posMapCoord[1] < state.map.rwP0MapCoord[1]) {
+                state.plane.posMapCoord[1] += ((
+                    state.map.rwP0MapCoord[1] - state.plane.posMapCoord[1]
+                ) * 2);
+            }
         }
     }
 
