@@ -140,6 +140,21 @@ function orientButtons(state) {
         }
     }
 
+    if(mainBtns.length) {
+        const mainBtnsCount = mainBtns.length;
+        const mainBtnHeight = 38;
+        const mainBtnWidth = 100;
+        let x1Pointer = state.camera.canvasW - mainBtnWidth;
+        for(let i = 0; i < mainBtnsCount; i++) {
+            let [_btn, wix] = mainBtns[i];
+            state.buttons[wix].boxCoord =  [
+                [x1Pointer, 0],
+                [x1Pointer + mainBtnWidth, mainBtnHeight]
+            ];
+            x1Pointer -= mainBtnWidth
+        }
+    }
+
     return state;
 }
 
@@ -195,7 +210,9 @@ function runDataLoop() {
                 let cmd = commands[i];
                 if(cmd.cmd === "quit-level") {
                     window.setGameState(
-                        createNewState(state.game.maxCompletedLevel)
+                        updateStateCamera(
+                            createNewState(state.game.maxCompletedLevel)
+                        )
                     );
                     setTimeout(runDataLoop);
                     return;

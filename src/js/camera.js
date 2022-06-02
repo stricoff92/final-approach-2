@@ -64,7 +64,21 @@ function drawButtons(state) {
 
         }
         else if (btn.type === BUTTON_TYPE_MAIN) {
+            state.ctx.beginPath();
+            state.ctx.fillStyle = "#000"
+            state.ctx.rect(...boxCoordToRectArgs(btn.boxCoord));
+            state.ctx.fill();
 
+            state.ctx.beginPath();
+            state.ctx.textBaseline = "middle";
+            state.ctx.textAlign = "center";
+            state.ctx.font = "bold 20px Arial";
+            state.ctx.fillStyle = "#fff";
+            state.ctx.fillText(
+                btn.text,
+                Math.round((btn.boxCoord[1][0] + btn.boxCoord[0][0]) / 2),
+                Math.round((btn.boxCoord[1][1] + btn.boxCoord[0][1]) / 2),
+            );
         }
     });
 }
