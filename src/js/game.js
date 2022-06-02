@@ -191,7 +191,6 @@ function runDataLoop() {
         }
         if(!state.plane.crashFrame) {
             const cmdCt = commands.length;
-            let adjustCtrlButtonSelection = false;
             for(let i=0; i<cmdCt; i++) {
                 let cmd = commands[i];
                 if(cmd.cmd === "quit-level") {
@@ -203,21 +202,11 @@ function runDataLoop() {
                 }
                 else if(cmd.cmd === "set-attitude") {
                     state.plane.attitude = cmd.args[0];
-                    adjustCtrlButtonSelection = true;
                 }
                 else if(cmd.cmd === "set-thrust") {
                     state.plane.thrust = cmd.args[0];
-                    adjustCtrlButtonSelection = true
                 }
             }
-            if(adjustCtrlButtonSelection) {
-                state.buttons.forEach((btn, wix) => {
-                    if(btn.type === BUTTON_TYPE_CTRL) {
-
-                    }
-                });
-            }
-
         }
         if(state.plane.crashFrame) {
             state.plane.crashFrame++;
