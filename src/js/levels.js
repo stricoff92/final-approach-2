@@ -81,10 +81,42 @@ function setPlaneProps(state) {
         state.plane.attitude = ATTITUDE_1;
         state.plane.thrust = false;
         state.plane.yVelMS = 0;
-        state.plane.xVelMS = 30;
+        state.plane.xVelMS = 65;
         state.plane.maxTouchdownSpeedMS = 6;
         state.plane.rwNegAccelerationMS = 4;
         state.plane.adjustPlanePosition = c152AdjustPlanePosition;
+    }
+    return state;
+}
+
+function setMapProps(state) {
+    const mupm = 25
+    state.map.mapUnitsPerMeter = 25;
+    const level = state.game.level;
+    if(level < 4) {
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwP0MapCoord = [5000 * mupm, 0];
+        state.map.rwP1MapCoord = [6000 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 1000 * mupm];
+        state.map.gsP1MapCoord = [5015 * mupm, 0];
+        state.plane.posMapCoord = [0, 1000 * mupm];
+        if(level == 1) {
+            state.map.windXVel = 0;
+            state.map.windVolitility = 0.05;
+            state.map.windXMin = -4;
+            state.map.windXMax = 4;
+            state.map.windXTarg = 0;
+        } else if (level == 2) {
+            throw "not implemented";
+        } else if(level == 3) {
+            throw "not implemented";
+        }
+    } else if(level < 7) {
+        state.map.terrain = TERRAIN_DESERT;
+        throw "not implemented";
+    } else {
+        state.map.terrain = TERRAIN_OCEAN;
+        throw "not implemented";
     }
     return state;
 }

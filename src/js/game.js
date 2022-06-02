@@ -45,6 +45,7 @@ function createNewState(maxCompletedLevel) {
         },
         map: {
             terrain: null,
+            mapUnitsPerMeter: null,
             windXVel: null,
             windVolitility: null,
             windXMin: null,
@@ -56,12 +57,13 @@ function createNewState(maxCompletedLevel) {
             gsP1MapCoord: null,
         },
         buttons: availableLevels.map(levelNumber => {
+            const disabled = levelNumber > (maxCompletedLevel + 1);
             const btn = {
                 type: BUTTON_TYPE_GRID,
-                text: `Level ${levelNumber}`,
+                text: disabled ? '🔒' : `Level ${levelNumber}`,
                 boxCoord: null,
-                disabled: levelNumber >= (maxCompletedLevel + 1),
-                handler: () => {
+                disabled,
+                handler: disabled ? ()=>{} : () => {
                     window.addCommand({
                         cmd: "start-level",
                         args: [ levelNumber ],
@@ -74,14 +76,22 @@ function createNewState(maxCompletedLevel) {
 }
 
 function orientButtons(state) {
-    const gridBtns = [];
+    const gridBtns = [], mainBtns = [], ctrlBtns = [];
     state.buttons.forEach((btn, wix) => {
-        if(btn.type === BUTTON_TYPE_GRID) {
-            gridBtns.push([btn, wix])
+        if(btn.type === BUTTON_TYPE_CTRL) {
+            ctrlBtns.push([btn, wix]);
+        }
+        else if(btn.type === BUTTON_TYPE_GRID) {
+            gridBtns.push([btn, wix]);
+        } else if(btn.type === BUTTON_TYPE_MAIN) {
+            mainBtns.push([btn, wix]);
+        } else {
+            throw "not implemented";
         }
     });
 
     if(gridBtns.length) {
+        const gridBtnsCount = gridBtns.length;
         const gridBtnMargin = 4;
         const gridBtnWidth = 125;
         const gridBtnHeight = 40;
@@ -93,7 +103,7 @@ function orientButtons(state) {
             state.camera.canvasH - (gridBtnRow0YOffset * 2) / gridBtnHeight
         ));
 
-        for(let i=0; i< gridBtns.length; i++) {
+        for(let i=0; i < gridBtnsCount; i++) {
             let [_btn, wix] = gridBtns[i];
             let btnX1 = gridBtnCol0XOffset + (colPointer * gridBtnWidth) + (gridBtnMargin * colPointer);
             let btnX2 = btnX1 + gridBtnWidth;
@@ -106,6 +116,27 @@ function orientButtons(state) {
                 rowPointer = 0;
                 colPointer++;
             }
+        }
+    }
+
+    if(ctrlBtns.length) {
+        const ctrlBtnsCount = ctrlBtns.length;
+        const ctrlBtnHeight = Math.floor(state.camera.canvasH * 0.95 / ctrlBtnsCount);
+        const ctrlBtnWidth = Math.min(state.camera.canvasW / 10, 60);
+        let y1Pointer = 0;
+        for(let i = 0; i < ctrlBtnsCount; i++) {
+            let [_btn, wix] = ctrlBtns[i];
+
+            if(state.buttons[wix].assetHref && !state.buttons[wix].asset) {
+                state.buttons[wix].asset = new Image();
+                state.buttons[wix].asset.src = state.buttons[wix].assetHref;
+            }
+
+            state.buttons[wix].boxCoord =  [
+                [0, y1Pointer],
+                [ctrlBtnWidth, y1Pointer + ctrlBtnHeight]
+            ]
+            y1Pointer += ctrlBtnHeight;
         }
     }
 
@@ -177,7 +208,7 @@ function runDataLoop() {
                 }
             }
         }
-        else if(state.plane.crashFrame) {
+        if(state.plane.crashFrame) {
             state.plane.crashFrame++;
             if(state.plane.crashFrame > 200) {
                 // Score screen
@@ -208,7 +239,7 @@ function runDataLoop() {
             state.plane.previousPoints = state.plane.previousPoints.slice(0, 50);
         }
 
-        // state = checkForGroundContact(state)
+        state = checkForGroundContact(state)
 
         window.setGameState(state);
         setTimeout(runDataLoop);
@@ -239,6 +270,12 @@ function runDataLoop() {
         if(state.game.countDownFrames >= state.game.maxCountDownFrames) {
             state.pageTitle = null;
             state.game.phase = PHASE_2_LIVE,
+
+            console.log(state.game.level)
+            state = setPlaneProps(state);
+            console.log(state.plane)
+            state = setMapProps(state);
+
             state.buttons = [{
                 type: BUTTON_TYPE_MAIN,
                 boxCoord: null,
@@ -251,8 +288,9 @@ function runDataLoop() {
             }, {
                 type: BUTTON_TYPE_CTRL,
                 boxCoord: null,
-                assetHref: "css/c152-2.svg",
-                selected: (state.plane.attitude === ATTITUDE_2) && state.plane.thrust,
+                assetHref: "img/c152-2-t.svg",
+                asset: null,
+                selected: state => Boolean((state.plane.attitude === ATTITUDE_2) && state.plane.thrust),
                 handler: () => {
                     window.addCommand({
                         cmd: "set-attitude",
@@ -266,8 +304,9 @@ function runDataLoop() {
             }, {
                 type: BUTTON_TYPE_CTRL,
                 boxCoord: null,
-                assetHref: "css/c152-2.svg",
-                selected: (state.plane.attitude === ATTITUDE_2) && !state.plane.thrust,
+                assetHref: "img/c152-2.svg",
+                asset: null,
+                selected: state => Boolean((state.plane.attitude === ATTITUDE_2) && !state.plane.thrust),
                 handler: () => {
                     window.addCommand({
                         cmd: "set-attitude",
@@ -281,8 +320,9 @@ function runDataLoop() {
             }, {
                 type: BUTTON_TYPE_CTRL,
                 boxCoord: null,
-                assetHref: "css/c152-1.svg",
-                selected: (state.plane.attitude === ATTITUDE_1) && !state.plane.thrust,
+                assetHref: "img/c152-1.svg",
+                asset: null,
+                selected: state => Boolean((state.plane.attitude === ATTITUDE_1) && !state.plane.thrust),
                 handler: () => {
                     window.addCommand({
                         cmd: "set-attitude",
@@ -296,8 +336,9 @@ function runDataLoop() {
             }, {
                 type: BUTTON_TYPE_CTRL,
                 boxCoord: null,
-                assetHref: "css/c152-0.svg",
-                selected: (state.plane.attitude === ATTITUDE_0) && !state.plane.thrust,
+                assetHref: "img/c152-0.svg",
+                asset: null,
+                selected: state => Boolean((state.plane.attitude === ATTITUDE_0) && !state.plane.thrust),
                 handler: () => {
                     window.addCommand({
                         cmd: "set-attitude",
@@ -309,7 +350,8 @@ function runDataLoop() {
                     });
                 },
             }];
-            state = setPlaneProps(state);
+
+            console.log(state.buttons)
         }
     }
 
@@ -340,11 +382,23 @@ function checkForGroundContact(state) {
         else if(touchdownSpeedMS <= (state.plane.maxTouchdownSpeedMS / 4)) {
             state.plane.touchedDown = true;
             state.plane.yVelMS = 0;
+            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1];
+
         } else if (touchdownSpeedMS > (state.plane.maxTouchdownSpeedMS * 0.75)) {
             state.plane.yVelMS = Math.abs(state.plane.yVelMS) * 1.5;
+            if(state.plane.posMapCoord[1] < state.map.rwP0MapCoord[1]) {
+                state.plane.posMapCoord[1] += ((
+                    state.map.rwP0MapCoord[1] - state.plane.posMapCoord[1]
+                ) * 2);
+            }
+
         } else {
             state.plane.yVelMS = Math.abs(state.plane.yVelMS);
-
+            if(state.plane.posMapCoord[1] < state.map.rwP0MapCoord[1]) {
+                state.plane.posMapCoord[1] += ((
+                    state.map.rwP0MapCoord[1] - state.plane.posMapCoord[1]
+                ) * 2);
+            }
         }
     }
 
