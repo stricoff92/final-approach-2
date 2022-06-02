@@ -24,3 +24,5 @@ const COLOR_PURPLE = "#620080";
 const COLOR_BLACK = "#000";
 
 const TWO_PI = Math.PI * 2;
+
+const GAME_STARTED_MSG = "Land The Plane!";

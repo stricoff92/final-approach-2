@@ -82,9 +82,28 @@ function setPlaneProps(state) {
         state.plane.thrust = false;
         state.plane.yVelMS = 0;
         state.plane.xVelMS = 65;
+        state.plane.dimensions = [],
         state.plane.maxTouchdownSpeedMS = 6;
         state.plane.rwNegAccelerationMS = 4;
         state.plane.adjustPlanePosition = c152AdjustPlanePosition;
+
+        const attitude0Asset = new Image();
+        attitude0Asset.src = "img/" + PLANE_C152 + "-0.svg";
+        const attitude1Asset = new Image();
+        attitude1Asset.src = "img/" + PLANE_C152 + "-1.svg";
+        const attitude2Asset = new Image();
+        attitude2Asset.src = "img/" + PLANE_C152 + "-2.svg";
+        state.plane.assets.push(
+            attitude0Asset,
+            attitude1Asset,
+            attitude2Asset,
+        );
+        state.plane.dimensions.push(
+            [6.0, 2.5], // attitude 0
+            [6.0, 2],   // attitude 1
+            [6.0, 2.0], // attitude 2
+        );
+
     }
     return state;
 }
