@@ -205,8 +205,4 @@ function drawDebugData(state) {
         yPointer -= yInterval;
         state.ctx.fillText(`Y: ${Math.round(state.plane.posMapCoord[1])}`, xOffset, yPointer);
     }
-    yPointer -= yInterval;
-    state.ctx.fillText(`VelX: ${Math.round(state.plane.xVelMS)}`, xOffset, yPointer);
-    yPointer -= yInterval;
-    state.ctx.fillText(`VelY: ${Math.round(state.plane.yVelMS)}`, xOffset, yPointer);
 }

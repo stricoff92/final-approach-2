@@ -32,8 +32,6 @@ function createNewState(maxCompletedLevel) {
             asset: null,
             assets: [],
             dimensions: [],
-            xVelMS: null,
-            yVelMS: null,
             massKG: null,
             posMapCoord: null,
             attitude: null,
@@ -45,6 +43,14 @@ function createNewState(maxCompletedLevel) {
             touchedDown: false,
             rwNegAccelerationMS: null,
 
+            horizontalVMS: null,
+            verticalVMS: null,
+            stallMS: null,
+            climbMinMS: null, // If below this speed, aircraft decends.
+            instantaneousThrust: null,
+            maxThrustingNewtons: null,
+            currentThrustingNewtons: null,
+            deltaNewtonPS: null,
         },
         map: {
             terrain: null,
@@ -223,6 +229,16 @@ function runDataLoop() {
                 }
                 else if(cmd.cmd === "set-thrust") {
                     state.plane.thrust = cmd.args[0];
+                    if(state.plane.instantaneousThrust) {
+                        state.plane.currentThrustingNewtons = (
+                            state.plane.thrust
+                            ? state.plane.maxThrustingNewtons
+                            : 0
+                        );
+
+                    } else {
+                        throw "Not Implemented";
+                    }
                 }
             }
         }
@@ -241,9 +257,9 @@ function runDataLoop() {
                 state.plane.crashFrame = 1;
             } else {
                 const frameDeltaX = state.plane.rwNegAccelerationMS / state.game.dataFPS;
-                state.plane.xVelMS -= frameDeltaX;
-                if(Math.abs(state.plane.xVelMS) < 3.5) {
-                    state.plane.xVelMS = 0;
+                state.plane.horizontalVMS = Math.max(0, state.plane.horizontalVMS - frameDeltaX);
+                if(Math.abs(state.plane.horizontalVMS) < 3.5) {
+                    state.plane.horizontalVMS = 0;
                 }
             }
         }
@@ -395,7 +411,7 @@ function checkForGroundContact(state) {
         && planeBottomMapCoordY <= state.map.rwP0MapCoord[1]
     );
     if(touchingRunway) {
-        const touchdownSpeedMS = state.plane.yVelMS;
+        const touchdownSpeedMS = state.plane.verticalVMS;
         if (
             touchdownSpeedMS > state.plane.maxTouchdownSpeedMS
             || state.plane.attitude === ATTITUDE_0
@@ -405,12 +421,12 @@ function checkForGroundContact(state) {
         else if(touchdownSpeedMS <= (state.plane.maxTouchdownSpeedMS / 4)) {
             // Smooth landing
             state.plane.touchedDown = true;
-            state.plane.yVelMS = 0;
+            state.plane.verticalVMS = 0;
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + planeBottomDiffY;
 
         } else if (touchdownSpeedMS > (state.plane.maxTouchdownSpeedMS * 0.75)) {
             // Big bounce off runway
-            state.plane.yVelMS = Math.abs(state.plane.yVelMS) * 1.5;
+            state.plane.verticalVMS = Math.abs(state.plane.verticalVMS) * 1.5;
             if(planeBottomMapCoordY < state.map.rwP0MapCoord[1]) {
                 state.plane.posMapCoord[1] += ((
                     state.map.rwP0MapCoord[1] - planeBottomMapCoordY
@@ -419,7 +435,7 @@ function checkForGroundContact(state) {
 
         } else {
             // Small bounce off runway
-            state.plane.yVelMS = Math.abs(state.plane.yVelMS);
+            state.plane.verticalVMS = Math.abs(state.plane.verticalVMS);
             if(planeBottomMapCoordY < state.map.rwP0MapCoord[1]) {
                 state.plane.posMapCoord[1] += ((
                     state.map.rwP0MapCoord[1] - planeBottomMapCoordY
