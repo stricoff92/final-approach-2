@@ -7,7 +7,9 @@ function runDisplayLoop() {
 
     drawPageTitle(state);
     drawButtons(state);
-
+    if(state.game.phase === PHASE_1_COUNTDOWN) {
+        drawLoadingIcon(state);
+    }
 
     window.requestAnimationFrame(runDisplayLoop)
 }
@@ -44,7 +46,7 @@ function drawPageTitle(state) {
     if(state.pageTitle) {
         state.ctx.beginPath();
         state.ctx.fillStyle = state.pageTitle.color;
-        state.ctx.font = "38px Arial";
+        state.ctx.font = "bold 38px Arial";
         state.ctx.textBaseline = "middle";
         state.ctx.textAlign = "center";
         state.ctx.fillText(
@@ -53,4 +55,22 @@ function drawPageTitle(state) {
             30,
         );
     }
+}
+
+function drawLoadingIcon(state) {
+    const percent = Math.min(1, (
+        state.game.countDownFrames
+        / state.game.maxCountDownFrames
+    ) * 1.15);
+    state.ctx.beginPath();
+    state.ctx.strokeStyle = COLOR_PURPLE;
+    state.ctx.lineWidth = 18 * percent;
+    state.ctx.arc(
+        state.camera.canvasHalfW,
+        140,
+        65,
+        0,
+        percent * TWO_PI,
+    );
+    state.ctx.stroke();
 }

@@ -17,4 +17,10 @@ const TERRAIN_OCEAN = 2;  // Hard
 
 const BUTTON_TYPE_GRID = 'grid';
 const BUTTON_TYPE_MAIN = 'main';
+const BUTTON_TYPE_CTRL = 'control';
 
+
+const COLOR_PURPLE = "#620080";
+const COLOR_BLACK = "#000";
+
+const TWO_PI = Math.PI * 2;
