@@ -81,7 +81,7 @@ function setPlaneProps(state) {
         state.plane.attitude = ATTITUDE_1;
         state.plane.thrust = false;
         state.plane.yVelMS = 0;
-        state.plane.xVelMS = 30;
+        state.plane.xVelMS = 65;
         state.plane.maxTouchdownSpeedMS = 6;
         state.plane.rwNegAccelerationMS = 4;
         state.plane.adjustPlanePosition = c152AdjustPlanePosition;
@@ -107,16 +107,16 @@ function setMapProps(state) {
             state.map.windXMax = 4;
             state.map.windXTarg = 0;
         } else if (level == 2) {
-            throw new Error("not implemented")
+            throw "not implemented";
         } else if(level == 3) {
-            throw new Error("not implemented")
+            throw "not implemented";
         }
     } else if(level < 7) {
         state.map.terrain = TERRAIN_DESERT;
-        throw new Error("not implemented")
+        throw "not implemented";
     } else {
         state.map.terrain = TERRAIN_OCEAN;
-        throw new Error("not implemented")
+        throw "not implemented";
     }
     return state;
 }

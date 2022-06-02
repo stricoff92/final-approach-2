@@ -23,22 +23,49 @@ function drawButtons(state) {
         if(btn.boxCoord === null) {
             return;
         }
-        const rectArgs = boxCoordToRectArgs(btn.boxCoord)
-        state.ctx.beginPath();
-        state.ctx.fillStyle = btn.backgroundColor || "#000";
-        state.ctx.rect(...rectArgs);
-        state.ctx.fill();
+        if(btn.type === BUTTON_TYPE_GRID) {
+            const rectArgs = boxCoordToRectArgs(btn.boxCoord);
+            state.ctx.beginPath();
+            state.ctx.fillStyle = btn.disabled ? "#5e5e5e" : "#000";
+            state.ctx.rect(...rectArgs);
+            state.ctx.fill();
 
-        state.ctx.beginPath();
-        state.ctx.font = btn.font || "28px Arial";
-        state.ctx.fillStyle = btn.textColor || "#fff";
-        state.ctx.textBaseline = "middle";
-        state.ctx.textAlign = "center";
-        state.ctx.fillText(
-            btn.text,
-            rectArgs[0] + Math.floor(rectArgs[2] / 2),
-            rectArgs[1] + Math.floor(rectArgs[3] / 2),
-        );
+            state.ctx.beginPath();
+            state.ctx.font = btn.disabled ? "20px Arial" : "bold 24px Arial";
+            state.ctx.fillStyle = btn.disabled ? "#fff" : "#0f0";
+            state.ctx.textBaseline = "middle";
+            state.ctx.textAlign = "center";
+            state.ctx.fillText(
+                btn.text,
+                rectArgs[0] + Math.floor(rectArgs[2] / 2),
+                rectArgs[1] + Math.floor(rectArgs[3] / 2),
+            );
+        }
+        else if (btn.type === BUTTON_TYPE_CTRL) {
+            const selected = btn.selected(state);
+            state.ctx.beginPath();
+            state.ctx.fillStyle = selected ? "#c2ffc2" : "#bfbfbf";
+            state.ctx.strokeStyle = selected ? "#003800" : "#383838";
+            state.ctx.lineWidth = 1;
+            state.ctx.rect(...boxCoordToRectArgs(btn.boxCoord));
+            state.ctx.fill();
+            state.ctx.stroke();
+
+            const btnYMid = Math.round((btn.boxCoord[0][1] + btn.boxCoord[1][1]) / 2);
+            const imgWidth = btn.boxCoord[1][0] - btn.boxCoord[0][0];
+            const imgHeight = Math.round(imgWidth / 3);
+            const imgX1 = 0
+            const imgY1 = btnYMid - (imgHeight / 2);
+            state.ctx.drawImage(
+                btn.asset,
+                imgX1, imgY1,
+                imgWidth, imgHeight
+            )
+
+        }
+        else if (btn.type === BUTTON_TYPE_MAIN) {
+
+        }
     });
 }
 
