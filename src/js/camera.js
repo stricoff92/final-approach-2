@@ -6,9 +6,16 @@ function runDisplayLoop() {
     clearCanvas(state);
 
     drawPageTitle(state);
-    drawButtons(state);
-    if(state.game.phase === PHASE_1_COUNTDOWN) {
+    if (state.game.phase === PHASE_2_LIVE) {
+        drawGameScene(state);
+    }
+    else if(state.game.phase === PHASE_1_COUNTDOWN) {
         drawLoadingIcon(state);
+    }
+    drawButtons(state);
+
+    if(state.isDebug) {
+        drawDebugData(state);
     }
 
     window.requestAnimationFrame(runDisplayLoop)
@@ -114,4 +121,92 @@ function drawLoadingIcon(state) {
         percent * TWO_PI,
     );
     state.ctx.stroke();
+}
+
+function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
+    const mapDx = mapCoord[0] - cameraPosition[0];
+    const mapDy = mapCoord[1] - cameraPosition[1];
+    return [
+        mapDx + camera.canvasHalfW,
+        camera.canvasH - (mapDy + camera.canvasHalfH),
+    ];
+}
+
+function drawGameScene(state) {
+    const plane = state.plane;
+    const mapDims = plane.dimensions[plane.attitude];
+
+    // Draw Glide Slope
+    const gsCanvasP0 = mapCoordToCanvasCoord(
+        state.map.gsP0MapCoord, plane.posMapCoord, state.camera
+    );
+    const gsCanvasP1 = mapCoordToCanvasCoord(
+        state.map.gsP1MapCoord, plane.posMapCoord, state.camera
+    );
+    state.ctx.beginPath();
+    state.ctx.strokeStyle = "#f200ff";
+    state.ctx.lineWidth = 2;
+    state.ctx.moveTo(...gsCanvasP0);
+    state.ctx.lineTo(...gsCanvasP1);
+    state.ctx.stroke();
+
+
+    if(!plane.crashFrame) {
+        const canvasDims = mapDims.map(d => d * state.map.mapUnitsPerMeter);
+        const planeCanvasX1 = state.camera.canvasHalfW - (canvasDims[0] / 2);
+        const planeCanvasY1 = state.camera.canvasHalfH - (canvasDims[1] / 2);
+        state.ctx.drawImage(
+            plane.assets[plane.attitude],
+            planeCanvasX1,
+            planeCanvasY1,
+            canvasDims[0],
+            canvasDims[1],
+        );
+    }
+
+    for(let i = 0; i < plane.previousPoints.length; i++) {
+        let [mapCoord, isThrusting] = plane.previousPoints[i];
+
+        let canvasCoord = mapCoordToCanvasCoord(
+            mapCoord, plane.posMapCoord, state.camera
+        );
+        state.ctx.beginPath();
+        state.ctx.fillStyle = isThrusting ? "#4d4d4d" : "#a6a6a6";
+        state.ctx.arc(
+            canvasCoord[0], canvasCoord[1],
+            isThrusting ? 9 : 5,
+            0, TWO_PI,
+        );
+        state.ctx.fill();
+    }
+}
+
+function drawDebugData(state) {
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "right";
+    state.ctx.fillStyle = "black";
+    state.ctx.font = "normal 18px Arial";
+
+    let yPointer = state.camera.canvasH - 10;
+    const yInterval = 20;
+    const xOffset =  state.camera.canvasW - 10;
+
+    state.ctx.fillText(`FPS: ${Math.round(state.game.dataFPS)}`, xOffset, yPointer);
+    yPointer -= yInterval;
+    state.ctx.fillText(`phase: ${state.game.phase}`, xOffset, yPointer);
+    yPointer -= yInterval;
+    state.ctx.fillText(`attitude: ${state.plane.attitude}`, xOffset, yPointer);
+    yPointer -= yInterval;
+    state.ctx.fillText(`thrust: ${state.plane.thrust}`, xOffset, yPointer);
+    if(Array.isArray(state.plane.posMapCoord)) {
+        yPointer -= yInterval;
+        state.ctx.fillText(`X: ${Math.round(state.plane.posMapCoord[0])}`, xOffset, yPointer);
+        yPointer -= yInterval;
+        state.ctx.fillText(`Y: ${Math.round(state.plane.posMapCoord[1])}`, xOffset, yPointer);
+    }
+    yPointer -= yInterval;
+    state.ctx.fillText(`VelX: ${Math.round(state.plane.xVelMS)}`, xOffset, yPointer);
+    yPointer -= yInterval;
+    state.ctx.fillText(`VelY: ${Math.round(state.plane.yVelMS)}`, xOffset, yPointer);
 }

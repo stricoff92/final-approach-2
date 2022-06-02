@@ -55,7 +55,6 @@ document.addEventListener("DOMContentLoaded", function() {
         return window._click_queue.shift();
     }
     window.registerClick = function(data) {
-        console.log(data);
         window._click_queue.push(data);
     }
 

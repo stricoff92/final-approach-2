@@ -5,6 +5,7 @@ function createNewState(maxCompletedLevel) {
     maxCompletedLevel = maxCompletedLevel || 0;
     const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     return {
+        isDebug: window.location.search.indexOf("debug") !== -1,
         ctx,
         pageTitle: {
             text: "Select A Level",
@@ -29,6 +30,8 @@ function createNewState(maxCompletedLevel) {
         },
         plane: {
             asset: null,
+            assets: [],
+            dimensions: [],
             xVelMS: null,
             yVelMS: null,
             massKG: null,
@@ -151,7 +154,7 @@ function orientButtons(state) {
                 [x1Pointer, 0],
                 [x1Pointer + mainBtnWidth, mainBtnHeight]
             ];
-            x1Pointer -= mainBtnWidth
+            x1Pointer -= mainBtnWidth;
         }
     }
 
@@ -169,14 +172,6 @@ function runDataLoop() {
     const fps = 1000 / diff;
     state.game.lastFrameTS = nowTS;
     state.game.dataFPS = fps;
-
-    // Increment Frame number
-    if(state.game.phase === PHASE_2_LIVE) {
-        state.game.frame++;
-        if(state.game.frame % 500 === 0) {
-            console.log({ state });
-        }
-    }
 
     // Position buttons and check for clicks
     state = orientButtons(state);
@@ -204,6 +199,12 @@ function runDataLoop() {
                 break;
             }
         }
+
+        state.game.frame++;
+        if(state.game.frame % 500 === 0) {
+            console.log({ state });
+        }
+
         if(!state.plane.crashFrame) {
             const cmdCt = commands.length;
             for(let i=0; i<cmdCt; i++) {
@@ -249,11 +250,11 @@ function runDataLoop() {
         else {
             state = state.plane.adjustPlanePosition(state);
         }
-        if(state.game.frame % 70 === 0) {
-            state.plane.previousPoints.push(
-                [state.plane.posMapCoord, state.plane.thrust]
+        if(state.game.frame % (state.plane.thrust ?  50 : 100) === 0) {
+            state.plane.previousPoints.unshift(
+                deepCopy([state.plane.posMapCoord, state.plane.thrust])
             );
-            state.plane.previousPoints = state.plane.previousPoints.slice(0, 50);
+            state.plane.previousPoints = state.plane.previousPoints.slice(0, 30);
         }
 
         state = checkForGroundContact(state)
@@ -261,7 +262,6 @@ function runDataLoop() {
         window.setGameState(state);
         setTimeout(runDataLoop);
         return;
-
     }
 
     // process commands
@@ -367,11 +367,8 @@ function runDataLoop() {
                     });
                 },
             }];
-
-            console.log(state.buttons)
         }
     }
-
 
     window.setGameState(state);
     setTimeout(runDataLoop);
@@ -380,13 +377,22 @@ function runDataLoop() {
 
 function checkForGroundContact(state) {
 
+    const planeBottomMapCoordY = (
+        state.plane.posMapCoord[1]
+        - (
+            state.plane.dimensions[state.plane.attitude][1] / 2
+            * state.map.mapUnitsPerMeter
+        )
+    );
+    const planeBottomDiffY = state.plane.posMapCoord[1] - planeBottomMapCoordY;
+
     const overRunway = Boolean(
         state.plane.posMapCoord[0] >= state.map.rwP0MapCoord[0]
         && state.plane.posMapCoord[0] <= state.map.rwP1MapCoord[0]
     );
     const touchingRunway = Boolean(
         overRunway
-        && state.plane.posMapCoord[1] <= state.map.rwP0MapCoord[1]
+        && planeBottomMapCoordY <= state.map.rwP0MapCoord[1]
     );
     if(touchingRunway) {
         const touchdownSpeedMS = state.plane.yVelMS;
@@ -397,23 +403,26 @@ function checkForGroundContact(state) {
             state.plane.crashFrame = 1;
         }
         else if(touchdownSpeedMS <= (state.plane.maxTouchdownSpeedMS / 4)) {
+            // Smooth landing
             state.plane.touchedDown = true;
             state.plane.yVelMS = 0;
-            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1];
+            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + planeBottomDiffY;
 
         } else if (touchdownSpeedMS > (state.plane.maxTouchdownSpeedMS * 0.75)) {
+            // Big bounce off runway
             state.plane.yVelMS = Math.abs(state.plane.yVelMS) * 1.5;
-            if(state.plane.posMapCoord[1] < state.map.rwP0MapCoord[1]) {
+            if(planeBottomMapCoordY < state.map.rwP0MapCoord[1]) {
                 state.plane.posMapCoord[1] += ((
-                    state.map.rwP0MapCoord[1] - state.plane.posMapCoord[1]
+                    state.map.rwP0MapCoord[1] - planeBottomMapCoordY
                 ) * 2);
             }
 
         } else {
+            // Small bounce off runway
             state.plane.yVelMS = Math.abs(state.plane.yVelMS);
-            if(state.plane.posMapCoord[1] < state.map.rwP0MapCoord[1]) {
+            if(planeBottomMapCoordY < state.map.rwP0MapCoord[1]) {
                 state.plane.posMapCoord[1] += ((
-                    state.map.rwP0MapCoord[1] - state.plane.posMapCoord[1]
+                    state.map.rwP0MapCoord[1] - planeBottomMapCoordY
                 ) * 2);
             }
         }
