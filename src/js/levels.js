@@ -72,7 +72,86 @@
 // }
 
 function innerAdjustPlanePosition(state) {
+    const frameHorizontalV = state.plane.horizontalVMS / state.game.dataFPS
+    const frameStallV = state.plane.stallMS / state.game.dataFPS;
+    const frameClimbMinV = state.plane.climbMinMS / state.game.dataFPS;
+    const frameLevelFlightMinV = state.plane.levelFlightMinMS / state.game.dataFPS;
 
+    if(frameHorizontalV < frameStallV) {
+        // plane is stalling
+        // force nose down, accelerate to stallMaxVerticalVMS
+        const newVerticalVMS = Math.max(
+            state.plane.stallMaxVerticalVMS,
+            state.plane.verticalVMS
+                - state.plane.stallNegHAccelerationMS
+                / state.game.dataFPS,
+        );
+        state.plane.verticalVMS = newVerticalVMS;
+        state.plane.attitude = ATTITUDE_0;
+    }
+    else if (state.plane.attitude === ATTITUDE_0) {
+        // Nose down and plane is not stalling
+        // shed altitude, accelerate to attitude0GlideVMS
+        const frameGlideVAcc = state.plane.attitude0GlideAVMS / state.game.dataFPS
+        if(state.plane.horizontalVMS > state.plane.attitude0GlideVMS) {
+            // speed up decent to attitude0GlideVMS
+            const newVerticalVMS = Math.max(
+                state.plane.attitude0GlideVMS,
+                state.plane.horizontalVMS - frameGlideAcc * -1
+            )
+        } else {
+            // slow down to attitude0GlideVMS
+
+        }
+    }
+    else if (
+        state.plane.attitude === ATTITUDE_1
+        && frameHorizontalV < frameLevelFlightMinV
+    ) {
+        // nose level, not enough speed for level flight
+        // trade altitude, accelerate to attitude1GlideVMS
+    }
+    else if (
+        state.plane.attitude === ATTITUDE_1
+        && frameHorizontalV >= frameLevelFlightMinV
+    ) {
+        // nose level, enough speed for level flight
+        // shed speed and maintain altitude
+    }
+    else if (
+        state.plane.attitude === ATTITUDE_2
+        && frameHorizontalV < frameLevelFlightMinV
+    ) {
+        // Nose up, not enough speed for level flight
+        // shed altitude, accelerate to attitude2GlideVMS
+    }
+    else if (
+        state.plane.attitude === ATTITUDE_2
+        && frameHorizontalV < frameClimbMinV
+    ) {
+        // Nose up, not enough speed for climb
+        // shed speed and maintain altitude
+    }
+    else if (
+        state.plane.attitude === ATTITUDE_2
+        && frameHorizontalV >= frameClimbMinV
+    ) {
+        // nose up, enough speed for a climb
+        // if thrusting, accelerate to attitude2ClimbVMS
+        // if not thrusting shed speed
+    }
+
+    // Adjust horizontal speed
+
+    // Update state's position
+}
+
+function feetPerMinToMS(fpm) {
+    return fpm / 60 / 3
+}
+
+function knotsToMS(k) {
+    return k / 2;
 }
 
 function setPlaneProps(state) {
@@ -85,18 +164,44 @@ function setPlaneProps(state) {
         state.plane.attitude = ATTITUDE_1;
         state.plane.thrust = false;
         state.plane.dimensions = [],
-        state.plane.maxTouchdownSpeedMS = 6;
+        state.plane.minTouchdownVerticalSpeedMS = feetPerMinToMS(-500)
         state.plane.rwNegAccelerationMS = 4;
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
-        state.plane.horizontalVMS = 58;
-        state.plane.verticalVMS = 0
-        state.plane.stallMS = 43;
-        state.plane.climbMinMS = 53;
+        state.plane.horizontalMS = knotsToMS(58);
+        state.plane.verticalMS = 0
+
         state.plane.instantaneousThrust = true;
         state.plane.maxThrustingNewtons = 225;
         state.plane.currentThrustingNewtons = 0;
         state.plane.deltaNewtonPS = null;
+
+        state.plane.stallHorizonalMS = knotsToMS(43);
+        state.plane.climbMinHorizontalMS = knotsToMS(55);
+        state.plane.levelFlightMinAirfoilVelocitiesyMS = [
+            null, // No level flight for attitude 0
+            knotsToMS(52),
+            knotsToMS(47),
+        ];
+        state.plane.terminalHorizonalGlideSpeedsMS = [
+            knotsToMS(72),
+            knotsToMS(48),
+            knotsToMS(41),
+        ];
+        state.plane.terminalVerticalGlideSpeedsMS = [
+            feetPerMinToMS(-2000),
+            feetPerMinToMS(-1000),
+            feetPerMinToMS(-550),
+        ];
+
+        state.plane.attitude2GlideNegativeAccelerationCurve = xMS => {
+            if(xMS < knotsToMS(53)) {
+                // y = 0.0006x^2
+                return -1 * Math.pow(xMS, 2) * 0.0006;
+            } else {
+                return -1.5 * xMS + 77.82;
+            }
+        }
 
 
 
