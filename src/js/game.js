@@ -36,6 +36,7 @@ function createNewState(maxCompletedLevel) {
             posMapCoord: null,
             attitude: null,
             thrust: null,
+
             minTouchdownVerticalSpeedMS: null,
             adjustPlanePosition: (state) => {},
             previousPoints: [],
@@ -44,15 +45,23 @@ function createNewState(maxCompletedLevel) {
             rwNegAccelerationMS: null,
 
             terminalHorizonalGlideSpeedsMS: [],
+            horizontalGlideAccelerationCurves: [],
             terminalVerticalGlideSpeedsMS: [],
-            attitude2GlideNegativeAccelerationCurve: (x) => {},
+            verticalGlideAccelerationCurves: [],
 
             horizontalMS: null,
             verticalMS: null,
-            airfoilMS: null,
+            isStalling: false,
             stallHorizonalMS: null,
+            stallVerticalAcceleration: null,
+            stallHorizontalAcceleration: null,
             climbMinHorizontalMS: null,
-            levelFlightMinAirfoilVelocitiesyMS: [],
+            climbTerminalVerticalSpeedMS: null,
+            climbTerminalHorizontalSpeedMS: null,
+            climbVerticalAccelerationCurve: null,
+            climbHorizontalNegAccelerationCurve: null,
+            climbHorizontalPosAccelerationCurve: null,
+            levelFlightMinVelocitiesMS: [],
 
             instantaneousThrust: null,
             maxThrustingNewtons: null,
@@ -394,7 +403,11 @@ function runDataLoop() {
     }
 
     window.setGameState(state);
-    setTimeout(runDataLoop);
+
+    const runtime = performance.now() - nowTS;
+    const targetRuntimeMS = 16.667; // 60 FPS
+    const timeout = Math.max(0, (targetRuntimeMS - runtime));
+    setTimeout(runDataLoop, timeout);
 }
 
 
