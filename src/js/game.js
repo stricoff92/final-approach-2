@@ -283,7 +283,7 @@ function runDataLoop() {
         else {
             state = state.plane.adjustPlanePosition(state);
         }
-        if(state.game.frame % (state.plane.thrust ?  50 : 100) === 0) {
+        if(state.game.frame % (state.plane.thrust ?  12 : 25) === 0) {
             state.plane.previousPoints.unshift(
                 deepCopy([state.plane.posMapCoord, state.plane.thrust])
             );
@@ -293,7 +293,12 @@ function runDataLoop() {
         state = checkForGroundContact(state)
 
         window.setGameState(state);
-        setTimeout(runDataLoop);
+
+        const runtime = performance.now() - nowTS;
+        const targetRuntimeMS = 16.667; // 60 FPS
+        const timeout = Math.max(0, (targetRuntimeMS - runtime));
+        setTimeout(runDataLoop, timeout);
+
         return;
     }
 
@@ -409,6 +414,7 @@ function runDataLoop() {
     const targetRuntimeMS = 16.667; // 60 FPS
     const timeout = Math.max(0, (targetRuntimeMS - runtime));
     setTimeout(runDataLoop, timeout);
+    return;
 }
 
 
