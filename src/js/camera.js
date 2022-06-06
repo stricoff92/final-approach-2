@@ -9,15 +9,14 @@ function runDisplayLoop() {
     if (state.game.phase === PHASE_2_LIVE) {
         drawGameScene(state);
         drawGauges(state);
+        if(state.isDebug) {
+            drawDebugData(state);
+        }
     }
     else if(state.game.phase === PHASE_1_COUNTDOWN) {
         drawLoadingIcon(state);
     }
     drawButtons(state);
-
-    if(state.isDebug) {
-        drawDebugData(state);
-    }
 
     window.requestAnimationFrame(runDisplayLoop)
 }
@@ -137,19 +136,96 @@ function drawGameScene(state) {
     const plane = state.plane;
     const mapDims = plane.dimensions[plane.attitude];
 
+    // Draw ground/sky horizon
+    const planeAltMeters = plane.posMapCoord[1] / state.map.mapUnitsPerMeter;
+    const maxAltToShowHorizonMeters = 100;
+    if(planeAltMeters > maxAltToShowHorizonMeters) {
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_SKY_FOREST;
+        state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
+        state.ctx.fill();
+    } else {
+        const percentSky = planeAltMeters / maxAltToShowHorizonMeters;
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_SKY_FOREST;
+        state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH * percentSky)
+        state.ctx.fill();
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_GROUND_FOREST;
+        state.ctx.rect(0, state.camera.canvasH * percentSky, state.camera.canvasW, state.camera.canvasH)
+        state.ctx.fill();
+    }
+
+    // draw runway
+    const runwayHalfVisualHMeters = 4.3 * state.map.mapUnitsPerMeter;
+    const rwCanvasP0 = mapCoordToCanvasCoord(
+        state.map.rwP0MapCoord, plane.posMapCoord, state.camera
+    );
+    const rwCanvasP1 = mapCoordToCanvasCoord(
+        state.map.rwP1MapCoord, plane.posMapCoord, state.camera,
+    );
+    state.ctx.beginPath()
+    state.ctx.fillStyle = COLOR_RW_FOREST;
+    state.ctx.rect(
+        rwCanvasP0[0],
+        rwCanvasP0[1] - runwayHalfVisualHMeters,
+        rwCanvasP1[0] - rwCanvasP0[0],
+        runwayHalfVisualHMeters * 2,
+    );
+    state.ctx.fill();
+
+    const rwLenMeters = (rwCanvasP1[0] - rwCanvasP0[0]) / state.map.mapUnitsPerMeter;
+    const paintLineLengthMeters = 3;
+    const paintLineIntervalMeters = 12;
+    let rwMeterPtr = paintLineLengthMeters;
+    while(true)
+    {
+        if(rwMeterPtr >= rwLenMeters - paintLineLengthMeters) {
+            break;
+        }
+
+        const paintLineP0 = mapCoordToCanvasCoord(
+            [
+                state.map.rwP0MapCoord[0] + rwMeterPtr * state.map.mapUnitsPerMeter,
+                state.map.rwP0MapCoord[1],
+            ],
+            plane.posMapCoord,
+            state.camera,
+        );
+        const paintLineP1 = mapCoordToCanvasCoord(
+            [
+                state.map.rwP0MapCoord[0]
+                    + rwMeterPtr * state.map.mapUnitsPerMeter
+                    + paintLineLengthMeters * state.map.mapUnitsPerMeter,
+                    state.map.rwP0MapCoord[1],
+            ],
+            plane.posMapCoord,
+            state.camera,
+        );
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#ff0";
+        state.ctx.lineWidth = 5;
+        state.ctx.moveTo(...paintLineP0);
+        state.ctx.lineTo(...paintLineP1);
+        state.ctx.stroke();
+        rwMeterPtr += paintLineIntervalMeters;
+    }
+
     // Draw Glide Slope
-    const gsCanvasP0 = mapCoordToCanvasCoord(
-        state.map.gsP0MapCoord, plane.posMapCoord, state.camera
-    );
-    const gsCanvasP1 = mapCoordToCanvasCoord(
-        state.map.gsP1MapCoord, plane.posMapCoord, state.camera
-    );
-    state.ctx.beginPath();
-    state.ctx.strokeStyle = "#f200ff";
-    state.ctx.lineWidth = 2;
-    state.ctx.moveTo(...gsCanvasP0);
-    state.ctx.lineTo(...gsCanvasP1);
-    state.ctx.stroke();
+    if(Math.random() < 0.7) {
+        const gsCanvasP0 = mapCoordToCanvasCoord(
+            state.map.gsP0MapCoord, plane.posMapCoord, state.camera
+        );
+        const gsCanvasP1 = mapCoordToCanvasCoord(
+            state.map.gsP1MapCoord, plane.posMapCoord, state.camera
+        );
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = `rgb(242, 0, 255, ${ Math.max(0.4, Math.min(1, Math.random() * 2)) })`;
+        state.ctx.lineWidth = getRandomFloat(0.3, 2.4);
+        state.ctx.moveTo(...gsCanvasP0);
+        state.ctx.lineTo(...gsCanvasP1);
+        state.ctx.stroke();
+    }
 
 
     if(!plane.crashFrame) {
@@ -241,4 +317,21 @@ function drawDebugData(state) {
         state.ctx.font = "normal 18px Arial";
         state.ctx.fillText(`${msMLen}M`, ...msP1);
     }
+
+    // state.ctx.beginPath();
+    // state.ctx.strokeStyle = "rgb(255, 0, 0, 0.3)";
+    // state.ctx.lineWidth = 1;
+    // state.ctx.moveTo(...mapCoordToCanvasCoord(
+    //     state.map.rwP0MapCoord,
+    //     state.plane.posMapCoord,
+    //     state.camera,
+    // ));
+    // state.ctx.lineTo(...mapCoordToCanvasCoord(
+    //     state.map.rwP1MapCoord,
+    //     state.plane.posMapCoord,
+    //     state.camera,
+    // ));
+    // state.ctx.stroke();
+
 }
+

@@ -38,3 +38,7 @@ function coordInsideBoxCoord(coord, boxCoord) {
 function deepCopy(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
+
+function getRandomFloat(min, max) {
+    return Math.random() * (max - min) + min;
+}
