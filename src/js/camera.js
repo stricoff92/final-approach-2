@@ -182,6 +182,7 @@ function drawGameScene(state) {
 }
 
 function drawDebugData(state) {
+    // Text info
     state.ctx.beginPath();
     state.ctx.textBaseline = "middle";
     state.ctx.textAlign = "right";
@@ -201,13 +202,35 @@ function drawDebugData(state) {
     state.ctx.fillText(`thrust: ${state.plane.thrust}`, xOffset, yPointer);
     yPointer -= yInterval;
     if(Array.isArray(state.plane.posMapCoord)) {
-        state.ctx.fillText(`X: ${Math.round(state.plane.posMapCoord[0])}`, xOffset, yPointer);
+        state.ctx.fillText(`X pos: ${Math.round(state.plane.posMapCoord[0])}`, xOffset, yPointer);
         yPointer -= yInterval;
-        state.ctx.fillText(`Y: ${Math.round(state.plane.posMapCoord[1])}`, xOffset, yPointer);
+        state.ctx.fillText(`Y pos: ${Math.round(state.plane.posMapCoord[1])}`, xOffset, yPointer);
         yPointer -= yInterval;
     }
-    state.ctx.fillText(`X: ${Math.round(state.plane.horizontalMS, 2)}`, xOffset, yPointer);
+    state.ctx.fillText(`X m/s: ${Math.round(state.plane.horizontalMS, 2)}`, xOffset, yPointer);
     yPointer -= yInterval;
-    state.ctx.fillText(`Y: ${Math.round(state.plane.verticalMS, 2)}`, xOffset, yPointer);
+    state.ctx.fillText(`Y m/s: ${Math.round(state.plane.verticalMS, 2)}`, xOffset, yPointer);
     yPointer -= yInterval;
+
+    // Draw map scape
+    if(state.map.mapUnitsPerMeter && state.camera.canvasH) {
+        const msXOffset = 25;
+        const msYOffset = 15;
+        const msPXLen = state.camera.canvasW / 3;
+        const msMLen = Math.round(msPXLen / state.map.mapUnitsPerMeter, 1)
+        const msP0 = [msXOffset, state.camera.canvasH - msYOffset];
+        const msP1 = [msXOffset + msPXLen, state.camera.canvasH - msYOffset];
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#000000";
+        state.ctx.lineWidth = 2;
+        state.ctx.moveTo(...msP0);
+        state.ctx.lineTo(...msP1);
+        state.ctx.stroke();
+        state.ctx.beginPath();
+        state.ctx.textBaseline = "bottom";
+        state.ctx.textAlign = "right";
+        state.ctx.fillStyle = "black";
+        state.ctx.font = "normal 18px Arial";
+        state.ctx.fillText(`${msMLen}M`, ...msP1);
+    }
 }
