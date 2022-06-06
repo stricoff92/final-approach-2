@@ -13,7 +13,7 @@ function createNewState(maxCompletedLevel) {
         },
         game: {
             phase: PHASE_0_LOBBY,
-            maxCountDownFrames: 220,
+            maxCountDownFrames: 85,
             countDownFrames: 0,
             frame: 0,
             maxCompletedLevel,
@@ -21,6 +21,7 @@ function createNewState(maxCompletedLevel) {
             dataFPS: null,
             level: null,
             lastFrameTS: performance.now(),
+            acceptControlCommands: false,
         },
         camera: {
             canvasW: null,
@@ -32,19 +33,41 @@ function createNewState(maxCompletedLevel) {
             asset: null,
             assets: [],
             dimensions: [],
-            xVelMS: null,
-            yVelMS: null,
             massKG: null,
             posMapCoord: null,
             attitude: null,
             thrust: null,
-            maxTouchdownSpeedMS: null,
+
+            minTouchdownVerticalSpeedMS: null,
             adjustPlanePosition: (state) => {},
             previousPoints: [],
             crashFrame: 0,
             touchedDown: false,
             rwNegAccelerationMS: null,
 
+            terminalHorizonalGlideSpeedsMS: [],
+            horizontalGlideAccelerationCurves: [],
+            terminalVerticalGlideSpeedsMS: [],
+            verticalGlideAccelerationCurves: [],
+
+            horizontalMS: null,
+            verticalMS: null,
+            isStalling: false,
+            stallHorizonalMS: null,
+            stallVerticalAccelerationMS: null,
+            stallTerminalVerticalSpeedMS: null,
+            climbMinHorizontalMS: null,
+            climbTerminalVerticalSpeedMS: null,
+            climbTerminalHorizontalSpeedMS: null,
+            climbVerticalAccelerationCurve: null,
+            climbHorizontalNegAccelerationCurve: null,
+            climbHorizontalPosAccelerationCurve: null,
+            levelFlightMinVelocitiesMS: [],
+
+            instantaneousThrust: null,
+            maxThrustingNewtons: null,
+            currentThrustingNewtons: null,
+            deltaNewtonPS: null,
         },
         map: {
             terrain: null,
@@ -218,13 +241,24 @@ function runDataLoop() {
                     setTimeout(runDataLoop);
                     return;
                 }
-                else if(cmd.cmd === "set-attitude") {
+                else if(cmd.cmd === "set-attitude" && state.game.acceptControlCommands) {
                     state.plane.attitude = cmd.args[0];
                 }
-                else if(cmd.cmd === "set-thrust") {
+                else if(cmd.cmd === "set-thrust" && state.game.acceptControlCommands) {
                     state.plane.thrust = cmd.args[0];
+                    if(state.plane.instantaneousThrust) {
+                        state.plane.currentThrustingNewtons = (
+                            state.plane.thrust
+                            ? state.plane.maxThrustingNewtons
+                            : 0
+                        );
+
+                    } else {
+                        throw "Not Implemented";
+                    }
                 }
             }
+
         }
         if(state.plane.crashFrame) {
             state.plane.crashFrame++;
@@ -241,16 +275,16 @@ function runDataLoop() {
                 state.plane.crashFrame = 1;
             } else {
                 const frameDeltaX = state.plane.rwNegAccelerationMS / state.game.dataFPS;
-                state.plane.xVelMS -= frameDeltaX;
-                if(Math.abs(state.plane.xVelMS) < 3.5) {
-                    state.plane.xVelMS = 0;
+                state.plane.horizontalVMS = Math.max(0, state.plane.horizontalVMS - frameDeltaX);
+                if(Math.abs(state.plane.horizontalVMS) < 3.5) {
+                    state.plane.horizontalVMS = 0;
                 }
             }
         }
         else {
             state = state.plane.adjustPlanePosition(state);
         }
-        if(state.game.frame % (state.plane.thrust ?  50 : 100) === 0) {
+        if(state.game.frame % (state.plane.thrust ?  12 : 25) === 0) {
             state.plane.previousPoints.unshift(
                 deepCopy([state.plane.posMapCoord, state.plane.thrust])
             );
@@ -260,7 +294,12 @@ function runDataLoop() {
         state = checkForGroundContact(state)
 
         window.setGameState(state);
-        setTimeout(runDataLoop);
+
+        const runtime = performance.now() - nowTS;
+        const targetRuntimeMS = 16.667; // 60 FPS
+        const timeout = Math.max(0, (targetRuntimeMS - runtime));
+        setTimeout(runDataLoop, timeout);
+
         return;
     }
 
@@ -287,6 +326,7 @@ function runDataLoop() {
         if(state.game.countDownFrames >= state.game.maxCountDownFrames) {
             state.pageTitle = null;
             state.game.phase = PHASE_2_LIVE,
+            state.game.acceptControlCommands = true;
 
             console.log(state.game.level)
             state = setPlaneProps(state);
@@ -371,7 +411,12 @@ function runDataLoop() {
     }
 
     window.setGameState(state);
-    setTimeout(runDataLoop);
+
+    const runtime = performance.now() - nowTS;
+    const targetRuntimeMS = 16.667; // 60 FPS
+    const timeout = Math.max(0, (targetRuntimeMS - runtime));
+    setTimeout(runDataLoop, timeout);
+    return;
 }
 
 
@@ -395,7 +440,7 @@ function checkForGroundContact(state) {
         && planeBottomMapCoordY <= state.map.rwP0MapCoord[1]
     );
     if(touchingRunway) {
-        const touchdownSpeedMS = state.plane.yVelMS;
+        const touchdownSpeedMS = state.plane.verticalVMS;
         if (
             touchdownSpeedMS > state.plane.maxTouchdownSpeedMS
             || state.plane.attitude === ATTITUDE_0
@@ -405,12 +450,12 @@ function checkForGroundContact(state) {
         else if(touchdownSpeedMS <= (state.plane.maxTouchdownSpeedMS / 4)) {
             // Smooth landing
             state.plane.touchedDown = true;
-            state.plane.yVelMS = 0;
+            state.plane.verticalVMS = 0;
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + planeBottomDiffY;
 
         } else if (touchdownSpeedMS > (state.plane.maxTouchdownSpeedMS * 0.75)) {
             // Big bounce off runway
-            state.plane.yVelMS = Math.abs(state.plane.yVelMS) * 1.5;
+            state.plane.verticalVMS = Math.abs(state.plane.verticalVMS) * 1.5;
             if(planeBottomMapCoordY < state.map.rwP0MapCoord[1]) {
                 state.plane.posMapCoord[1] += ((
                     state.map.rwP0MapCoord[1] - planeBottomMapCoordY
@@ -419,7 +464,7 @@ function checkForGroundContact(state) {
 
         } else {
             // Small bounce off runway
-            state.plane.yVelMS = Math.abs(state.plane.yVelMS);
+            state.plane.verticalVMS = Math.abs(state.plane.verticalVMS);
             if(planeBottomMapCoordY < state.map.rwP0MapCoord[1]) {
                 state.plane.posMapCoord[1] += ((
                     state.map.rwP0MapCoord[1] - planeBottomMapCoordY
