@@ -24,7 +24,7 @@ const COLOR_PURPLE = "#620080";
 const COLOR_BLACK = "#000";
 const COLOR_SKY_FOREST = "#e3e3ff";
 const COLOR_GROUND_FOREST = "#9dff5c";
-const COLOR_RW_FOREST = "#c4c4c4";
+const COLOR_RW_FOREST = "#808080";
 
 const TWO_PI = Math.PI * 2;
 
