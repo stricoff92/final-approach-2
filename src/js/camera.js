@@ -9,15 +9,14 @@ function runDisplayLoop() {
     if (state.game.phase === PHASE_2_LIVE) {
         drawGameScene(state);
         drawGauges(state);
+        if(state.isDebug) {
+            drawDebugData(state);
+        }
     }
     else if(state.game.phase === PHASE_1_COUNTDOWN) {
         drawLoadingIcon(state);
     }
     drawButtons(state);
-
-    if(state.isDebug) {
-        drawDebugData(state);
-    }
 
     window.requestAnimationFrame(runDisplayLoop)
 }
@@ -136,6 +135,45 @@ function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
 function drawGameScene(state) {
     const plane = state.plane;
     const mapDims = plane.dimensions[plane.attitude];
+
+    // Draw ground/sky horizon
+    const planeAltMeters = plane.posMapCoord[1] / state.map.mapUnitsPerMeter;
+    const maxAltToShowHorizonMeters = 100;
+    if(planeAltMeters > maxAltToShowHorizonMeters) {
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_SKY_FOREST;
+        state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
+        state.ctx.fill();
+    } else {
+        const percentSky = planeAltMeters / maxAltToShowHorizonMeters;
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_SKY_FOREST;
+        state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH * percentSky)
+        state.ctx.fill();
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_GROUND_FOREST;
+        state.ctx.rect(0, state.camera.canvasH * percentSky, state.camera.canvasW, state.camera.canvasH)
+        state.ctx.fill();
+    }
+
+    // draw runway
+    const runwayHalfVisualHMeters = 3.3 * state.map.mapUnitsPerMeter;
+    const rwCanvasP0 = mapCoordToCanvasCoord(
+        state.map.rwP0MapCoord, plane.posMapCoord, state.camera
+    );
+    const rwCanvasP1 = mapCoordToCanvasCoord(
+        state.map.rwP1MapCoord, plane.posMapCoord, state.camera
+    );
+    state.ctx.beginPath()
+    state.ctx.fillStyle = COLOR_RW_FOREST;
+    state.ctx.rect(
+        rwCanvasP0[0],
+        rwCanvasP0[1] - runwayHalfVisualHMeters,
+        rwCanvasP1[0] - rwCanvasP0[0],
+        rwCanvasP1[1] - rwCanvasP0[1] + runwayHalfVisualHMeters,
+    );
+    state.ctx.fill();
+
 
     // Draw Glide Slope
     const gsCanvasP0 = mapCoordToCanvasCoord(
