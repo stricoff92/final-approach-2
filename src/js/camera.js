@@ -218,12 +218,14 @@ function drawGameScene(state) {
     const gsCanvasP1 = mapCoordToCanvasCoord(
         state.map.gsP1MapCoord, plane.posMapCoord, state.camera
     );
-    state.ctx.beginPath();
-    state.ctx.strokeStyle = "#f200ff";
-    state.ctx.lineWidth = 2;
-    state.ctx.moveTo(...gsCanvasP0);
-    state.ctx.lineTo(...gsCanvasP1);
-    state.ctx.stroke();
+    if(Math.random() < 0.7) {
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = `rgb(242, 0, 255, ${ Math.max(0.4, Math.min(1, Math.random() * 2)) })`;
+        state.ctx.lineWidth = getRandomFloat(0.3, 2.4);
+        state.ctx.moveTo(...gsCanvasP0);
+        state.ctx.lineTo(...gsCanvasP1);
+        state.ctx.stroke();
+    }
 
 
     if(!plane.crashFrame) {
@@ -316,20 +318,20 @@ function drawDebugData(state) {
         state.ctx.fillText(`${msMLen}M`, ...msP1);
     }
 
-    state.ctx.beginPath();
-    state.ctx.strokeStyle = "rgb(255, 0, 0, 0.3)";
-    state.ctx.lineWidth = 1;
-    state.ctx.moveTo(...mapCoordToCanvasCoord(
-        state.map.rwP0MapCoord,
-        state.plane.posMapCoord,
-        state.camera,
-    ));
-    state.ctx.lineTo(...mapCoordToCanvasCoord(
-        state.map.rwP1MapCoord,
-        state.plane.posMapCoord,
-        state.camera,
-    ));
-    state.ctx.stroke();
+    // state.ctx.beginPath();
+    // state.ctx.strokeStyle = "rgb(255, 0, 0, 0.3)";
+    // state.ctx.lineWidth = 1;
+    // state.ctx.moveTo(...mapCoordToCanvasCoord(
+    //     state.map.rwP0MapCoord,
+    //     state.plane.posMapCoord,
+    //     state.camera,
+    // ));
+    // state.ctx.lineTo(...mapCoordToCanvasCoord(
+    //     state.map.rwP1MapCoord,
+    //     state.plane.posMapCoord,
+    //     state.camera,
+    // ));
+    // state.ctx.stroke();
 
 }
 
