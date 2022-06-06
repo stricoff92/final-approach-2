@@ -30,7 +30,7 @@ function innerAdjustPlanePosition(state) {
     else if (plane.attitude === ATTITUDE_0) {
         // Plane is nose down, accelerating
         // +horizontally and -vertically.
-        const att = ATTITUDE_1;
+        const att = ATTITUDE_0;
         const termDeltaXMS = plane.terminalHorizonalGlideSpeedsMS[att];
         const horizontalGlideAccCurve = plane.horizontalGlideAccelerationCurves[att];
         const xAccMS =  horizontalGlideAccCurve(plane.horizontalMS);
