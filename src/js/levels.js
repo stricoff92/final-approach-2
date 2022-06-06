@@ -64,15 +64,17 @@ function innerAdjustPlanePosition(state) {
                 termDeltaXMS,
                 plane.horizontalMS + xAccMF
             );
-        } else {
+        } else if(horizontalMF > termDeltaXMF) {
             // -horizontal acceleration to term
             const horizontalGlideAccCurve = plane.horizontalGlideAccelerationCurves[att];
             const xAccMS =  horizontalGlideAccCurve(plane.horizontalMS);
             const xAccMF = xAccMS / fps;
-            newHorizontalMS = Math.min(
+            newHorizontalMS = Math.max(
                 termDeltaXMS,
                 plane.horizontalMS + xAccMF
             );
+        } else {
+            newHorizontalMS = plane.horizontalMS;
         }
 
         const levelFlightMinMF = plane.levelFlightMinVelocitiesMS[att] / fps;
