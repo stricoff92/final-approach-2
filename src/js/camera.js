@@ -212,13 +212,13 @@ function drawGameScene(state) {
     }
 
     // Draw Glide Slope
-    const gsCanvasP0 = mapCoordToCanvasCoord(
-        state.map.gsP0MapCoord, plane.posMapCoord, state.camera
-    );
-    const gsCanvasP1 = mapCoordToCanvasCoord(
-        state.map.gsP1MapCoord, plane.posMapCoord, state.camera
-    );
     if(Math.random() < 0.7) {
+        const gsCanvasP0 = mapCoordToCanvasCoord(
+            state.map.gsP0MapCoord, plane.posMapCoord, state.camera
+        );
+        const gsCanvasP1 = mapCoordToCanvasCoord(
+            state.map.gsP1MapCoord, plane.posMapCoord, state.camera
+        );
         state.ctx.beginPath();
         state.ctx.strokeStyle = `rgb(242, 0, 255, ${ Math.max(0.4, Math.min(1, Math.random() * 2)) })`;
         state.ctx.lineWidth = getRandomFloat(0.3, 2.4);
