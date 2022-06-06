@@ -54,6 +54,7 @@ function createNewState(maxCompletedLevel) {
             isStalling: false,
             stallHorizonalMS: null,
             stallVerticalAcceleration: null,
+            stallTerminalVerticalSpeedMS: null,
             stallHorizontalAcceleration: null,
             climbMinHorizontalMS: null,
             climbTerminalVerticalSpeedMS: null,

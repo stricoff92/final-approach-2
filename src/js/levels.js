@@ -18,13 +18,17 @@ function innerAdjustPlanePosition(state) {
         frameDeltaXPosMeters = plane.stallHorizontalAcceleration / fps;
         newHorizontalMS = plane.horizontalMS + frameDeltaXPosMeters;
         frameDeltaYPosMeters = plane.stallVerticalAcceleration / fps;
-        newVerticalMS = plane.verticalMS + frameDeltaYPosMeters;
+        newVerticalMS = Math.max(
+            plane.stallTerminalVerticalSpeedMS / fps,
+            plane.verticalMS + frameDeltaYPosMeters,
+        );
     }
     else if (plane.attitude === ATTITUDE_0) {
         // Plane is nose down, accelerating
         // +horizontally and -vertically.
-        const termDeltaXMS = plane.terminalHorizonalGlideSpeedsMS[ATTITUDE_0];
-        const horizontalGlideAccCurve = plane.horizontalGlideAccelerationCurves[ATTITUDE_0];
+        const att = ATTITUDE_1;
+        const termDeltaXMS = plane.terminalHorizonalGlideSpeedsMS[att];
+        const horizontalGlideAccCurve = plane.horizontalGlideAccelerationCurves[att];
         const xAccMS =  horizontalGlideAccCurve(plane.horizontalMS);
         const xAccMF = xAccMS / fps;
         newHorizontalMS = Math.min(
@@ -32,8 +36,8 @@ function innerAdjustPlanePosition(state) {
             plane.horizontalMS + xAccMF
         )
 
-        const termDeltaYMS = plane.terminalVerticalGlideSpeedsMS[ATTITUDE_0];
-        const verticalGlideAccelerationCurve = plane.verticalGlideAccelerationCurves[ATTITUDE_0];
+        const termDeltaYMS = plane.terminalVerticalGlideSpeedsMS[att];
+        const verticalGlideAccelerationCurve = plane.verticalGlideAccelerationCurves[att];
         const yAccMS = verticalGlideAccelerationCurve(plane.horizontalMS);
         const yAccMF = yAccMS / fps;
         newVerticalMS = Math.max(
@@ -98,13 +102,16 @@ function innerAdjustPlanePosition(state) {
             }
         }
     }
-    else if(!plane.thrust && plane.attitude === ATTITUDE_2) {
-        // Nose up, no thrust
+    else if(plane.attitude === ATTITUDE_2) {
+        // Nose up
         const att = 2;
 
         const termDeltaXMS = plane.terminalHorizonalGlideSpeedsMS[att];
         const termDeltaXMF = termDeltaXMS / fps;
-        if(horizontalMF > termDeltaXMF) {
+        const termDeltaXClimbMS = plane.climbTerminalHorizontalSpeedMS;
+        const termDeltaXClimbMF = termDeltaXClimbMS / fps;
+
+        if(horizontalMF > termDeltaXMF && !plane.thrust) {
             // -horizontal acc
             const termDeltaXMS = plane.terminalHorizonalGlideSpeedsMS[att];
             const horizontalGlideAccelerationCurve = plane.horizontalGlideAccelerationCurves[att];
@@ -115,24 +122,73 @@ function innerAdjustPlanePosition(state) {
                 plane.horizontalMS + xAccMF
             );
         }
-        else {
+        else if (horizontalMF <= termDeltaXMF && !plane.thrust){
+            // zero horizontal acceleration
             newHorizontalMS = plane.horizontalMS;
+        }
+        else if (horizontalMF < termDeltaXClimbMF && plane.thrust) {
+            // +horizontal acc
+            const xAccMS = plane.climbHorizontalPosAccelerationCurve(plane.horizontalMS);
+            const xAccMF = xAccMS / fps;
+            newHorizontalMS = Math.min(
+                termDeltaXClimbMS,
+                plane.horizontalMS + xAccMF
+            );
+        }
+        else if (horizontalMF < termDeltaXClimbMF && plane.thrust) {
+            // -horizontal acc
+            const xAccMS = plane.climbHorizontalNegAccelerationCurve(plane.horizontalMS);
+            const xAccMF = xAccMS / fps;
+            newHorizontalMS = Math.max(
+                termDeltaXClimbMS,
+                plane.horizontalMS + xAccMF
+            );
+        } else if (horizontalMF === termDeltaXClimbMF && plane.thrust) {
+            newHorizontalMS = termDeltaXClimbMS;
+        }
+        else {
+            throw "not implemented";
         }
 
         const climbMinMF = plane.climbMinHorizontalMS / fps;
         const levelFlightMinMF = plane.levelFlightMinVelocitiesMS[att] / fps;
         if(horizontalMF < levelFlightMinMF) {
             // descent
-        } else if (horizontalMF >= levelFlightMinMF && horizontalMF < climbMinMF) {
+            const termDeltaYMS = plane.terminalVerticalGlideSpeedsMS[att];
+            const verticalGlideAccelerationCurve = plane.verticalGlideAccelerationCurves[att];
+            const yAccMS = verticalGlideAccelerationCurve(plane.horizontalMS);
+            const yAccMF = yAccMS / fps;
+            newVerticalMS = Math.max(
+                termDeltaYMS,
+                plane.verticalMS + yAccMF
+            );
+        }
+        else if (horizontalMF >= levelFlightMinMF && horizontalMF < climbMinMF) {
             // level flight
-        } else if(horizontalMF >= climbMinMF) {
+            newVerticalMS = 0;
+        }
+        else if(horizontalMF >= climbMinMF) {
             // climb
+            const termDeltaYMS = plane.climbTerminalVerticalSpeedMS;
+            const yAccMS =  Math.max(0, plane.climbVerticalAccelerationCurve(plane.horizontalMS));
+            const yAccMF = yAccMS / fps;
+            newVerticalMS = Math.min(
+                termDeltaYMS,
+                plane.verticalMS + yAccMF,
+            );
+        }
+        else {
+            throw "not implemented"
         }
     }
     else {
         throw "not implemented";
     }
 
+    state.plane.horizontalMS = newHorizontalMS;
+    state.plane.verticalMS = newVerticalMS;
+    state.plane.posMapCoord[0] += (newHorizontalMS / fps)
+    state.plane.posMapCoord[1] += (newVerticalMS / fps)
 
     return state;
 }
@@ -175,12 +231,12 @@ function setPlaneProps(state) {
         state.plane.deltaNewtonPS = null;
 
         state.plane.stallHorizonalMS = knotsToMS(43);
-        state.plane.stallVerticalAcceleration = feetPerMinToMS(-1000);
-        state.plane.stallHorizontalAcceleration = knotsToMS(10);
+        state.plane.stallHorizontalAcceleration = knotsToMS(15);
+        state.plane.stallTerminalVerticalSpeedMS = feetPerMinToMS(-4000);
 
         state.plane.climbMinHorizontalMS = knotsToMS(55);
         state.plane.climbTerminalVerticalSpeedMS = feetPerMinToMS(1200);
-        state.plane.climbTerminalHorizontalSpeedMS = knotsToMS(72);
+        state.plane.climbTerminalHorizontalSpeedMS = knotsToMS(65);
         state.plane.climbVerticalAccelerationCurve = xMS => -1 * xMS + knotsToMS(72);
         state.plane.climbHorizontalPosAccelerationCurve = xMS => 4;
         state.plane.climbHorizontalNegAccelerationCurve = xMS => -8;
