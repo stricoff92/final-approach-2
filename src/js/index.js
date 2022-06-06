@@ -73,6 +73,50 @@ document.addEventListener("DOMContentLoaded", function() {
         window.registerClick(clickCanvasCoord);
     });
 
+    document.onkeydown = (event) => {
+        if(event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            const state = window.readGameState();
+            if(event.key === 'ArrowDown') {
+                if(state.plane.attitude === ATTITUDE_1) {
+                    window.addCommand({
+                        cmd: "set-attitude", args: [ 0 ],
+                    });
+                } else if (state.plane.attitude === ATTITUDE_2 && !state.plane.thrust) {
+                    window.addCommand({
+                        cmd: "set-attitude", args: [ 1 ],
+                    });
+                } else if (state.plane.attitude === ATTITUDE_2 && state.plane.thrust) {
+                    window.addCommand({
+                        cmd: "set-attitude", args: [ 2 ],
+                    });
+                    window.addCommand({
+                        cmd: "set-thrust", args: [ false ],
+                    });
+                }
+            }
+            else if (event.key === 'ArrowUp') {
+                if(state.plane.attitude === ATTITUDE_0) {
+                    window.addCommand({
+                        cmd: "set-attitude", args: [ 1 ],
+                    });
+                }
+                else if(state.plane.attitude === ATTITUDE_1) {
+                    window.addCommand({
+                        cmd: "set-attitude", args: [ 2 ],
+                    });
+                }
+                else if(state.plane.attitude === ATTITUDE_2 && !state.plane.thrust) {
+                    window.addCommand({
+                        cmd: "set-attitude", args: [ 2 ],
+                    });
+                    window.addCommand({
+                        cmd: "set-thrust", args: [ true ],
+                    });
+                }
+            }
+        }
+    };
+
     setTimeout(runDataLoop);
     window.requestAnimationFrame(runDisplayLoop);
 
