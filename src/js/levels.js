@@ -240,7 +240,7 @@ function setPlaneProps(state) {
         state.plane.currentThrustingNewtons = 0;
         state.plane.deltaNewtonPS = null;
 
-        state.plane.stallHorizonalMS = knotsToMS(41);
+        state.plane.stallHorizonalMS = knotsToMS(29);
         state.plane.stallTerminalVerticalSpeedMS = feetPerMinToMS(-10000);
         state.plane.stallVerticalAccelerationMS = -15
 
@@ -260,7 +260,7 @@ function setPlaneProps(state) {
         state.plane.terminalHorizonalGlideSpeedsMS = [
             knotsToMS(72),
             knotsToMS(48),
-            knotsToMS(40),
+            knotsToMS(28),
         ];
         state.plane.horizontalGlideAccelerationCurves = [
             xMS => knotsToMS(Math.pow(mPSToKnots(xMS), 2) * 0.005),

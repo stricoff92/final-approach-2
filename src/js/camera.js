@@ -8,6 +8,7 @@ function runDisplayLoop() {
     drawPageTitle(state);
     if (state.game.phase === PHASE_2_LIVE) {
         drawGameScene(state);
+        drawGauges(state);
     }
     else if(state.game.phase === PHASE_1_COUNTDOWN) {
         drawLoadingIcon(state);
@@ -180,6 +181,10 @@ function drawGameScene(state) {
         state.ctx.fill();
     }
 }
+
+function drawGauges(state) {
+}
+
 
 function drawDebugData(state) {
     // Text info

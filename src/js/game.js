@@ -13,7 +13,7 @@ function createNewState(maxCompletedLevel) {
         },
         game: {
             phase: PHASE_0_LOBBY,
-            maxCountDownFrames: 85,
+            maxCountDownFrames: 60,
             countDownFrames: 0,
             frame: 0,
             maxCompletedLevel,
