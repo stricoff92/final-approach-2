@@ -157,7 +157,7 @@ function drawGameScene(state) {
     }
 
     // draw runway
-    const runwayHalfVisualHMeters = 3.3 * state.map.mapUnitsPerMeter;
+    const runwayHalfVisualHMeters = 4.3 * state.map.mapUnitsPerMeter;
     const rwCanvasP0 = mapCoordToCanvasCoord(
         state.map.rwP0MapCoord, plane.posMapCoord, state.camera
     );
@@ -170,9 +170,62 @@ function drawGameScene(state) {
         rwCanvasP0[0],
         rwCanvasP0[1] - runwayHalfVisualHMeters,
         rwCanvasP1[0] - rwCanvasP0[0],
-        rwCanvasP1[1] - rwCanvasP0[1] + runwayHalfVisualHMeters,
+        (rwCanvasP1[1] - rwCanvasP0[1]) + runwayHalfVisualHMeters,
     );
     state.ctx.fill();
+
+    const rwLenMeters = (rwCanvasP1[0] - rwCanvasP0[0]) / state.map.mapUnitsPerMeter;
+    const paintLineLengthMeters = 3;
+    const paintLineIntervalMeters = 12;
+    let rwMeterPtr = paintLineLengthMeters;
+    while(true)
+    {
+        if(rwMeterPtr >= rwLenMeters - paintLineLengthMeters) {
+            break;
+        }
+
+        const paintLineP0 = mapCoordToCanvasCoord(
+            [
+                state.map.rwP0MapCoord[0] + rwMeterPtr * state.map.mapUnitsPerMeter,
+                state.map.rwP0MapCoord[1] + runwayHalfVisualHMeters,
+            ],
+            plane.posMapCoord,
+            state.camera,
+        );
+        const paintLineP1 = mapCoordToCanvasCoord(
+            [
+                state.map.rwP0MapCoord[0]
+                    + rwMeterPtr * state.map.mapUnitsPerMeter
+                    + paintLineLengthMeters * state.map.mapUnitsPerMeter,
+                    state.map.rwP0MapCoord[1] + runwayHalfVisualHMeters,
+            ],
+            plane.posMapCoord,
+            state.camera,
+        );
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#ff0";
+        state.ctx.lineWidth = 5;
+        state.ctx.moveTo(...paintLineP0);
+        state.ctx.lineTo(...paintLineP1);
+        state.ctx.stroke();
+        rwMeterPtr += paintLineIntervalMeters;
+    }
+    if(state.isDebug) {
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#f00";
+        state.ctx.lineWidth = 1;
+        state.ctx.moveTo(...mapCoordToCanvasCoord(
+            state.map.rwP0MapCoord,
+            plane.posMapCoord,
+            state.camera,
+        ));
+        state.ctx.lineTo(...mapCoordToCanvasCoord(
+            state.map.rwP1MapCoord,
+            plane.posMapCoord,
+            state.camera,
+        ));
+        state.ctx.stroke();
+    }
 
 
     // Draw Glide Slope
