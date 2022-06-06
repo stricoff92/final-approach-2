@@ -141,7 +141,7 @@ function innerAdjustPlanePosition(state) {
                 plane.horizontalMS + xAccMF
             );
         }
-        else if (horizontalMF < termDeltaXClimbMF && plane.thrust) {
+        else if (horizontalMF > termDeltaXClimbMF && plane.thrust) {
             // -horizontal acc
             const xAccMS = plane.climbHorizontalNegAccelerationCurve(plane.horizontalMS);
             const xAccMF = xAccMS / fps;
@@ -240,12 +240,11 @@ function setPlaneProps(state) {
         state.plane.currentThrustingNewtons = 0;
         state.plane.deltaNewtonPS = null;
 
-        state.plane.stallHorizonalMS = knotsToMS(43);
-        state.plane.stallHorizontalAcceleration = knotsToMS(3);
+        state.plane.stallHorizonalMS = knotsToMS(29);
         state.plane.stallTerminalVerticalSpeedMS = feetPerMinToMS(-10000);
         state.plane.stallVerticalAccelerationMS = -15
 
-        state.plane.climbMinHorizontalMS = knotsToMS(55);
+        state.plane.climbMinHorizontalMS = knotsToMS(60);
         state.plane.climbTerminalVerticalSpeedMS = feetPerMinToMS(1200);
         state.plane.climbTerminalHorizontalSpeedMS = knotsToMS(65);
         state.plane.climbVerticalAccelerationCurve = xMS => -1 * xMS + knotsToMS(72);
@@ -254,25 +253,25 @@ function setPlaneProps(state) {
 
         state.plane.levelFlightMinVelocitiesMS = [
             null, // No level flight for attitude 0
-            knotsToMS(52),
+            knotsToMS(54),
             knotsToMS(47),
         ];
 
         state.plane.terminalHorizonalGlideSpeedsMS = [
             knotsToMS(72),
             knotsToMS(48),
-            knotsToMS(41),
+            knotsToMS(28),
         ];
         state.plane.horizontalGlideAccelerationCurves = [
             xMS => knotsToMS(Math.pow(mPSToKnots(xMS), 2) * 0.005),
-            xMS => knotsToMS(-1 * Math.pow(mPSToKnots(xMS), 2) * 0.0008),
             xMS => knotsToMS(-1 * Math.pow(mPSToKnots(xMS), 2) * 0.002),
+            xMS => knotsToMS(-1 * Math.pow(mPSToKnots(xMS), 2) * 0.008),
         ];
 
         state.plane.terminalVerticalGlideSpeedsMS = [
-            feetPerMinToMS(-2000),
-            feetPerMinToMS(-1000),
-            feetPerMinToMS(-550),
+            feetPerMinToMS(-3000),
+            feetPerMinToMS(-1800),
+            feetPerMinToMS(-800),
         ];
 
         state.plane.verticalGlideAccelerationCurves = [
@@ -320,11 +319,11 @@ function setMapProps(state) {
     const level = state.game.level;
     if(level < 4) {
         state.map.terrain = TERRAIN_FOREST;
-        state.map.rwP0MapCoord = [5000 * mupm, 0];
-        state.map.rwP1MapCoord = [6000 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 1000 * mupm];
-        state.map.gsP1MapCoord = [5015 * mupm, 0];
-        state.plane.posMapCoord = [0, 1000 * mupm];
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1500 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 200 * mupm];
+        state.map.gsP1MapCoord = [1010 * mupm, 0];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
         if(level == 1) {
             state.map.windXVel = 0;
             state.map.windVolitility = 0.05;
