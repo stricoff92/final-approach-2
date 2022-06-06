@@ -212,6 +212,9 @@ function drawDebugData(state) {
     state.ctx.fillText(`Y m/s: ${Math.round(state.plane.verticalMS, 2)}`, xOffset, yPointer);
     yPointer -= yInterval;
 
+    state.ctx.fillText(`stalling: ${state.plane.isStalling}`, xOffset, yPointer);
+    yPointer -= yInterval;
+
     // Draw map scape
     if(state.map.mapUnitsPerMeter && state.camera.canvasH) {
         const msXOffset = 25;

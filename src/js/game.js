@@ -21,6 +21,7 @@ function createNewState(maxCompletedLevel) {
             dataFPS: null,
             level: null,
             lastFrameTS: performance.now(),
+            acceptControlCommands: false,
         },
         camera: {
             canvasW: null,
@@ -53,9 +54,8 @@ function createNewState(maxCompletedLevel) {
             verticalMS: null,
             isStalling: false,
             stallHorizonalMS: null,
-            stallVerticalAcceleration: null,
+            stallVerticalAccelerationMS: null,
             stallTerminalVerticalSpeedMS: null,
-            stallHorizontalAcceleration: null,
             climbMinHorizontalMS: null,
             climbTerminalVerticalSpeedMS: null,
             climbTerminalHorizontalSpeedMS: null,
@@ -241,10 +241,10 @@ function runDataLoop() {
                     setTimeout(runDataLoop);
                     return;
                 }
-                else if(cmd.cmd === "set-attitude") {
+                else if(cmd.cmd === "set-attitude" && state.game.acceptControlCommands) {
                     state.plane.attitude = cmd.args[0];
                 }
-                else if(cmd.cmd === "set-thrust") {
+                else if(cmd.cmd === "set-thrust" && state.game.acceptControlCommands) {
                     state.plane.thrust = cmd.args[0];
                     if(state.plane.instantaneousThrust) {
                         state.plane.currentThrustingNewtons = (
@@ -258,6 +258,7 @@ function runDataLoop() {
                     }
                 }
             }
+
         }
         if(state.plane.crashFrame) {
             state.plane.crashFrame++;
@@ -325,6 +326,7 @@ function runDataLoop() {
         if(state.game.countDownFrames >= state.game.maxCountDownFrames) {
             state.pageTitle = null;
             state.game.phase = PHASE_2_LIVE,
+            state.game.acceptControlCommands = true;
 
             console.log(state.game.level)
             state = setPlaneProps(state);

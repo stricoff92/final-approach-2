@@ -1,6 +1,7 @@
 
 function innerAdjustPlanePosition(state) {
     state.plane.isStalling = false;
+    state.game.acceptControlCommands = true;
 
     const fps = state.game.dataFPS;
     const plane = state.plane;
@@ -13,13 +14,16 @@ function innerAdjustPlanePosition(state) {
     let frameDeltaYPosMeters;
     let newVerticalMS;
     if(horizontalMF < frameStallV) {
+
         state.plane.isStalling = true;
-        state.plane.attitude = ATTITUDE_0;
-        frameDeltaXPosMeters = plane.stallHorizontalAcceleration / fps;
-        newHorizontalMS = plane.horizontalMS + frameDeltaXPosMeters;
-        frameDeltaYPosMeters = plane.stallVerticalAcceleration / fps;
+        state.game.acceptControlCommands = false;
+        state.plane.attitude = ATTITUDE_2;
+        state.buttons = state.buttons.filter(b => b.type !== BUTTON_TYPE_CTRL);
+
+        newHorizontalMS = plane.horizontalMS;
+        frameDeltaYPosMeters = plane.stallVerticalAccelerationMS / fps;
         newVerticalMS = Math.max(
-            plane.stallTerminalVerticalSpeedMS / fps,
+            plane.stallTerminalVerticalSpeedMS,
             plane.verticalMS + frameDeltaYPosMeters,
         );
     }
@@ -235,8 +239,9 @@ function setPlaneProps(state) {
         state.plane.deltaNewtonPS = null;
 
         state.plane.stallHorizonalMS = knotsToMS(43);
-        state.plane.stallHorizontalAcceleration = knotsToMS(15);
-        state.plane.stallTerminalVerticalSpeedMS = feetPerMinToMS(-4000);
+        state.plane.stallHorizontalAcceleration = knotsToMS(3);
+        state.plane.stallTerminalVerticalSpeedMS = feetPerMinToMS(-10000);
+        state.plane.stallVerticalAccelerationMS = -15
 
         state.plane.climbMinHorizontalMS = knotsToMS(55);
         state.plane.climbTerminalVerticalSpeedMS = feetPerMinToMS(1200);
