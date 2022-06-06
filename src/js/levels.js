@@ -187,8 +187,12 @@ function innerAdjustPlanePosition(state) {
 
     state.plane.horizontalMS = newHorizontalMS;
     state.plane.verticalMS = newVerticalMS;
-    state.plane.posMapCoord[0] += (newHorizontalMS / fps)
-    state.plane.posMapCoord[1] += (newVerticalMS / fps)
+    state.plane.posMapCoord[0] += (
+        newHorizontalMS * state.map.mapUnitsPerMeter / fps
+    );
+    state.plane.posMapCoord[1] += (
+        newVerticalMS * state.map.mapUnitsPerMeter / fps
+    );
 
     return state;
 }
