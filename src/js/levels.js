@@ -319,10 +319,10 @@ function setMapProps(state) {
     const level = state.game.level;
     if(level < 4) {
         state.map.terrain = TERRAIN_FOREST;
-        state.map.rwP0MapCoord = [1500 * mupm, 0];
-        state.map.rwP1MapCoord = [2200 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 300 * mupm];
-        state.map.gsP1MapCoord = [1510 * mupm, 0];
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1500 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 200 * mupm];
+        state.map.gsP1MapCoord = [1010 * mupm, 0];
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
         if(level == 1) {
             state.map.windXVel = 0;
