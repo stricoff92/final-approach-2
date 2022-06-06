@@ -199,10 +199,15 @@ function drawDebugData(state) {
     state.ctx.fillText(`attitude: ${state.plane.attitude}`, xOffset, yPointer);
     yPointer -= yInterval;
     state.ctx.fillText(`thrust: ${state.plane.thrust}`, xOffset, yPointer);
+    yPointer -= yInterval;
     if(Array.isArray(state.plane.posMapCoord)) {
-        yPointer -= yInterval;
         state.ctx.fillText(`X: ${Math.round(state.plane.posMapCoord[0])}`, xOffset, yPointer);
         yPointer -= yInterval;
         state.ctx.fillText(`Y: ${Math.round(state.plane.posMapCoord[1])}`, xOffset, yPointer);
+        yPointer -= yInterval;
     }
+    state.ctx.fillText(`X: ${Math.round(state.plane.horizontalMS, 2)}`, xOffset, yPointer);
+    yPointer -= yInterval;
+    state.ctx.fillText(`Y: ${Math.round(state.plane.verticalMS, 2)}`, xOffset, yPointer);
+    yPointer -= yInterval;
 }
