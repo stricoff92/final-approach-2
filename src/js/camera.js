@@ -133,6 +133,7 @@ function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
 }
 
 function drawGameScene(state) {
+    const nowTS = performance.now();
     const plane = state.plane;
     const mapDims = plane.dimensions[plane.attitude];
 
@@ -211,6 +212,35 @@ function drawGameScene(state) {
         rwMeterPtr += paintLineIntervalMeters;
     }
 
+    // Draw tire strikes
+    state.map.tireStrikes.forEach(ts => {
+        const tireStrikeLifespanMS = 1600;
+        const ageMS = nowTS - ts.createdTS;
+        if(ageMS > tireStrikeLifespanMS) {
+            return;
+        }
+        const radiusCurve = ageSeconds => Math.pow(ageSeconds, 2) * 0.5 + 0.5;
+        const percentAge = ageMS / tireStrikeLifespanMS;
+        const alpha = 1 - percentAge;
+        const radius = Math.max(0.2, radiusCurve(ageMS / 1000)) * state.map.mapUnitsPerMeter;
+        const tsCanvasPoint = mapCoordToCanvasCoord(
+            ts.originMapPoint, plane.posMapCoord, state.camera,
+        );
+        const xOffset = -1 * state.map.mapUnitsPerMeter * percentAge;
+        const yOffset = 2 * state.map.mapUnitsPerMeter * percentAge;
+
+        state.ctx.beginPath()
+        state.ctx.fillStyle = `rgb(50, 50, 50, ${ alpha })`;
+        state.ctx.arc(
+            tsCanvasPoint[0] + xOffset,
+            tsCanvasPoint[1] - yOffset,
+            radius,
+            0,
+            TWO_PI,
+        );
+        state.ctx.fill();
+    });
+
     // Draw Glide Slope
     if(Math.random() < 0.9) {
         const gsCanvasP0 = mapCoordToCanvasCoord(
@@ -241,20 +271,22 @@ function drawGameScene(state) {
         );
     }
 
-    for(let i = 0; i < plane.previousPoints.length; i++) {
-        let [mapCoord, isThrusting] = plane.previousPoints[i];
+    if(!plane.touchedDown && !plane.crashFrame) {
+        for(let i = 0; i < plane.previousPoints.length; i++) {
+            let [mapCoord, isThrusting] = plane.previousPoints[i];
 
-        let canvasCoord = mapCoordToCanvasCoord(
-            mapCoord, plane.posMapCoord, state.camera
-        );
-        state.ctx.beginPath();
-        state.ctx.fillStyle = isThrusting ? "#4d4d4d" : "#a6a6a6";
-        state.ctx.arc(
-            canvasCoord[0], canvasCoord[1],
-            isThrusting ? 9 : 5,
-            0, TWO_PI,
-        );
-        state.ctx.fill();
+            let canvasCoord = mapCoordToCanvasCoord(
+                mapCoord, plane.posMapCoord, state.camera
+            );
+            state.ctx.beginPath();
+            state.ctx.fillStyle = isThrusting ? "#4d4d4d" : "#a6a6a6";
+            state.ctx.arc(
+                canvasCoord[0], canvasCoord[1],
+                isThrusting ? 9 : 5,
+                0, TWO_PI,
+            );
+            state.ctx.fill();
+        }
     }
 }
 
