@@ -37,12 +37,21 @@ function createNewState(maxCompletedLevel) {
             posMapCoord: null,
             attitude: null,
             thrust: null,
+            minTouchdownVerticalMS: null,
+            touchdownStats: {
+                runwayUsedM: null,
+                runwayWastedM: null,
+                verticalMS: null,
+                isSmooth: false,
+                isRough: false,
+                bounces: 0,
+            },
 
-            minTouchdownVerticalSpeedMS: null,
             adjustPlanePosition: (state) => {},
             previousPoints: [],
             crashFrame: 0,
             touchedDown: false,
+            halted: false,
             rwNegAccelerationMS: null,
 
             terminalHorizonalGlideSpeedsMS: [],
@@ -228,6 +237,7 @@ function runDataLoop() {
             console.log({ state });
         }
 
+        // Process commands if not crashing
         if(!state.plane.crashFrame) {
             const cmdCt = commands.length;
             for(let i=0; i<cmdCt; i++) {
@@ -260,38 +270,30 @@ function runDataLoop() {
             }
 
         }
-        if(state.plane.crashFrame) {
+        else {
             state.plane.crashFrame++;
             if(state.plane.crashFrame > 200) {
                 // Score screen
             }
         }
-        else if(state.plane.touchedDown) {
-            const overRunway = Boolean(
-                state.plane.posMapCoord[0] >= state.map.rwP0MapCoord[0]
-                && state.plane.posMapCoord[0] <= state.map.rwP1MapCoord[0]
-            )
-            if(!overRunway) {
-                state.plane.crashFrame = 1;
-            } else {
-                const frameDeltaX = state.plane.rwNegAccelerationMS / state.game.dataFPS;
-                state.plane.horizontalVMS = Math.max(0, state.plane.horizontalVMS - frameDeltaX);
-                if(Math.abs(state.plane.horizontalVMS) < 3.5) {
-                    state.plane.horizontalVMS = 0;
-                }
-            }
-        }
-        else {
+
+        // Adjust state for plane flying through the air
+        if(!state.plane.touchedDown && !state.plane.crashFrame) {
             state = state.plane.adjustPlanePosition(state);
         }
+
+        // check for ground contact and adjust state for plane
+        // that is touching the ground.
+        if(!state.plane.crashFrame && !state.plane.halted) {
+            state = processGroundInteractions(state);
+        }
+
         if(state.game.frame % (state.plane.thrust ?  12 : 25) === 0) {
             state.plane.previousPoints.unshift(
                 deepCopy([state.plane.posMapCoord, state.plane.thrust])
             );
             state.plane.previousPoints = state.plane.previousPoints.slice(0, 30);
         }
-
-        state = checkForGroundContact(state)
 
         window.setGameState(state);
 
@@ -328,9 +330,7 @@ function runDataLoop() {
             state.game.phase = PHASE_2_LIVE,
             state.game.acceptControlCommands = true;
 
-            console.log(state.game.level)
             state = setPlaneProps(state);
-            console.log(state.plane)
             state = setMapProps(state);
 
             state.buttons = [{
@@ -420,7 +420,32 @@ function runDataLoop() {
 }
 
 
-function checkForGroundContact(state) {
+function processGroundInteractions(state) {
+    const plane = state.plane;
+    if(plane.crashFrame) {
+        throw "not implemented";
+    }
+    const fps = state.game.dataFPS;
+
+    if(plane.touchedDown) {
+        // Plane has touched down and negatively accelerating
+        if(plane.horizontalMS > 0) {
+            const deltaHVMF = plane.rwNegAccelerationMS / fps;
+            const newHorizontalMS = Math.max(0, plane.horizontalMS - deltaHVMF)
+            state.plane.horizontalMS = newHorizontalMS;
+            if(newHorizontalMS > 0) {
+                state.plane.posMapCoord[0] += (newHorizontalMS / fps);
+                if(state.plane.posMapCoord[0] > state.map.rwP1MapCoord[0]) {
+                    // Plane overan the runway
+                    console.log("👉 overran runway");
+                    state.plane.crashFrame++;
+                }
+            }
+        } else {
+            state.plane.halted = true;
+        }
+        return state;
+    }
 
     const planeBottomMapCoordY = (
         state.plane.posMapCoord[1]
@@ -430,46 +455,58 @@ function checkForGroundContact(state) {
         )
     );
     const planeBottomDiffY = state.plane.posMapCoord[1] - planeBottomMapCoordY;
-
     const overRunway = Boolean(
         state.plane.posMapCoord[0] >= state.map.rwP0MapCoord[0]
         && state.plane.posMapCoord[0] <= state.map.rwP1MapCoord[0]
     );
+
+    // Plane crashed into the ground
+    if(!overRunway && planeBottomMapCoordY <= 0) {
+        state.plane.crashFrame++;
+        return state;
+    }
+
     const touchingRunway = Boolean(
         overRunway
         && planeBottomMapCoordY <= state.map.rwP0MapCoord[1]
     );
     if(touchingRunway) {
-        const touchdownSpeedMS = state.plane.verticalVMS;
-        if (
-            touchdownSpeedMS > state.plane.maxTouchdownSpeedMS
-            || state.plane.attitude === ATTITUDE_0
-        ) {
-            state.plane.crashFrame = 1;
-        }
-        else if(touchdownSpeedMS <= (state.plane.maxTouchdownSpeedMS / 4)) {
-            // Smooth landing
-            state.plane.touchedDown = true;
-            state.plane.verticalVMS = 0;
-            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + planeBottomDiffY;
 
-        } else if (touchdownSpeedMS > (state.plane.maxTouchdownSpeedMS * 0.75)) {
-            // Big bounce off runway
-            state.plane.verticalVMS = Math.abs(state.plane.verticalVMS) * 1.5;
-            if(planeBottomMapCoordY < state.map.rwP0MapCoord[1]) {
-                state.plane.posMapCoord[1] += ((
-                    state.map.rwP0MapCoord[1] - planeBottomMapCoordY
-                ) * 2);
-            }
+        const touchdownMS = state.plane.verticalMS;
+        const isCrash = touchdownMS < state.plane.minTouchdownVerticalMS
+        const noBounceMin =  state.plane.minTouchdownVerticalMS * 0.333;
+        const bigBounceMin = state.plane.minTouchdownVerticalMS * 0.666;
+
+        // check for plane crash into runway
+        if (isCrash || state.plane.attitude === ATTITUDE_0)
+        {
+            state.plane.crashFrame++;
+        }
+        else if(!isCrash && touchdownMS >= noBounceMin) {
+            // touchdown
+            state.plane.touchedDown = true;
+            state.plane.verticalMS = 0;
+            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + planeBottomDiffY;
+            state.plane.touchdownStats.isSmooth = state.plane.touchdownStats.bounces === 0;
+            state.plane.touchdownStats.verticalMS = touchdownMS;
+            state.plane.touchdownStats.runwayWastedM = Math.round((
+                plane.posMapCoord[0] - state.map.gsP1MapCoord[0]
+            ) / state.map.mapUnitsPerMeter);
+            console.log("👉 touch down");
+            console.log(state.plane.touchdownStats);
+
+        } else if (!isCrash && touchdownMS > bigBounceMin) {
+            // small bounce off landing
+            state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 0.65;
+            state.plane.touchdownStats.bounces++;
+            console.log("👉 small bounce");
 
         } else {
-            // Small bounce off runway
-            state.plane.verticalVMS = Math.abs(state.plane.verticalVMS);
-            if(planeBottomMapCoordY < state.map.rwP0MapCoord[1]) {
-                state.plane.posMapCoord[1] += ((
-                    state.map.rwP0MapCoord[1] - planeBottomMapCoordY
-                ) * 2);
-            }
+            // big bounce off runway
+            state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 1.2;
+            state.plane.touchdownStats.isRough = true;
+            state.plane.touchdownStats.bounces++;
+            console.log("👉 big bounce");
         }
     }
 

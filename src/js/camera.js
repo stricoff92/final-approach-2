@@ -212,7 +212,7 @@ function drawGameScene(state) {
     }
 
     // Draw Glide Slope
-    if(Math.random() < 0.7) {
+    if(Math.random() < 0.9) {
         const gsCanvasP0 = mapCoordToCanvasCoord(
             state.map.gsP0MapCoord, plane.posMapCoord, state.camera
         );
@@ -220,7 +220,7 @@ function drawGameScene(state) {
             state.map.gsP1MapCoord, plane.posMapCoord, state.camera
         );
         state.ctx.beginPath();
-        state.ctx.strokeStyle = `rgb(242, 0, 255, ${ Math.max(0.4, Math.min(1, Math.random() * 2)) })`;
+        state.ctx.strokeStyle = `rgb(242, 0, 255, ${ getRandomFloat(0.2, 0.8) })`;
         state.ctx.lineWidth = getRandomFloat(0.3, 2.4);
         state.ctx.moveTo(...gsCanvasP0);
         state.ctx.lineTo(...gsCanvasP1);
@@ -317,21 +317,6 @@ function drawDebugData(state) {
         state.ctx.font = "normal 18px Arial";
         state.ctx.fillText(`${msMLen}M`, ...msP1);
     }
-
-    // state.ctx.beginPath();
-    // state.ctx.strokeStyle = "rgb(255, 0, 0, 0.3)";
-    // state.ctx.lineWidth = 1;
-    // state.ctx.moveTo(...mapCoordToCanvasCoord(
-    //     state.map.rwP0MapCoord,
-    //     state.plane.posMapCoord,
-    //     state.camera,
-    // ));
-    // state.ctx.lineTo(...mapCoordToCanvasCoord(
-    //     state.map.rwP1MapCoord,
-    //     state.plane.posMapCoord,
-    //     state.camera,
-    // ));
-    // state.ctx.stroke();
 
 }
 
