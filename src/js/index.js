@@ -43,18 +43,19 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     window._cmd_queue = [];
-    window.addCommand = function(cmd) {
+    window.addCommand = cmd => {
         window._cmd_queue.push(cmd);
     }
-    window.nextCommand = function() {
+    window.nextCommand = () => {
         return window._cmd_queue.shift();
     }
 
     window._click_queue = [];
-    window.nextClick = function () {
+    window.nextClick = () => {
         return window._click_queue.shift();
     }
-    window.registerClick = function(data) {
+    window.registerClick = data => {
+        console.log(data);
         window._click_queue.push(data);
     }
 
@@ -62,20 +63,28 @@ document.addEventListener("DOMContentLoaded", function() {
     const state = updateStateCamera(createNewState());
     window.setGameState(state);
 
+    let singleClickTimers = [];
+    const singleClickDelayMS = 250;
     const canvas = document.getElementById("game-canvas");
     canvas.addEventListener("click", event => {
-        const rect = canvas.getBoundingClientRect();
-        const clickCanvasCoord = [
-            Math.round(event.clientX - rect.left),
-            Math.round(event.clientY - rect.top),
-        ];
-        window.registerClick({
-            ts: performance.now(),
-            clickCanvasCoord,
-            isDoubleClick: false,
-        });
+        const t = setTimeout(() => {
+            const rect = canvas.getBoundingClientRect();
+            const clickCanvasCoord = [
+                Math.round(event.clientX - rect.left),
+                Math.round(event.clientY - rect.top),
+            ];
+            window.registerClick({
+                ts: performance.now(),
+                clickCanvasCoord,
+                isDoubleClick: false,
+            });
+        }, singleClickDelayMS);
+        singleClickTimers.push(t);
     });
     canvas.addEventListener('dblclick', event => {
+        singleClickTimers.forEach(t => { clearTimeout(t) });
+        singleClickTimers = [];
+
         const rect = canvas.getBoundingClientRect();
         const clickCanvasCoord = [
             Math.round(event.clientX - rect.left),
