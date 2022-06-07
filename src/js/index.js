@@ -68,13 +68,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const canvas = document.getElementById("game-canvas");
     canvas.addEventListener("click", event => {
         const t = setTimeout(() => {
+            singleClickTimers = [];
             const rect = canvas.getBoundingClientRect();
             const clickCanvasCoord = [
                 Math.round(event.clientX - rect.left),
                 Math.round(event.clientY - rect.top),
             ];
             window.registerClick({
-                ts: performance.now(),
                 clickCanvasCoord,
                 isDoubleClick: false,
             });
@@ -91,7 +91,6 @@ document.addEventListener("DOMContentLoaded", function() {
             Math.round(event.clientY - rect.top),
         ];
         window.registerClick({
-            ts: performance.now(),
             clickCanvasCoord,
             isDoubleClick: true,
         });

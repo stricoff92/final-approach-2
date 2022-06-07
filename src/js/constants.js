@@ -1,6 +1,8 @@
 
 const NOT_IMPLEMENTED = "Not Implemented";
 
+const TWO_PI = Math.PI * 2;
+
 const PHASE_0_LOBBY = 0;
 const PHASE_1_COUNTDOWN = 1;
 const PHASE_2_LIVE = 2;
@@ -22,11 +24,10 @@ const BUTTON_TYPE_MAIN = 1;
 const COMMAND_QUIT_LEVEL = 0;
 const COMMAND_LEVEL_OUT = 1;
 const COMMAND_FLARE = 2;
+const COMMAND_START_LEVEL = 3;
 
 const COLOR_PURPLE = "#620080";
 const COLOR_BLACK = "#000";
 const COLOR_SKY_FOREST = "#e3e3ff";
 const COLOR_GROUND_FOREST = "#9dff5c";
 const COLOR_RW_FOREST = "#808080";
-
-const TWO_PI = Math.PI * 2;

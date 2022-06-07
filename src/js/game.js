@@ -101,7 +101,7 @@ function createNewState(maxCompletedLevel) {
                 disabled,
                 handler: disabled ? ()=>{} : () => {
                     window.addCommand({
-                        cmd: "start-level",
+                        cmd: COMMAND_START_LEVEL,
                         args: [ levelNumber ],
                     });
                 }
@@ -205,16 +205,29 @@ function runDataLoop() {
 
     // Position buttons and check for clicks
     state = orientButtons(state);
-    const clickCanvasCoord = window.nextClick();
-    if(clickCanvasCoord) {
-        for(let i = 0; i < state.buttons.length; i++) {
-            let clickInside = coordInsideBoxCoord(
-                clickCanvasCoord,
-                state.buttons[i].boxCoord,
-            )
-            if (clickInside) {
-                state.buttons[i].handler();
-                break;
+    const nextClick = window.nextClick();
+    if(nextClick) {
+        if(nextClick.isDoubleClick) {
+            window.addCommand({
+                cmd: COMMAND_FLARE,
+            });
+        } else {
+            let isButtonClick = false;
+            for(let i = 0; i < state.buttons.length; i++) {
+                let clickInside = coordInsideBoxCoord(
+                    nextClick.clickCanvasCoord,
+                    state.buttons[i].boxCoord,
+                )
+                if (clickInside) {
+                    state.buttons[i].handler();
+                    isButtonClick = true;
+                    break;
+                }
+            }
+            if (!isButtonClick) {
+                window.addCommand({
+                    cmd: COMMAND_LEVEL_OUT,
+                });
             }
         }
     }
@@ -298,7 +311,7 @@ function runDataLoop() {
     const nextCmd = window.nextCommand();
     if(nextCmd) {
         if(
-            nextCmd.cmd === "start-level"
+            nextCmd.cmd === COMMAND_START_LEVEL
             && state.game.phase === PHASE_0_LOBBY
         ) {
             state.game.phase = PHASE_1_COUNTDOWN;
