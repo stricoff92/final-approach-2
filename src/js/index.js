@@ -63,59 +63,30 @@ document.addEventListener("DOMContentLoaded", function() {
     window.setGameState(state);
 
     const canvas = document.getElementById("game-canvas");
-    canvas.addEventListener("click", function(event) {
+    canvas.addEventListener("click", event => {
         const rect = canvas.getBoundingClientRect();
         const clickCanvasCoord = [
             Math.round(event.clientX - rect.left),
             Math.round(event.clientY - rect.top),
         ];
-
-        window.registerClick(clickCanvasCoord);
+        window.registerClick({
+            ts: performance.now(),
+            clickCanvasCoord,
+            isDoubleClick: false,
+        });
     });
-
-    document.onkeydown = (event) => {
-        if(event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-            const state = window.readGameState();
-            if(event.key === 'ArrowDown') {
-                if(state.plane.attitude === ATTITUDE_1) {
-                    window.addCommand({
-                        cmd: "set-attitude", args: [ 0 ],
-                    });
-                } else if (state.plane.attitude === ATTITUDE_2 && !state.plane.thrust) {
-                    window.addCommand({
-                        cmd: "set-attitude", args: [ 1 ],
-                    });
-                } else if (state.plane.attitude === ATTITUDE_2 && state.plane.thrust) {
-                    window.addCommand({
-                        cmd: "set-attitude", args: [ 2 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust", args: [ false ],
-                    });
-                }
-            }
-            else if (event.key === 'ArrowUp') {
-                if(state.plane.attitude === ATTITUDE_0) {
-                    window.addCommand({
-                        cmd: "set-attitude", args: [ 1 ],
-                    });
-                }
-                else if(state.plane.attitude === ATTITUDE_1) {
-                    window.addCommand({
-                        cmd: "set-attitude", args: [ 2 ],
-                    });
-                }
-                else if(state.plane.attitude === ATTITUDE_2 && !state.plane.thrust) {
-                    window.addCommand({
-                        cmd: "set-attitude", args: [ 2 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust", args: [ true ],
-                    });
-                }
-            }
-        }
-    };
+    canvas.addEventListener('dblclick', event => {
+        const rect = canvas.getBoundingClientRect();
+        const clickCanvasCoord = [
+            Math.round(event.clientX - rect.left),
+            Math.round(event.clientY - rect.top),
+        ];
+        window.registerClick({
+            ts: performance.now(),
+            clickCanvasCoord,
+            isDoubleClick: true,
+        });
+    });
 
     setTimeout(runDataLoop);
     window.requestAnimationFrame(runDisplayLoop);

@@ -48,28 +48,6 @@ function drawButtons(state) {
                 rectArgs[1] + Math.floor(rectArgs[3] / 2),
             );
         }
-        else if (btn.type === BUTTON_TYPE_CTRL) {
-            const selected = btn.selected(state);
-            state.ctx.beginPath();
-            state.ctx.fillStyle = selected ? "#c2ffc2" : "#bfbfbf";
-            state.ctx.strokeStyle = selected ? "#003800" : "#383838";
-            state.ctx.lineWidth = 1;
-            state.ctx.rect(...boxCoordToRectArgs(btn.boxCoord));
-            state.ctx.fill();
-            state.ctx.stroke();
-
-            const btnYMid = Math.round((btn.boxCoord[0][1] + btn.boxCoord[1][1]) / 2);
-            const imgWidth = btn.boxCoord[1][0] - btn.boxCoord[0][0];
-            const imgHeight = Math.round(imgWidth / 3);
-            const imgX1 = 0
-            const imgY1 = btnYMid - (imgHeight / 2);
-            state.ctx.drawImage(
-                btn.asset,
-                imgX1, imgY1,
-                imgWidth, imgHeight
-            )
-
-        }
         else if (btn.type === BUTTON_TYPE_MAIN) {
             state.ctx.beginPath();
             state.ctx.fillStyle = "#000"

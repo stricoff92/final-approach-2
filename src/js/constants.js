@@ -15,10 +15,12 @@ const TERRAIN_FOREST = 0; // Easy
 const TERRAIN_DESERT = 1; // Medium
 const TERRAIN_OCEAN = 2;  // Hard
 
-const BUTTON_TYPE_GRID = 'grid';
-const BUTTON_TYPE_MAIN = 'main';
-const BUTTON_TYPE_CTRL = 'control';
+const BUTTON_TYPE_GRID = 0;
+const BUTTON_TYPE_MAIN = 1;
 
+const COMMAND_QUIT_LEVEL = 0;
+const COMMAND_LEVEL_OUT = 1;
+const COMMAND_FLARE = 2;
 
 const COLOR_PURPLE = "#620080";
 const COLOR_BLACK = "#000";
@@ -27,5 +29,3 @@ const COLOR_GROUND_FOREST = "#9dff5c";
 const COLOR_RW_FOREST = "#808080";
 
 const TWO_PI = Math.PI * 2;
-
-const GAME_STARTED_MSG = "Land The Plane!";

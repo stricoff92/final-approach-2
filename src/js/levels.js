@@ -18,7 +18,6 @@ function innerAdjustPlanePosition(state) {
         state.plane.isStalling = true;
         state.game.acceptControlCommands = false;
         state.plane.attitude = ATTITUDE_2;
-        state.buttons = state.buttons.filter(b => b.type !== BUTTON_TYPE_CTRL);
 
         newHorizontalMS = plane.horizontalMS;
         frameDeltaYPosMeters = plane.stallVerticalAccelerationMS / fps;

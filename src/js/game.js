@@ -115,10 +115,7 @@ function createNewState(maxCompletedLevel) {
 function orientButtons(state) {
     const gridBtns = [], mainBtns = [], ctrlBtns = [];
     state.buttons.forEach((btn, wix) => {
-        if(btn.type === BUTTON_TYPE_CTRL) {
-            ctrlBtns.push([btn, wix]);
-        }
-        else if(btn.type === BUTTON_TYPE_GRID) {
+        if(btn.type === BUTTON_TYPE_GRID) {
             gridBtns.push([btn, wix]);
         } else if(btn.type === BUTTON_TYPE_MAIN) {
             mainBtns.push([btn, wix]);
@@ -243,7 +240,7 @@ function runDataLoop() {
         const cmdCt = commands.length;
         for(let i=0; i<cmdCt; i++) {
             let cmd = commands[i];
-            if(cmd.cmd === "quit-level") {
+            if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
                     updateStateCamera(
                         createNewState(state.game.maxCompletedLevel)
@@ -342,71 +339,7 @@ function runDataLoop() {
                 text: 'QUIT',
                 handler: () => {
                     window.addCommand({
-                        cmd: "quit-level",
-                    });
-                },
-            }, {
-                type: BUTTON_TYPE_CTRL,
-                boxCoord: null,
-                assetHref: "img/c152-2-t.svg",
-                asset: null,
-                selected: state => Boolean((state.plane.attitude === ATTITUDE_2) && state.plane.thrust),
-                handler: () => {
-                    window.addCommand({
-                        cmd: "set-attitude",
-                        args: [ 2 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust",
-                        args: [ true ],
-                    });
-                },
-            }, {
-                type: BUTTON_TYPE_CTRL,
-                boxCoord: null,
-                assetHref: "img/c152-2.svg",
-                asset: null,
-                selected: state => Boolean((state.plane.attitude === ATTITUDE_2) && !state.plane.thrust),
-                handler: () => {
-                    window.addCommand({
-                        cmd: "set-attitude",
-                        args: [ 2 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust",
-                        args: [ false ],
-                    });
-                },
-            }, {
-                type: BUTTON_TYPE_CTRL,
-                boxCoord: null,
-                assetHref: "img/c152-1.svg",
-                asset: null,
-                selected: state => Boolean((state.plane.attitude === ATTITUDE_1) && !state.plane.thrust),
-                handler: () => {
-                    window.addCommand({
-                        cmd: "set-attitude",
-                        args: [ 1 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust",
-                        args: [ false ],
-                    });
-                },
-            }, {
-                type: BUTTON_TYPE_CTRL,
-                boxCoord: null,
-                assetHref: "img/c152-0.svg",
-                asset: null,
-                selected: state => Boolean((state.plane.attitude === ATTITUDE_0) && !state.plane.thrust),
-                handler: () => {
-                    window.addCommand({
-                        cmd: "set-attitude",
-                        args: [ 0 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust",
-                        args: [ false ],
+                        cmd: COMMAND_QUIT_LEVEL,
                     });
                 },
             }];
@@ -522,8 +455,6 @@ function processGroundInteractions(state) {
             state.plane.touchdownStats.runwayWastedM = Math.round((
                 plane.posMapCoord[0] - state.map.gsP1MapCoord[0]
             ) / state.map.mapUnitsPerMeter);
-
-            state.buttons = state.buttons.filter(b => b.type !== BUTTON_TYPE_CTRL);
 
             console.log("👉 touch down");
             console.log(state.plane.touchdownStats);
