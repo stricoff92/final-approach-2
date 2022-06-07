@@ -35,6 +35,7 @@ function createNewState(maxCompletedLevel) {
             dimensions: [],
             posMapCoord: null,
             flaring: 0,
+            lastLevelOutFrame: null,
             minTouchdownVerticalMS: null,
             touchdownStats: {
                 runwayUsedM: null,
@@ -247,21 +248,11 @@ function runDataLoop() {
                 setTimeout(runDataLoop);
                 return;
             }
-            else if(cmd.cmd === "set-attitude" && state.game.acceptControlCommands) {
-                state.plane.attitude = cmd.args[0];
+            else if(cmd.cmd === COMMAND_LEVEL_OUT && state.game.acceptControlCommands) {
+                state.plane.lastLevelOutFrame = deepCopy(state.game.frame);
             }
-            else if(cmd.cmd === "set-thrust" && state.game.acceptControlCommands) {
-                state.plane.thrust = cmd.args[0];
-                if(state.plane.instantaneousThrust) {
-                    state.plane.currentThrustingNewtons = (
-                        state.plane.thrust
-                        ? state.plane.maxThrustingNewtons
-                        : 0
-                    );
-
-                } else {
-                    throw NOT_IMPLEMENTED;
-                }
+            else if(cmd.cmd === COMMAND_FLARE && state.game.acceptControlCommands) {
+                state.plane.flaring = IS_FLARING;
             }
         }
 
@@ -364,7 +355,7 @@ function processGroundInteractions(state) {
     const planeBottomMapCoordY = (
         state.plane.posMapCoord[1]
         - (
-            state.plane.dimensions[state.plane.attitude][1] / 2
+            state.plane.dimensions[state.plane.flaring][1] / 2
             * state.map.mapUnitsPerMeter
         )
     );
@@ -384,13 +375,13 @@ function processGroundInteractions(state) {
                 }
                 else {
                     if(
-                        plane.attitude === ATTITUDE_2
+                        plane.flaring === IS_FLARING
                         && newHorizontalMS < (plane.stallHorizonalMS * 0.75)
                     ) {
-                        state.plane.attitude = ATTITUDE_1;
+                        state.plane.flaring = IS_NOT_FLARING;
                         state.map.tireStrikes.push({
                             originMapPoint: deepCopy([
-                                plane.posMapCoord[0] + plane.dimensions[1][0] / 2 * state.map.mapUnitsPerMeter,
+                                plane.posMapCoord[0] + plane.dimensions[IS_NOT_FLARING][0] / 2 * state.map.mapUnitsPerMeter,
                                 planeBottomMapCoordY,
                             ]),
                             createdTS: performance.now(),
@@ -431,12 +422,12 @@ function processGroundInteractions(state) {
         let addRubberStrike = true;
 
         // check for plane crash into runway
-        if (isCrash || state.plane.attitude === ATTITUDE_0)
+        if (isCrash)
         {
             console.log("👉 crash");
             console.log({
                 touchdownMS,
-                attitude: state.plane.attitude,
+                flaring: state.plane.flaring,
             });
             state.plane.crashFrame++;
             addRubberStrike = false;
@@ -449,7 +440,7 @@ function processGroundInteractions(state) {
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + planeBottomDiffY;
             state.plane.touchdownStats.isSmooth = plane.touchdownStats.bounces === 0;
             state.plane.touchdownStats.verticalMS = touchdownMS;
-            state.plane.touchdownStats.isFlaired = plane.attitude === ATTITUDE_2;
+            state.plane.touchdownStats.isFlaired = plane.flaring === IS_FLARING;
             state.plane.touchdownStats.runwayWastedM = Math.round((
                 plane.posMapCoord[0] - state.map.gsP1MapCoord[0]
             ) / state.map.mapUnitsPerMeter);

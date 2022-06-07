@@ -298,8 +298,8 @@ function setPlaneProps(state) {
         );
 
         state.plane.dimensions.push(
-            [6.0, 2],   // no flare (nose level)
-            [6.0, 2.0], // flare    (nose us)
+            [6.0, 2],     // no flare (nose level)
+            [5.95, 2.05], // flare    (nose us)
         );
 
     }

@@ -244,7 +244,7 @@ function drawGameScene(state) {
         const planeCanvasX1 = state.camera.canvasHalfW - (canvasDims[0] / 2);
         const planeCanvasY1 = state.camera.canvasHalfH - (canvasDims[1] / 2);
         state.ctx.drawImage(
-            plane.assets[plane.attitude],
+            plane.assets[plane.flaring],
             planeCanvasX1,
             planeCanvasY1,
             canvasDims[0],
@@ -291,7 +291,7 @@ function drawDebugData(state) {
     yPointer -= yInterval;
     state.ctx.fillText(`phase: ${state.game.phase}`, xOffset, yPointer);
     yPointer -= yInterval;
-    state.ctx.fillText(`attitude: ${state.plane.attitude}`, xOffset, yPointer);
+    state.ctx.fillText(`flaring: ${state.plane.flaring}`, xOffset, yPointer);
     yPointer -= yInterval;
     state.ctx.fillText(`thrust: ${state.plane.thrust}`, xOffset, yPointer);
     yPointer -= yInterval;
