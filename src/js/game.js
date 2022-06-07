@@ -91,6 +91,7 @@ function createNewState(maxCompletedLevel) {
             rwP1MapCoord: null,
             gsP0MapCoord: null,
             gsP1MapCoord: null,
+            tireStrikes: [],
         },
         buttons: availableLevels.map(levelNumber => {
             const disabled = levelNumber > (maxCompletedLevel + 1);
@@ -239,39 +240,37 @@ function runDataLoop() {
         }
 
         // Process commands if not crashing
-        if(!state.plane.crashFrame) {
-            const cmdCt = commands.length;
-            for(let i=0; i<cmdCt; i++) {
-                let cmd = commands[i];
-                if(cmd.cmd === "quit-level") {
-                    window.setGameState(
-                        updateStateCamera(
-                            createNewState(state.game.maxCompletedLevel)
-                        )
+        const cmdCt = commands.length;
+        for(let i=0; i<cmdCt; i++) {
+            let cmd = commands[i];
+            if(cmd.cmd === "quit-level") {
+                window.setGameState(
+                    updateStateCamera(
+                        createNewState(state.game.maxCompletedLevel)
+                    )
+                );
+                setTimeout(runDataLoop);
+                return;
+            }
+            else if(cmd.cmd === "set-attitude" && state.game.acceptControlCommands) {
+                state.plane.attitude = cmd.args[0];
+            }
+            else if(cmd.cmd === "set-thrust" && state.game.acceptControlCommands) {
+                state.plane.thrust = cmd.args[0];
+                if(state.plane.instantaneousThrust) {
+                    state.plane.currentThrustingNewtons = (
+                        state.plane.thrust
+                        ? state.plane.maxThrustingNewtons
+                        : 0
                     );
-                    setTimeout(runDataLoop);
-                    return;
-                }
-                else if(cmd.cmd === "set-attitude" && state.game.acceptControlCommands) {
-                    state.plane.attitude = cmd.args[0];
-                }
-                else if(cmd.cmd === "set-thrust" && state.game.acceptControlCommands) {
-                    state.plane.thrust = cmd.args[0];
-                    if(state.plane.instantaneousThrust) {
-                        state.plane.currentThrustingNewtons = (
-                            state.plane.thrust
-                            ? state.plane.maxThrustingNewtons
-                            : 0
-                        );
 
-                    } else {
-                        throw "Not Implemented";
-                    }
+                } else {
+                    throw "Not Implemented";
                 }
             }
-
         }
-        else {
+
+        if(state.plane.crashFrame) {
             state.plane.crashFrame++;
             if(state.plane.crashFrame > 200) {
                 // Score screen
@@ -289,11 +288,14 @@ function runDataLoop() {
             state = processGroundInteractions(state);
         }
 
-        if(state.game.frame % (state.plane.thrust ?  12 : 25) === 0) {
+        if(state.game.frame % (state.plane.thrust ?  12 : 25) === 0 && !state.plane.halted) {
             state.plane.previousPoints.unshift(
                 deepCopy([state.plane.posMapCoord, state.plane.thrust])
             );
             state.plane.previousPoints = state.plane.previousPoints.slice(0, 30);
+        }
+        if(state.plane.halted) {
+            state.plane.previousPoints = [];
         }
 
         window.setGameState(state);
@@ -485,13 +487,17 @@ function processGroundInteractions(state) {
 
         const touchdownMS = state.plane.verticalMS;
         const isCrash = touchdownMS < state.plane.minTouchdownVerticalMS
-        const noBounceMin =  state.plane.minTouchdownVerticalMS * 0.333;
+        const noBounceMin = state.plane.minTouchdownVerticalMS * 0.333;
         const bigBounceMin = state.plane.minTouchdownVerticalMS * 0.666;
 
         // check for plane crash into runway
         if (isCrash || state.plane.attitude === ATTITUDE_0)
         {
             console.log("👉 crash");
+            console.log({
+                touchdownMS,
+                attitude: state.plane.attitude,
+            });
             state.plane.crashFrame++;
         }
         else if(!isCrash && touchdownMS >= noBounceMin) {
@@ -514,13 +520,13 @@ function processGroundInteractions(state) {
 
         } else if (!isCrash && touchdownMS > bigBounceMin) {
             // small bounce off landing
-            state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 0.65;
+            state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 0.85;
             state.plane.touchdownStats.bounces++;
             console.log("👉 small bounce");
 
         } else {
             // big bounce off runway
-            state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 1.2;
+            state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 2;
             state.plane.touchdownStats.isRough = true;
             state.plane.touchdownStats.bounces++;
             console.log("👉 big bounce");
