@@ -1,11 +1,13 @@
 
+const NOT_IMPLEMENTED = "Not Implemented";
+
 const PHASE_0_LOBBY = 0;
 const PHASE_1_COUNTDOWN = 1;
 const PHASE_2_LIVE = 2;
 const PHASE_3_SCORESCREEN = 3;
 
-const PLANE_C152 = "c152"; // Easy
-const PLANE_F18 = "f18";   // Hard
+const PLANE_C152 = "c152";
+const PLANE_F18 = "f18";
 
 const ATTITUDE_0 = 0; // Nose down.
 const ATTITUDE_1 = 1; // Nose level.

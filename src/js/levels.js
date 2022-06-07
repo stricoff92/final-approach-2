@@ -152,7 +152,7 @@ function innerAdjustPlanePosition(state) {
             newHorizontalMS = termDeltaXClimbMS;
         }
         else {
-            throw "not implemented";
+            throw NOT_IMPLEMENTED;
         }
 
         const climbMinMF = plane.climbMinHorizontalMS / fps;
@@ -183,11 +183,11 @@ function innerAdjustPlanePosition(state) {
             );
         }
         else {
-            throw "not implemented"
+            throw NOT_IMPLEMENTED
         }
     }
     else {
-        throw "not implemented";
+        throw NOT_IMPLEMENTED;
     }
 
     state.plane.horizontalMS = newHorizontalMS;
@@ -223,8 +223,6 @@ function setPlaneProps(state) {
     }
     if(state.game.level < 6) {
         state.plane.asset = PLANE_C152;
-        state.plane.massKG = 85;
-        state.plane.attitude = ATTITUDE_1;
         state.plane.thrust = false;
         state.plane.dimensions = [],
         state.plane.rwNegAccelerationMS = knotsToMS(-6);
@@ -290,22 +288,18 @@ function setPlaneProps(state) {
             },
         ]
 
-
-        const attitude0Asset = new Image();
-        attitude0Asset.src = "img/" + PLANE_C152 + "-0.svg";
-        const attitude1Asset = new Image();
-        attitude1Asset.src = "img/" + PLANE_C152 + "-1.svg";
-        const attitude2Asset = new Image();
-        attitude2Asset.src = "img/" + PLANE_C152 + "-2.svg";
+        const noFlareAsset = new Image();
+        noFlareAsset.src = "img/" + PLANE_C152 + "-1.svg";
+        const flareAsset = new Image();
+        flareAsset.src = "img/" + PLANE_C152 + "-2.svg";
         state.plane.assets.push(
-            attitude0Asset,
-            attitude1Asset,
-            attitude2Asset,
+            noFlareAsset,
+            flareAsset,
         );
+
         state.plane.dimensions.push(
-            [6.0, 2.5], // attitude 0
-            [6.0, 2],   // attitude 1
-            [6.0, 2.0], // attitude 2
+            [6.0, 2],   // no flare (nose level)
+            [6.0, 2.0], // flare    (nose us)
         );
 
     }
@@ -330,16 +324,16 @@ function setMapProps(state) {
             state.map.windXMax = 4;
             state.map.windXTarg = 0;
         } else if (level == 2) {
-            throw "not implemented";
+            throw NOT_IMPLEMENTED;
         } else if(level == 3) {
-            throw "not implemented";
+            throw NOT_IMPLEMENTED;
         }
     } else if(level < 7) {
         state.map.terrain = TERRAIN_DESERT;
-        throw "not implemented";
+        throw NOT_IMPLEMENTED;
     } else {
         state.map.terrain = TERRAIN_OCEAN;
-        throw "not implemented";
+        throw NOT_IMPLEMENTED;
     }
     return state;
 }

@@ -65,6 +65,9 @@ function drawButtons(state) {
                 Math.round((btn.boxCoord[1][1] + btn.boxCoord[0][1]) / 2),
             );
         }
+        else {
+            throw NOT_IMPLEMENTED
+        }
     });
 }
 
@@ -113,7 +116,7 @@ function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
 function drawGameScene(state) {
     const nowTS = performance.now();
     const plane = state.plane;
-    const mapDims = plane.dimensions[plane.attitude];
+    const mapDims = plane.dimensions[plane.flaring];
 
     // Draw ground/sky horizon
     const planeAltMeters = plane.posMapCoord[1] / state.map.mapUnitsPerMeter;

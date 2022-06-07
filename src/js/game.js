@@ -33,10 +33,8 @@ function createNewState(maxCompletedLevel) {
             asset: null,
             assets: [],
             dimensions: [],
-            massKG: null,
             posMapCoord: null,
-            attitude: null,
-            thrust: null,
+            flaring: 0,
             minTouchdownVerticalMS: null,
             touchdownStats: {
                 runwayUsedM: null,
@@ -120,7 +118,7 @@ function orientButtons(state) {
         } else if(btn.type === BUTTON_TYPE_MAIN) {
             mainBtns.push([btn, wix]);
         } else {
-            throw "not implemented";
+            throw NOT_IMPLEMENTED;
         }
     });
 
@@ -262,7 +260,7 @@ function runDataLoop() {
                     );
 
                 } else {
-                    throw "Not Implemented";
+                    throw NOT_IMPLEMENTED;
                 }
             }
         }
@@ -359,7 +357,7 @@ function runDataLoop() {
 function processGroundInteractions(state) {
     const plane = state.plane;
     if(plane.crashFrame) {
-        throw "not implemented";
+        throw NOT_IMPLEMENTED;
     }
     const fps = state.game.dataFPS;
 
