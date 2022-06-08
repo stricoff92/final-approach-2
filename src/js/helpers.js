@@ -42,3 +42,18 @@ function deepCopy(obj) {
 function getRandomFloat(min, max) {
     return Math.random() * (max - min) + min;
 }
+
+function feetPerMinToMS(fpm) {
+    // feet per minute to meters per second
+    return fpm / 60 / 3
+}
+
+function knotsToMS(k) {
+    // knots to meters per second
+    return k / 2;
+}
+
+function mPSToKnots(ms) {
+    // Meters per second to knots
+    return ms * 2;
+}

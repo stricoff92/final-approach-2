@@ -116,7 +116,7 @@ function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
 function drawGameScene(state) {
     const nowTS = performance.now();
     const plane = state.plane;
-    const mapDims = plane.dimensions[plane.flaring];
+    const mapDims = plane.dimensions[plane.flare];
 
     // Draw ground/sky horizon
     const planeAltMeters = plane.posMapCoord[1] / state.map.mapUnitsPerMeter;
@@ -244,7 +244,7 @@ function drawGameScene(state) {
         const planeCanvasX1 = state.camera.canvasHalfW - (canvasDims[0] / 2);
         const planeCanvasY1 = state.camera.canvasHalfH - (canvasDims[1] / 2);
         state.ctx.drawImage(
-            plane.assets[plane.flaring],
+            plane.assets[plane.flare],
             planeCanvasX1,
             planeCanvasY1,
             canvasDims[0],
@@ -291,7 +291,7 @@ function drawDebugData(state) {
     yPointer -= yInterval;
     state.ctx.fillText(`phase: ${state.game.phase}`, xOffset, yPointer);
     yPointer -= yInterval;
-    state.ctx.fillText(`flaring: ${state.plane.flaring}`, xOffset, yPointer);
+    state.ctx.fillText(`flare: ${state.plane.flare}`, xOffset, yPointer);
     yPointer -= yInterval;
     state.ctx.fillText(`thrust: ${state.plane.thrust}`, xOffset, yPointer);
     yPointer -= yInterval;
@@ -304,9 +304,6 @@ function drawDebugData(state) {
     state.ctx.fillText(`X m/s: ${Math.round(state.plane.horizontalMS, 2)}`, xOffset, yPointer);
     yPointer -= yInterval;
     state.ctx.fillText(`Y m/s: ${Math.round(state.plane.verticalMS, 2)}`, xOffset, yPointer);
-    yPointer -= yInterval;
-
-    state.ctx.fillText(`stalling: ${state.plane.isStalling}`, xOffset, yPointer);
     yPointer -= yInterval;
 
     // Draw map scape
