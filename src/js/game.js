@@ -227,7 +227,7 @@ function runDataLoop() {
             console.log({ state });
         }
 
-        // Process commands if not crashing
+        // Process commands
         const cmdCt = commands.length;
         for(let i=0; i<cmdCt; i++) {
             let cmd = commands[i];
