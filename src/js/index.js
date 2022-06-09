@@ -26,7 +26,7 @@ function resizeCanvas(updateState) {
         return;
     }
     console.log("camera state updated")
-    window.setGameState(updateStateCamera(state))
+    window.setGameState(updateCameraCanvasMetaData(state))
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     console.log("camera state updated")
-    const state = updateStateCamera(createNewState());
+    const state = updateCameraCanvasMetaData(createNewState());
     window.setGameState(state);
 
     let singleClickTimers = [];

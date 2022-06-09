@@ -6,14 +6,17 @@ function innerAdjustPlanePosition(state) {
     const plane = state.plane;
     const horizontalMF = plane.horizontalMS / fps;
     const verticalMF = plane.verticalMS / fps;
+    const nowTS = performance.now();
 
+    // Calculate these new values
     let newHorizontalMS;
     let newVerticalMS;
 
-    if(
-        plane.flare === IS_NOT_FLARING
-    ) {
-        newVerticalMS = 0;
+
+    if(plane.lastLevelOutFrame === state.game.frame) {
+
+
+
     }
 
 
@@ -46,6 +49,22 @@ function setPlaneProps(state) {
         state.plane.verticalMS = 0;
 
         state.plane.lastLevelOutTS = performance.now();
+        state.plane.lastLevelOutFrame = state.game.frame;
+        state.plane.leveledOutInitialHorizontalMS = knotsToMS(50);
+        state.plane.leveledOutHorizontalAccelerationMS2 = knotsToMS(3);
+        state.plane.leveledOutTerminalHorizontalMS = knotsToMS(69);
+
+        state.plane.leveledOutTerminalVerticalMS = feetPerMinToMS(-1800);
+        state.plane.leveledOutVerticalAccelerationMS2Curve = elapsedMS => {
+            return -1 * Math.pow(elapsedMS / 1000, 2) * 0.06 - 0.1;
+        }
+
+        state.plane.flareTerminalHorizontalMS = knotsToMS(40);
+        state.plane.flareHorizontalAccelerationMS2 = knotsToMS(-5);
+        state.plane.flareTerminalVerticalMS = feetPerMinToMS(-3000);
+        state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
+
+        }
 
         const noFlareAsset = new Image();
         noFlareAsset.src = "img/" + PLANE_C152 + "-1.svg";

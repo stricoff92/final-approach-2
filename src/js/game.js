@@ -34,9 +34,20 @@ function createNewState(maxCompletedLevel) {
             assets: [],
             dimensions: [],
             posMapCoord: null,
-            flare: IS_NOT_FLARING,
             lastLevelOutTS: null,
+            lastLevelOutFrame: null,
+            leveledOutInitialHorizontalMS: null,
+            leveledOutTerminalHorizontalMS: null,
+            leveledOutHorizontalAccelerationMS2: null,
+            leveledOutTerminalVerticalMS: null,
+            leveledOutVerticalAccelerationMS2Curve: null,
+            flare: IS_NOT_FLARING,
             lastFlareTS: null,
+            lastFlareFrame: null,
+            flareTerminalHorizontalMS: null,
+            flareHorizontalAccelerationMS2: null,
+            flareTerminalVerticalMS: null,
+            flareVerticalAccelerationMS2Curve: null,
             minTouchdownVerticalMS: null,
             touchdownStats: {
                 runwayUsedM: null,
@@ -233,7 +244,7 @@ function runDataLoop() {
             let cmd = commands[i];
             if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
-                    updateStateCamera(
+                    updateCameraCanvasMetaData(
                         createNewState(state.game.maxCompletedLevel)
                     )
                 );
@@ -309,6 +320,7 @@ function runDataLoop() {
         state.game.countDownFrames++;
         if(state.game.countDownFrames >= state.game.maxCountDownFrames) {
             state.pageTitle = null;
+            state.game.frame = 1;
             state.game.phase = PHASE_2_LIVE,
             state.game.acceptControlCommands = true;
 

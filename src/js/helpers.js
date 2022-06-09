@@ -1,5 +1,5 @@
 
-function updateStateCamera(state) {
+function updateCameraCanvasMetaData(state) {
     const canvas = document.getElementById("game-canvas");
     state.camera.canvasW = canvas.width;
     state.camera.canvasH = canvas.height;
@@ -44,16 +44,13 @@ function getRandomFloat(min, max) {
 }
 
 function feetPerMinToMS(fpm) {
-    // feet per minute to meters per second
     return fpm / 60 / 3
 }
 
 function knotsToMS(k) {
-    // knots to meters per second
     return k / 2;
 }
 
 function mPSToKnots(ms) {
-    // Meters per second to knots
     return ms * 2;
 }
