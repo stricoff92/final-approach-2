@@ -1,5 +1,4 @@
 
-
 function resizeCanvas(updateState) {
     const canvas = document.getElementById("game-canvas");
     canvas.width = canvas.scrollWidth;
@@ -63,12 +62,35 @@ document.addEventListener("DOMContentLoaded", function() {
     const state = updateCameraCanvasMetaData(createNewState());
     window.setGameState(state);
 
-    let singleClickTimers = [];
-    const singleClickDelayMS = 250;
+    // Register single & double clicks on the canvas.
     const canvas = document.getElementById("game-canvas");
+    const singleClickDelayMS = 200;
+    let lastSingleClickTS;
+    let singleClickTimer;
+    let diffBeteenClicks;
     canvas.addEventListener("click", event => {
-        const t = setTimeout(() => {
-            singleClickTimers = [];
+        const nowTS = performance.now();
+        if(!lastSingleClickTS) {
+            lastSingleClickTS = nowTS;
+            diffBeteenClicks = singleClickDelayMS + 1;
+        } else {
+            diffBeteenClicks = nowTS - lastSingleClickTS;
+            lastSingleClickTS = nowTS;
+        }
+        if(diffBeteenClicks > singleClickDelayMS) {
+            singleClickTimer = setTimeout(() => {
+                const rect = canvas.getBoundingClientRect();
+                const clickCanvasCoord = [
+                    Math.round(event.clientX - rect.left),
+                    Math.round(event.clientY - rect.top),
+                ];
+                window.registerClick({
+                    clickCanvasCoord,
+                    isDoubleClick: false,
+                });
+            }, singleClickDelayMS);
+        } else {
+            clearTimeout(singleClickTimer);
             const rect = canvas.getBoundingClientRect();
             const clickCanvasCoord = [
                 Math.round(event.clientX - rect.left),
@@ -76,24 +98,9 @@ document.addEventListener("DOMContentLoaded", function() {
             ];
             window.registerClick({
                 clickCanvasCoord,
-                isDoubleClick: false,
+                isDoubleClick: true,
             });
-        }, singleClickDelayMS);
-        singleClickTimers.push(t);
-    });
-    canvas.addEventListener('dblclick', event => {
-        singleClickTimers.forEach(t => { clearTimeout(t) });
-        singleClickTimers = [];
-
-        const rect = canvas.getBoundingClientRect();
-        const clickCanvasCoord = [
-            Math.round(event.clientX - rect.left),
-            Math.round(event.clientY - rect.top),
-        ];
-        window.registerClick({
-            clickCanvasCoord,
-            isDoubleClick: true,
-        });
+        }
     });
 
     setTimeout(runDataLoop);

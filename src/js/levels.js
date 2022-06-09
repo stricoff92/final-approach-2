@@ -1,6 +1,6 @@
 
 function innerAdjustPlanePosition(state) {
-    state.game.acceptControlCommands = true;
+    state.game.acceptControlCommands = state.plane.flare === IS_NOT_FLARING;
 
     const fps = state.game.dataFPS;
     const plane = state.plane;
@@ -25,7 +25,7 @@ function innerAdjustPlanePosition(state) {
             // End of flare.
             state.plane.flare = IS_NOT_FLARING;
             newVerticalMS = 0;
-            const deltaHorizontalMF = plane.flareHorizontalAccelerationMS2 / fps;
+            const deltaHorizontalMF = plane.leveledOutHorizontalAccelerationMS2 / fps;
             newHorizontalMS = plane.horizontalMS + deltaHorizontalMF;
         } else {
             // Continue flaring.
@@ -36,10 +36,6 @@ function innerAdjustPlanePosition(state) {
 
             const deltaHorizontalMF = plane.flareHorizontalAccelerationMS2 / fps;
             newHorizontalMS = plane.horizontalMS + deltaHorizontalMF;
-            // newHorizontalMS = Math.max(
-            //     plane.flareTerminalHorizontalMS,
-            //     plane.horizontalMS + deltaHorizontalMF,
-            // );
         }
     }
     else {
