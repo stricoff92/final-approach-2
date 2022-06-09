@@ -3,6 +3,15 @@ function urlContainsDebug() {
     return window.location.search.indexOf("debug") !== -1;
 }
 
+function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
+    const mapDx = mapCoord[0] - cameraPosition[0];
+    const mapDy = mapCoord[1] - cameraPosition[1];
+    return [
+        mapDx + camera.canvasHalfW,
+        camera.canvasH - (mapDy + camera.canvasHalfH),
+    ];
+}
+
 function updateCameraCanvasMetaData(state) {
     const canvas = document.getElementById("game-canvas");
     state.camera.canvasW = canvas.width;

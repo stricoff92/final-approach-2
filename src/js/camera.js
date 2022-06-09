@@ -106,19 +106,10 @@ function drawLoadingIcon(state) {
     state.ctx.stroke();
 }
 
-function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
-    const mapDx = mapCoord[0] - cameraPosition[0];
-    const mapDy = mapCoord[1] - cameraPosition[1];
-    return [
-        mapDx + camera.canvasHalfW,
-        camera.canvasH - (mapDy + camera.canvasHalfH),
-    ];
-}
-
 function drawGameScene(state) {
     const nowTS = performance.now();
     const plane = state.plane;
-    const mapDims = plane.dimensions[plane.flare];
+    const planeMapDims = plane.dimensions[plane.flare];
 
     // Draw ground/sky horizon
     const planeAltMeters = plane.posMapCoord[1] / state.map.mapUnitsPerMeter;
@@ -297,15 +288,34 @@ function drawGameScene(state) {
 
 
     if(!plane.crashFrame) {
-        const canvasDims = mapDims.map(d => d * state.map.mapUnitsPerMeter);
-        const planeCanvasX1 = state.camera.canvasHalfW - (canvasDims[0] / 2);
-        const planeCanvasY1 = state.camera.canvasHalfH - (canvasDims[1] / 2);
+        // Draw Plane Shadow
+        const planeCanvasDims = planeMapDims.map(d => d * state.map.mapUnitsPerMeter);
+        const shadowCenterMapCoord = [
+            plane.posMapCoord[0] + state.plane.posMapCoord[1] / 2.5,
+            plane.posMapCoord[1] * -0.3,
+        ];
+        const shadowCenterCanvasCoord = mapCoordToCanvasCoord(
+            shadowCenterMapCoord, plane.posMapCoord, state.camera
+        );
+        state.ctx.beginPath();
+        state.ctx.fillStyle = `rgb(0, 0, 0, 0.35)`;
+        state.ctx.rect(
+            shadowCenterCanvasCoord[0] - planeCanvasDims[0] / 2,
+            shadowCenterCanvasCoord[1] - planeCanvasDims[1] / 2,
+            ...planeCanvasDims
+        );
+        state.ctx.fill();
+
+        // Draw plane
+        const planeCanvasX1 = state.camera.canvasHalfW - (planeCanvasDims[0] / 2);
+        const planeCanvasY1 = state.camera.canvasHalfH - (planeCanvasDims[1] / 2);
+        state.ctx.beginPath();
         state.ctx.drawImage(
             plane.assets[plane.flare],
             planeCanvasX1,
             planeCanvasY1,
-            canvasDims[0],
-            canvasDims[1],
+            planeCanvasDims[0],
+            planeCanvasDims[1],
         );
     }
 
