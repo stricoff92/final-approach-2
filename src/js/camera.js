@@ -291,18 +291,19 @@ function drawGameScene(state) {
         // Draw Plane Shadow
         const planeCanvasDims = planeMapDims.map(d => d * state.map.mapUnitsPerMeter);
         const shadowCenterMapCoord = [
-            plane.posMapCoord[0] + state.plane.posMapCoord[1] / 2.5,
-            plane.posMapCoord[1] * -0.3,
+            plane.posMapCoord[0] + state.plane.posMapCoord[1] * 0.4,
+            plane.posMapCoord[1] * -0.2,
         ];
         const shadowCenterCanvasCoord = mapCoordToCanvasCoord(
             shadowCenterMapCoord, plane.posMapCoord, state.camera
         );
+        const shadowCanvasDims = planeCanvasDims.map((d, ix) => d / (ix + 1));
         state.ctx.beginPath();
-        state.ctx.fillStyle = `rgb(0, 0, 0, 0.35)`;
+        state.ctx.fillStyle = `rgb(0, 0, 0, 0.27)`;
         state.ctx.rect(
-            shadowCenterCanvasCoord[0] - planeCanvasDims[0] / 2,
-            shadowCenterCanvasCoord[1] - planeCanvasDims[1] / 2,
-            ...planeCanvasDims
+            shadowCenterCanvasCoord[0] - shadowCanvasDims[0] / 2,
+            shadowCenterCanvasCoord[1] - shadowCanvasDims[1] / 2,
+            ...shadowCanvasDims
         );
         state.ctx.fill();
 
