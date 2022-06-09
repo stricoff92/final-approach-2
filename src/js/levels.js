@@ -45,6 +45,8 @@ function setPlaneProps(state) {
         state.plane.horizontalMS = knotsToMS(58);
         state.plane.verticalMS = 0;
 
+        state.plane.lastLevelOutTS = performance.now();
+
         const noFlareAsset = new Image();
         noFlareAsset.src = "img/" + PLANE_C152 + "-1.svg";
         const flareAsset = new Image();

@@ -36,6 +36,7 @@ function createNewState(maxCompletedLevel) {
             posMapCoord: null,
             flare: IS_NOT_FLARING,
             lastLevelOutTS: null,
+            lastFlareTS: null,
             minTouchdownVerticalMS: null,
             touchdownStats: {
                 runwayUsedM: null,
@@ -244,6 +245,7 @@ function runDataLoop() {
             }
             else if(cmd.cmd === COMMAND_FLARE && state.game.acceptControlCommands) {
                 state.plane.flare = IS_FLARING;
+                state.plane.lastFlareTS = performance.now();
             }
         }
 
