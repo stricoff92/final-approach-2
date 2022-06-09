@@ -48,28 +48,6 @@ function drawButtons(state) {
                 rectArgs[1] + Math.floor(rectArgs[3] / 2),
             );
         }
-        else if (btn.type === BUTTON_TYPE_CTRL) {
-            const selected = btn.selected(state);
-            state.ctx.beginPath();
-            state.ctx.fillStyle = selected ? "#c2ffc2" : "#bfbfbf";
-            state.ctx.strokeStyle = selected ? "#003800" : "#383838";
-            state.ctx.lineWidth = 1;
-            state.ctx.rect(...boxCoordToRectArgs(btn.boxCoord));
-            state.ctx.fill();
-            state.ctx.stroke();
-
-            const btnYMid = Math.round((btn.boxCoord[0][1] + btn.boxCoord[1][1]) / 2);
-            const imgWidth = btn.boxCoord[1][0] - btn.boxCoord[0][0];
-            const imgHeight = Math.round(imgWidth / 3);
-            const imgX1 = 0
-            const imgY1 = btnYMid - (imgHeight / 2);
-            state.ctx.drawImage(
-                btn.asset,
-                imgX1, imgY1,
-                imgWidth, imgHeight
-            )
-
-        }
         else if (btn.type === BUTTON_TYPE_MAIN) {
             state.ctx.beginPath();
             state.ctx.fillStyle = "#000"
@@ -86,6 +64,9 @@ function drawButtons(state) {
                 Math.round((btn.boxCoord[1][0] + btn.boxCoord[0][0]) / 2),
                 Math.round((btn.boxCoord[1][1] + btn.boxCoord[0][1]) / 2),
             );
+        }
+        else {
+            throw NOT_IMPLEMENTED
         }
     });
 }
@@ -135,7 +116,7 @@ function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
 function drawGameScene(state) {
     const nowTS = performance.now();
     const plane = state.plane;
-    const mapDims = plane.dimensions[plane.attitude];
+    const mapDims = plane.dimensions[plane.flare];
 
     // Draw ground/sky horizon
     const planeAltMeters = plane.posMapCoord[1] / state.map.mapUnitsPerMeter;
@@ -263,7 +244,7 @@ function drawGameScene(state) {
         const planeCanvasX1 = state.camera.canvasHalfW - (canvasDims[0] / 2);
         const planeCanvasY1 = state.camera.canvasHalfH - (canvasDims[1] / 2);
         state.ctx.drawImage(
-            plane.assets[plane.attitude],
+            plane.assets[plane.flare],
             planeCanvasX1,
             planeCanvasY1,
             canvasDims[0],
@@ -273,16 +254,16 @@ function drawGameScene(state) {
 
     if(!plane.touchedDown && !plane.crashFrame) {
         for(let i = 0; i < plane.previousPoints.length; i++) {
-            let [mapCoord, isThrusting] = plane.previousPoints[i];
+            let mapCoord = plane.previousPoints[i];
 
             let canvasCoord = mapCoordToCanvasCoord(
                 mapCoord, plane.posMapCoord, state.camera
             );
             state.ctx.beginPath();
-            state.ctx.fillStyle = isThrusting ? "#4d4d4d" : "#a6a6a6";
+            state.ctx.fillStyle = "#a6a6a6";
             state.ctx.arc(
                 canvasCoord[0], canvasCoord[1],
-                isThrusting ? 9 : 5,
+                5,
                 0, TWO_PI,
             );
             state.ctx.fill();
@@ -310,9 +291,7 @@ function drawDebugData(state) {
     yPointer -= yInterval;
     state.ctx.fillText(`phase: ${state.game.phase}`, xOffset, yPointer);
     yPointer -= yInterval;
-    state.ctx.fillText(`attitude: ${state.plane.attitude}`, xOffset, yPointer);
-    yPointer -= yInterval;
-    state.ctx.fillText(`thrust: ${state.plane.thrust}`, xOffset, yPointer);
+    state.ctx.fillText(`flare: ${state.plane.flare}`, xOffset, yPointer);
     yPointer -= yInterval;
     if(Array.isArray(state.plane.posMapCoord)) {
         state.ctx.fillText(`X pos: ${Math.round(state.plane.posMapCoord[0])}`, xOffset, yPointer);
@@ -320,14 +299,12 @@ function drawDebugData(state) {
         state.ctx.fillText(`Y pos: ${Math.round(state.plane.posMapCoord[1])}`, xOffset, yPointer);
         yPointer -= yInterval;
     }
-    state.ctx.fillText(`X m/s: ${Math.round(state.plane.horizontalMS, 2)}`, xOffset, yPointer);
-    yPointer -= yInterval;
-    state.ctx.fillText(`Y m/s: ${Math.round(state.plane.verticalMS, 2)}`, xOffset, yPointer);
-    yPointer -= yInterval;
-
-    state.ctx.fillText(`stalling: ${state.plane.isStalling}`, xOffset, yPointer);
-    yPointer -= yInterval;
-
+    if(state.plane.horizontalMS !== null && state.plane.verticalMS !== null) {
+        state.ctx.fillText(`X m/s: ${state.plane.horizontalMS.toFixed(2)}`, xOffset, yPointer);
+        yPointer -= yInterval;
+        state.ctx.fillText(`Y m/s: ${state.plane.verticalMS.toFixed(2)}`, xOffset, yPointer);
+        yPointer -= yInterval;
+    }
     // Draw map scape
     if(state.map.mapUnitsPerMeter && state.camera.canvasH) {
         const msXOffset = 25;

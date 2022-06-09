@@ -1,5 +1,5 @@
 
-function updateStateCamera(state) {
+function updateCameraCanvasMetaData(state) {
     const canvas = document.getElementById("game-canvas");
     state.camera.canvasW = canvas.width;
     state.camera.canvasH = canvas.height;
@@ -41,4 +41,16 @@ function deepCopy(obj) {
 
 function getRandomFloat(min, max) {
     return Math.random() * (max - min) + min;
+}
+
+function feetPerMinToMS(fpm) {
+    return fpm / 60 / 3
+}
+
+function knotsToMS(k) {
+    return k / 2;
+}
+
+function mPSToKnots(ms) {
+    return ms * 2;
 }

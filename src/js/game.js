@@ -33,10 +33,23 @@ function createNewState(maxCompletedLevel) {
             asset: null,
             assets: [],
             dimensions: [],
-            massKG: null,
             posMapCoord: null,
-            attitude: null,
-            thrust: null,
+            horizontalMS: null,
+            verticalMS: null,
+            lastLevelOutTS: null,
+            lastLevelOutFrame: null,
+            leveledOutInitialHorizontalMS: null,
+            leveledOutTerminalHorizontalMS: null,
+            leveledOutHorizontalAccelerationMS2: null,
+            leveledOutTerminalVerticalMS: null,
+            leveledOutVerticalAccelerationMS2Curve: null,
+            flare: IS_NOT_FLARING,
+            lastFlareTS: null,
+            lastFlareFrame: null,
+            flareTerminalHorizontalMS: null,
+            flareHorizontalAccelerationMS2: null,
+            flareVerticalAccelerationMS2Curve: null,
+            touchDownFlareMinMS: null,
             minTouchdownVerticalMS: null,
             touchdownStats: {
                 runwayUsedM: null,
@@ -47,37 +60,12 @@ function createNewState(maxCompletedLevel) {
                 isFlaired: false,
                 bounces: 0,
             },
-
             adjustPlanePosition: (state) => {},
             previousPoints: [],
             crashFrame: 0,
             touchedDown: false,
             halted: false,
             rwNegAccelerationMS: null,
-
-            terminalHorizonalGlideSpeedsMS: [],
-            horizontalGlideAccelerationCurves: [],
-            terminalVerticalGlideSpeedsMS: [],
-            verticalGlideAccelerationCurves: [],
-
-            horizontalMS: null,
-            verticalMS: null,
-            isStalling: false,
-            stallHorizonalMS: null,
-            stallVerticalAccelerationMS: null,
-            stallTerminalVerticalSpeedMS: null,
-            climbMinHorizontalMS: null,
-            climbTerminalVerticalSpeedMS: null,
-            climbTerminalHorizontalSpeedMS: null,
-            climbVerticalAccelerationCurve: null,
-            climbHorizontalNegAccelerationCurve: null,
-            climbHorizontalPosAccelerationCurve: null,
-            levelFlightMinVelocitiesMS: [],
-
-            instantaneousThrust: null,
-            maxThrustingNewtons: null,
-            currentThrustingNewtons: null,
-            deltaNewtonPS: null,
         },
         map: {
             terrain: null,
@@ -102,7 +90,7 @@ function createNewState(maxCompletedLevel) {
                 disabled,
                 handler: disabled ? ()=>{} : () => {
                     window.addCommand({
-                        cmd: "start-level",
+                        cmd: COMMAND_START_LEVEL,
                         args: [ levelNumber ],
                     });
                 }
@@ -115,15 +103,12 @@ function createNewState(maxCompletedLevel) {
 function orientButtons(state) {
     const gridBtns = [], mainBtns = [], ctrlBtns = [];
     state.buttons.forEach((btn, wix) => {
-        if(btn.type === BUTTON_TYPE_CTRL) {
-            ctrlBtns.push([btn, wix]);
-        }
-        else if(btn.type === BUTTON_TYPE_GRID) {
+        if(btn.type === BUTTON_TYPE_GRID) {
             gridBtns.push([btn, wix]);
         } else if(btn.type === BUTTON_TYPE_MAIN) {
             mainBtns.push([btn, wix]);
         } else {
-            throw "not implemented";
+            throw NOT_IMPLEMENTED;
         }
     });
 
@@ -209,16 +194,29 @@ function runDataLoop() {
 
     // Position buttons and check for clicks
     state = orientButtons(state);
-    const clickCanvasCoord = window.nextClick();
-    if(clickCanvasCoord) {
-        for(let i = 0; i < state.buttons.length; i++) {
-            let clickInside = coordInsideBoxCoord(
-                clickCanvasCoord,
-                state.buttons[i].boxCoord,
-            )
-            if (clickInside) {
-                state.buttons[i].handler();
-                break;
+    const nextClick = window.nextClick();
+    if(nextClick) {
+        if(nextClick.isDoubleClick) {
+            window.addCommand({
+                cmd: COMMAND_FLARE,
+            });
+        } else {
+            let isButtonClick = false;
+            for(let i = 0; i < state.buttons.length; i++) {
+                let clickInside = coordInsideBoxCoord(
+                    nextClick.clickCanvasCoord,
+                    state.buttons[i].boxCoord,
+                )
+                if (clickInside) {
+                    state.buttons[i].handler();
+                    isButtonClick = true;
+                    break;
+                }
+            }
+            if (!isButtonClick) {
+                window.addCommand({
+                    cmd: COMMAND_LEVEL_OUT,
+                });
             }
         }
     }
@@ -239,34 +237,27 @@ function runDataLoop() {
             console.log({ state });
         }
 
-        // Process commands if not crashing
+        // Process commands
         const cmdCt = commands.length;
         for(let i=0; i<cmdCt; i++) {
             let cmd = commands[i];
-            if(cmd.cmd === "quit-level") {
+            if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
-                    updateStateCamera(
+                    updateCameraCanvasMetaData(
                         createNewState(state.game.maxCompletedLevel)
                     )
                 );
                 setTimeout(runDataLoop);
                 return;
             }
-            else if(cmd.cmd === "set-attitude" && state.game.acceptControlCommands) {
-                state.plane.attitude = cmd.args[0];
+            else if(cmd.cmd === COMMAND_LEVEL_OUT && state.game.acceptControlCommands) {
+                state.plane.lastLevelOutTS = performance.now();
+                state.plane.lastLevelOutFrame = state.game.frame;
             }
-            else if(cmd.cmd === "set-thrust" && state.game.acceptControlCommands) {
-                state.plane.thrust = cmd.args[0];
-                if(state.plane.instantaneousThrust) {
-                    state.plane.currentThrustingNewtons = (
-                        state.plane.thrust
-                        ? state.plane.maxThrustingNewtons
-                        : 0
-                    );
-
-                } else {
-                    throw "Not Implemented";
-                }
+            else if(cmd.cmd === COMMAND_FLARE && state.game.acceptControlCommands) {
+                state.plane.flare = IS_FLARING;
+                state.plane.lastFlareTS = performance.now();
+                state.plane.lastFlareFrame = state.game.frame;
             }
         }
 
@@ -288,9 +279,9 @@ function runDataLoop() {
             state = processGroundInteractions(state);
         }
 
-        if(state.game.frame % (state.plane.thrust ?  12 : 25) === 0 && !state.plane.halted) {
+        if(state.game.frame %  25 === 0 && !state.plane.halted) {
             state.plane.previousPoints.unshift(
-                deepCopy([state.plane.posMapCoord, state.plane.thrust])
+                deepCopy(state.plane.posMapCoord)
             );
             state.plane.previousPoints = state.plane.previousPoints.slice(0, 30);
         }
@@ -312,7 +303,7 @@ function runDataLoop() {
     const nextCmd = window.nextCommand();
     if(nextCmd) {
         if(
-            nextCmd.cmd === "start-level"
+            nextCmd.cmd === COMMAND_START_LEVEL
             && state.game.phase === PHASE_0_LOBBY
         ) {
             state.game.phase = PHASE_1_COUNTDOWN;
@@ -330,6 +321,7 @@ function runDataLoop() {
         state.game.countDownFrames++;
         if(state.game.countDownFrames >= state.game.maxCountDownFrames) {
             state.pageTitle = null;
+            state.game.frame = 1;
             state.game.phase = PHASE_2_LIVE,
             state.game.acceptControlCommands = true;
 
@@ -342,71 +334,7 @@ function runDataLoop() {
                 text: 'QUIT',
                 handler: () => {
                     window.addCommand({
-                        cmd: "quit-level",
-                    });
-                },
-            }, {
-                type: BUTTON_TYPE_CTRL,
-                boxCoord: null,
-                assetHref: "img/c152-2-t.svg",
-                asset: null,
-                selected: state => Boolean((state.plane.attitude === ATTITUDE_2) && state.plane.thrust),
-                handler: () => {
-                    window.addCommand({
-                        cmd: "set-attitude",
-                        args: [ 2 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust",
-                        args: [ true ],
-                    });
-                },
-            }, {
-                type: BUTTON_TYPE_CTRL,
-                boxCoord: null,
-                assetHref: "img/c152-2.svg",
-                asset: null,
-                selected: state => Boolean((state.plane.attitude === ATTITUDE_2) && !state.plane.thrust),
-                handler: () => {
-                    window.addCommand({
-                        cmd: "set-attitude",
-                        args: [ 2 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust",
-                        args: [ false ],
-                    });
-                },
-            }, {
-                type: BUTTON_TYPE_CTRL,
-                boxCoord: null,
-                assetHref: "img/c152-1.svg",
-                asset: null,
-                selected: state => Boolean((state.plane.attitude === ATTITUDE_1) && !state.plane.thrust),
-                handler: () => {
-                    window.addCommand({
-                        cmd: "set-attitude",
-                        args: [ 1 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust",
-                        args: [ false ],
-                    });
-                },
-            }, {
-                type: BUTTON_TYPE_CTRL,
-                boxCoord: null,
-                assetHref: "img/c152-0.svg",
-                asset: null,
-                selected: state => Boolean((state.plane.attitude === ATTITUDE_0) && !state.plane.thrust),
-                handler: () => {
-                    window.addCommand({
-                        cmd: "set-attitude",
-                        args: [ 0 ],
-                    });
-                    window.addCommand({
-                        cmd: "set-thrust",
-                        args: [ false ],
+                        cmd: COMMAND_QUIT_LEVEL,
                     });
                 },
             }];
@@ -426,14 +354,14 @@ function runDataLoop() {
 function processGroundInteractions(state) {
     const plane = state.plane;
     if(plane.crashFrame) {
-        throw "not implemented";
+        throw NOT_IMPLEMENTED;
     }
     const fps = state.game.dataFPS;
 
     const planeBottomMapCoordY = (
         state.plane.posMapCoord[1]
         - (
-            state.plane.dimensions[state.plane.attitude][1] / 2
+            state.plane.dimensions[state.plane.flare][1] / 2
             * state.map.mapUnitsPerMeter
         )
     );
@@ -453,13 +381,13 @@ function processGroundInteractions(state) {
                 }
                 else {
                     if(
-                        plane.attitude === ATTITUDE_2
-                        && newHorizontalMS < (plane.stallHorizonalMS * 0.75)
+                        plane.flare === IS_FLARING
+                        && newHorizontalMS < plane.touchDownFlareMinMS
                     ) {
-                        state.plane.attitude = ATTITUDE_1;
+                        state.plane.flare = IS_NOT_FLARING;
                         state.map.tireStrikes.push({
                             originMapPoint: deepCopy([
-                                plane.posMapCoord[0] + plane.dimensions[1][0] / 2 * state.map.mapUnitsPerMeter,
+                                plane.posMapCoord[0] + plane.dimensions[IS_NOT_FLARING][0] / 2 * state.map.mapUnitsPerMeter,
                                 planeBottomMapCoordY,
                             ]),
                             createdTS: performance.now(),
@@ -500,12 +428,12 @@ function processGroundInteractions(state) {
         let addRubberStrike = true;
 
         // check for plane crash into runway
-        if (isCrash || state.plane.attitude === ATTITUDE_0)
+        if (isCrash)
         {
             console.log("👉 crash");
             console.log({
                 touchdownMS,
-                attitude: state.plane.attitude,
+                flare: state.plane.flare,
             });
             state.plane.crashFrame++;
             addRubberStrike = false;
@@ -518,12 +446,10 @@ function processGroundInteractions(state) {
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + planeBottomDiffY;
             state.plane.touchdownStats.isSmooth = plane.touchdownStats.bounces === 0;
             state.plane.touchdownStats.verticalMS = touchdownMS;
-            state.plane.touchdownStats.isFlaired = plane.attitude === ATTITUDE_2;
+            state.plane.touchdownStats.isFlaired = plane.flare === IS_FLARING;
             state.plane.touchdownStats.runwayWastedM = Math.round((
                 plane.posMapCoord[0] - state.map.gsP1MapCoord[0]
             ) / state.map.mapUnitsPerMeter);
-
-            state.buttons = state.buttons.filter(b => b.type !== BUTTON_TYPE_CTRL);
 
             console.log("👉 touch down");
             console.log(state.plane.touchdownStats);
