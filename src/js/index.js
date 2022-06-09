@@ -34,6 +34,11 @@ document.addEventListener("DOMContentLoaded", function() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, false);
 
+    const canvas = document.getElementById("game-canvas");
+    if(urlContainsDebug()) {
+        canvas.style.border = "1px solid #f00";
+    }
+
     window.setGameState = function(gs) {
         window._gamestate = gs;
     }
@@ -63,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function() {
     window.setGameState(state);
 
     // Register single & double clicks on the canvas.
-    const canvas = document.getElementById("game-canvas");
+
     const singleClickDelayMS = 200;
     let lastSingleClickTS;
     let singleClickTimer;

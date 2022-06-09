@@ -3,10 +3,6 @@ body {
     margin:0px;
 }
 
-canvas {
-    border: 1px solid #f00;
-}
-
 #page-title {
     font-family:'Courier New', Courier, monospace;
     font-weight: bold;

@@ -5,7 +5,7 @@ function createNewState(maxCompletedLevel) {
     maxCompletedLevel = maxCompletedLevel || 0;
     const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     return {
-        isDebug: window.location.search.indexOf("debug") !== -1,
+        isDebug: urlContainsDebug(),
         ctx,
         pageTitle: {
             text: "Select A Level",
@@ -22,6 +22,11 @@ function createNewState(maxCompletedLevel) {
             level: null,
             lastFrameTS: performance.now(),
             acceptControlCommands: false,
+            lastClick: {
+                canvasCoord: null,
+                frameCreated: null,
+                color: null,
+            }
         },
         camera: {
             canvasW: null,
@@ -218,6 +223,13 @@ function runDataLoop() {
                     cmd: COMMAND_LEVEL_OUT,
                 });
             }
+        }
+        if (state.game.phase === PHASE_2_LIVE) {
+            state.game.lastClick = {
+                canvasCoord: deepCopy(nextClick.clickCanvasCoord),
+                frameCreated: state.game.frame,
+                color: nextClick.isDoubleClick ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
+            };
         }
     }
 

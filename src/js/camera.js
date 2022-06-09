@@ -6,6 +6,7 @@ function runDisplayLoop() {
     clearCanvas(state);
 
     drawPageTitle(state);
+
     if (state.game.phase === PHASE_2_LIVE) {
         drawGameScene(state);
         drawGauges(state);
@@ -17,6 +18,7 @@ function runDisplayLoop() {
         drawLoadingIcon(state);
     }
     drawButtons(state);
+    drawClickRing(state);
 
     window.requestAnimationFrame(runDisplayLoop)
 }
@@ -272,6 +274,26 @@ function drawGameScene(state) {
 }
 
 function drawGauges(state) {
+}
+
+function drawClickRing(state) {
+    if(state.game.lastClick.frameCreated !== null && state.game.phase === PHASE_2_LIVE) {
+        if(state.game.frame > state.game.lastClick.frameCreated + CLICK_RING_MAX_FRAME_AGE) {
+            return;
+        }
+        const percentAge = (state.game.frame - state.game.lastClick.frameCreated) / CLICK_RING_MAX_FRAME_AGE;
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = state.game.lastClick.color;
+        state.ctx.lineWidth = CLICK_RING_WIDTH;
+        state.ctx.arc(
+            state.game.lastClick.canvasCoord[0],
+            state.game.lastClick.canvasCoord[1],
+            CLICK_RING_MAX_RADIUS_CANVAS_PX * percentAge,
+            0,
+            TWO_PI,
+        );
+        state.ctx.stroke()
+    }
 }
 
 

@@ -1,4 +1,8 @@
 
+function urlContainsDebug() {
+    return window.location.search.indexOf("debug") !== -1;
+}
+
 function updateCameraCanvasMetaData(state) {
     const canvas = document.getElementById("game-canvas");
     state.camera.canvasW = canvas.width;
