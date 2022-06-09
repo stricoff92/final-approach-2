@@ -278,9 +278,9 @@ function runDataLoop() {
             state = processGroundInteractions(state);
         }
 
-        if(state.game.frame % (state.plane.thrust ?  12 : 25) === 0 && !state.plane.halted) {
+        if(state.game.frame %  25 === 0 && !state.plane.halted) {
             state.plane.previousPoints.unshift(
-                deepCopy([state.plane.posMapCoord, state.plane.thrust])
+                deepCopy(state.plane.posMapCoord)
             );
             state.plane.previousPoints = state.plane.previousPoints.slice(0, 30);
         }

@@ -39,12 +39,12 @@ function innerAdjustPlanePosition(state) {
     }
     else {
         const elapsedLeveledOutMS = nowTS - plane.lastLevelOutTS;
-        const verticalAccMS = plane.flareVerticalAccelerationMS2Curve(elapsedLeveledOutMS);
+        const verticalAccMS = plane.leveledOutVerticalAccelerationMS2Curve(elapsedLeveledOutMS);
         const verticalAccMF = verticalAccMS / fps;
         newVerticalMS = plane.verticalMS + verticalAccMF;
 
         const deltaHorizontalMF = plane.leveledOutHorizontalAccelerationMS2 / fps;
-        newHorizontalMS = Math.max(
+        newHorizontalMS = Math.min(
             plane.leveledOutTerminalHorizontalMS,
             plane.horizontalMS + deltaHorizontalMF,
         )
@@ -69,7 +69,6 @@ function setPlaneProps(state) {
     }
     if(state.game.level < 6) {
         state.plane.asset = PLANE_C152;
-        state.plane.thrust = false;
         state.plane.dimensions = [],
         state.plane.rwNegAccelerationMS = knotsToMS(-6);
         state.plane.minTouchdownVerticalMS = feetPerMinToMS(-750)
@@ -86,7 +85,7 @@ function setPlaneProps(state) {
 
         state.plane.leveledOutTerminalVerticalMS = feetPerMinToMS(-1800);
         state.plane.leveledOutVerticalAccelerationMS2Curve = elapsedMS => {
-            return -0.06 * Math.pow(elapsedMS / 1000, 2) - 0.1;
+            return -0.15 * Math.pow(elapsedMS / 1000, 2) - 1;
         }
 
         state.plane.flareTerminalHorizontalMS = knotsToMS(40);
@@ -96,9 +95,9 @@ function setPlaneProps(state) {
         }
 
         const noFlareAsset = new Image();
-        noFlareAsset.src = "img/" + PLANE_C152 + "-1.svg";
+        noFlareAsset.src = "img/" + PLANE_C152 + "-0.svg";
         const flareAsset = new Image();
-        flareAsset.src = "img/" + PLANE_C152 + "-2.svg";
+        flareAsset.src = "img/" + PLANE_C152 + "-1.svg";
         state.plane.assets.push(
             noFlareAsset,
             flareAsset,
