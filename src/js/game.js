@@ -35,7 +35,7 @@ function createNewState(maxCompletedLevel) {
             dimensions: [],
             posMapCoord: null,
             flare: IS_NOT_FLARING,
-            lastLevelOutFrame: null,
+            lastLevelOutTS: null,
             minTouchdownVerticalMS: null,
             touchdownStats: {
                 runwayUsedM: null,
@@ -46,7 +46,6 @@ function createNewState(maxCompletedLevel) {
                 isFlaired: false,
                 bounces: 0,
             },
-
             adjustPlanePosition: (state) => {},
             previousPoints: [],
             crashFrame: 0,
@@ -241,7 +240,7 @@ function runDataLoop() {
                 return;
             }
             else if(cmd.cmd === COMMAND_LEVEL_OUT && state.game.acceptControlCommands) {
-                state.plane.lastLevelOutFrame = deepCopy(state.game.frame);
+                state.plane.lastLevelOutTS = performance.now();
             }
             else if(cmd.cmd === COMMAND_FLARE && state.game.acceptControlCommands) {
                 state.plane.flare = IS_FLARING;

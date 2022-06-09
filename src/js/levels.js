@@ -12,7 +12,6 @@ function innerAdjustPlanePosition(state) {
 
     if(
         plane.flare === IS_NOT_FLARING
-        && plane.lastLevelOutFrame === state.game.frame
     ) {
         newVerticalMS = 0;
     }
