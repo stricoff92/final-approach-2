@@ -49,6 +49,7 @@ function createNewState(maxCompletedLevel) {
             flareTerminalHorizontalMS: null,
             flareHorizontalAccelerationMS2: null,
             flareVerticalAccelerationMS2Curve: null,
+            touchDownFlareMinMS: null,
             minTouchdownVerticalMS: null,
             touchdownStats: {
                 runwayUsedM: null,
@@ -381,7 +382,7 @@ function processGroundInteractions(state) {
                 else {
                     if(
                         plane.flare === IS_FLARING
-                        && newHorizontalMS < 18
+                        && newHorizontalMS < plane.touchDownFlareMinMS
                     ) {
                         state.plane.flare = IS_NOT_FLARING;
                         state.map.tireStrikes.push({

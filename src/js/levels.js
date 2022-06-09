@@ -94,6 +94,7 @@ function setPlaneProps(state) {
         state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
             return -0.02 * Math.pow(elapsedMS / 1000, 2) - 0.05;
         }
+        state.plane.touchDownFlareMinMS = 18;
 
         const noFlareAsset = new Image();
         noFlareAsset.src = "img/" + PLANE_C152 + "-0.svg";
