@@ -34,6 +34,8 @@ function createNewState(maxCompletedLevel) {
             assets: [],
             dimensions: [],
             posMapCoord: null,
+            horizontalMS: null,
+            verticalMS: null,
             lastLevelOutTS: null,
             lastLevelOutFrame: null,
             leveledOutInitialHorizontalMS: null,
@@ -46,7 +48,6 @@ function createNewState(maxCompletedLevel) {
             lastFlareFrame: null,
             flareTerminalHorizontalMS: null,
             flareHorizontalAccelerationMS2: null,
-            flareTerminalVerticalMS: null,
             flareVerticalAccelerationMS2Curve: null,
             minTouchdownVerticalMS: null,
             touchdownStats: {
@@ -64,9 +65,6 @@ function createNewState(maxCompletedLevel) {
             touchedDown: false,
             halted: false,
             rwNegAccelerationMS: null,
-
-            horizontalMS: null,
-            verticalMS: null,
         },
         map: {
             terrain: null,
@@ -253,10 +251,12 @@ function runDataLoop() {
             }
             else if(cmd.cmd === COMMAND_LEVEL_OUT && state.game.acceptControlCommands) {
                 state.plane.lastLevelOutTS = performance.now();
+                state.plane.lastLevelOutFrame = state.game.frame;
             }
             else if(cmd.cmd === COMMAND_FLARE && state.game.acceptControlCommands) {
                 state.plane.flare = IS_FLARING;
                 state.plane.lastFlareTS = performance.now();
+                state.plane.lastFlareFrame = state.game.frame;
             }
         }
 
