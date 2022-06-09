@@ -299,11 +299,12 @@ function drawDebugData(state) {
         state.ctx.fillText(`Y pos: ${Math.round(state.plane.posMapCoord[1])}`, xOffset, yPointer);
         yPointer -= yInterval;
     }
-    state.ctx.fillText(`X m/s: ${state.plane.horizontalMS}`, xOffset, yPointer);
-    yPointer -= yInterval;
-    state.ctx.fillText(`Y m/s: ${state.plane.verticalMS}`, xOffset, yPointer);
-    yPointer -= yInterval;
-
+    if(state.plane.horizontalMS !== null && state.plane.verticalMS !== null) {
+        state.ctx.fillText(`X m/s: ${state.plane.horizontalMS.toFixed(2)}`, xOffset, yPointer);
+        yPointer -= yInterval;
+        state.ctx.fillText(`Y m/s: ${state.plane.verticalMS.toFixed(2)}`, xOffset, yPointer);
+        yPointer -= yInterval;
+    }
     // Draw map scape
     if(state.map.mapUnitsPerMeter && state.camera.canvasH) {
         const msXOffset = 25;
