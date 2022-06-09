@@ -240,6 +240,61 @@ function drawGameScene(state) {
         state.ctx.stroke();
     }
 
+    // Draw altitude indicator if over min altutude
+    const runwayAltitudeM = state.map.rwP0MapCoord[1] * state.map.mapUnitsPerMeter;
+    const planeBottomAltitudeM = (
+        state.plane.posMapCoord[1]
+        - (
+            state.plane.dimensions[state.plane.flare][1] / 2
+            * state.map.mapUnitsPerMeter
+        )
+    ) / state.map.mapUnitsPerMeter;
+    if(!plane.crashFrame && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
+        // Text
+        const altText1P = [
+            state.camera.canvasHalfW,
+            Math.round(state.camera.canvasH * 0.6),
+        ];
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#000";
+        state.ctx.font = "20px Arial";
+        state.ctx.textBaseline = "middle";
+        state.ctx.textAlign = "left";
+        state.ctx.fillText("ground", ...altText1P);
+        const altText2P = [
+            altText1P[0],
+            altText1P[1] + 25,
+        ];
+        state.ctx.beginPath();
+        state.ctx.font = "bold 25px Arial";
+        state.ctx.fillText(`${planeBottomAltitudeM.toFixed(0)} M`, ...altText2P);
+
+        // Arrow
+        const altLineP1 = [
+            altText1P[0] - 5,
+            altText1P[1] - 7,
+        ];
+        const altLineP2 = [
+            altText2P[0] - 5,
+            state.camera.canvasH * 0.9,
+        ];
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#000"
+        state.ctx.lineWidth = 1;
+        state.ctx.moveTo(...altLineP1);
+        state.ctx.lineTo(...altLineP2);
+        state.ctx.stroke();
+        const altArrowHeadLen = 15
+        state.ctx.beginPath();
+        state.ctx.moveTo(...altLineP2);
+        state.ctx.lineTo(altLineP2[0] - altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
+        state.ctx.stroke();
+        state.ctx.beginPath();
+        state.ctx.moveTo(...altLineP2);
+        state.ctx.lineTo(altLineP2[0] + altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
+        state.ctx.stroke();
+    }
+
 
     if(!plane.crashFrame) {
         const canvasDims = mapDims.map(d => d * state.map.mapUnitsPerMeter);
