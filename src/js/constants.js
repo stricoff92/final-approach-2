@@ -32,8 +32,8 @@ const COLOR_SKY_FOREST = "#e3e3ff";
 const COLOR_GROUND_FOREST = "#9dff5c";
 const COLOR_RW_FOREST = "#808080";
 
-const CLICK_RING_MAX_FRAME_AGE = 30;
-const CLICK_RING_WIDTH = 2;
-const CLICK_RING_MAX_RADIUS_CANVAS_PX = 40;
-const COLOR_CLICK_RING_SINGLE = "#008a39";
-const COLOR_CLICK_RING_DOUBLE = "#8a008a";
+const CLICK_RING_MAX_FRAME_AGE = 20;
+const CLICK_RING_WIDTH = 6;
+const CLICK_RING_MAX_RADIUS_CANVAS_PX = 50;
+const COLOR_CLICK_RING_SINGLE = a => `rgb(0, 138, 57, ${a.toFixed(2)})`;
+const COLOR_CLICK_RING_DOUBLE = a => `rgb(138, 0, 138, ${a.toFixed(2)})`;

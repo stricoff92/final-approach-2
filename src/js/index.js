@@ -111,6 +111,4 @@ document.addEventListener("DOMContentLoaded", function() {
     setTimeout(runDataLoop);
     window.requestAnimationFrame(runDisplayLoop);
 
-
-
 });

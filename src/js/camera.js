@@ -283,7 +283,7 @@ function drawClickRing(state) {
         }
         const percentAge = (state.game.frame - state.game.lastClick.frameCreated) / CLICK_RING_MAX_FRAME_AGE;
         state.ctx.beginPath();
-        state.ctx.strokeStyle = state.game.lastClick.color;
+        state.ctx.strokeStyle = state.game.lastClick.color(Math.max(0.1, 1 - percentAge));
         state.ctx.lineWidth = CLICK_RING_WIDTH;
         state.ctx.arc(
             state.game.lastClick.canvasCoord[0],
