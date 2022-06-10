@@ -300,7 +300,7 @@ function runDataLoop() {
             state.plane.previousPoints.unshift(
                 deepCopy(state.plane.posMapCoord)
             );
-            state.plane.previousPoints = state.plane.previousPoints.slice(0, 30);
+            state.plane.previousPoints = state.plane.previousPoints.slice(0, 10);
         }
 
         window.setGameState(state);
