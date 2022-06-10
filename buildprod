@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# transpile JS files
+./node_modules/.bin/babel src --out-dir build --presets=@babel/env
+
+# copy non js assets to build directory
+rsync -av --progress src/ build/ --exclude js
+
