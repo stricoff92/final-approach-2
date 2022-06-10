@@ -461,9 +461,13 @@ function processGroundInteractions(state) {
             state.plane.touchdownStats.isSmooth = plane.touchdownStats.bounces === 0;
             state.plane.touchdownStats.verticalMS = touchdownMS;
             state.plane.touchdownStats.isFlaired = plane.flare === IS_FLARING;
-            state.plane.touchdownStats.runwayWastedM = Math.round((
-                plane.posMapCoord[0] - state.map.gsP1MapCoord[0]
-            ) / state.map.mapUnitsPerMeter);
+            state.plane.touchdownStats.runwayWastedM = Math.max(
+                0,
+                Math.round(
+                    (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                    / state.map.mapUnitsPerMeter
+                )
+            );
 
             console.log("👉 touch down");
             console.log(state.plane.touchdownStats);
