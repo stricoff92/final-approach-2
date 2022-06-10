@@ -115,15 +115,15 @@ function setPlaneProps(state) {
 }
 
 function setMapProps(state) {
-    const mupm = 25
     state.map.mapUnitsPerMeter = state.camera.canvasW > 700 ? 21 : 14;
+    const mupm = state.map.mapUnitsPerMeter;
     const level = state.game.level;
     if(level < 4) {
         state.map.terrain = TERRAIN_FOREST;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [1500 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 200 * mupm];
-        state.map.gsP1MapCoord = [1010 * mupm, 0];
+        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1050 * mupm, 0];
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
         if(level == 1) {
             state.map.windXVel = 0;

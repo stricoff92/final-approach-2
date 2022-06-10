@@ -178,8 +178,8 @@ function drawGameScene(state) {
             state.camera,
         );
         state.ctx.beginPath();
-        state.ctx.strokeStyle = "#ff0";
-        state.ctx.lineWidth = 5;
+        state.ctx.strokeStyle = "#fff";
+        state.ctx.lineWidth = 8;
         state.ctx.moveTo(...paintLineP0);
         state.ctx.lineTo(...paintLineP1);
         state.ctx.stroke();
@@ -395,14 +395,14 @@ function drawClickRing(state) {
         if(state.game.frame > state.game.lastClick.frameCreated + CLICK_RING_MAX_FRAME_AGE) {
             return;
         }
-        const percentAge = (state.game.frame - state.game.lastClick.frameCreated) / CLICK_RING_MAX_FRAME_AGE;
+        const percentRemaining = (CLICK_RING_MAX_FRAME_AGE - (state.game.frame - state.game.lastClick.frameCreated)) / CLICK_RING_MAX_FRAME_AGE;
         state.ctx.beginPath();
-        state.ctx.strokeStyle = state.game.lastClick.color(Math.max(0.1, 1 - percentAge));
+        state.ctx.strokeStyle = state.game.lastClick.color(Math.max(0.1, 1 * percentRemaining));
         state.ctx.lineWidth = CLICK_RING_WIDTH;
         state.ctx.arc(
             state.game.lastClick.canvasCoord[0],
             state.game.lastClick.canvasCoord[1],
-            CLICK_RING_MAX_RADIUS_CANVAS_PX * percentAge,
+            CLICK_RING_MAX_RADIUS_CANVAS_PX * (1 - percentRemaining),
             0,
             TWO_PI,
         );

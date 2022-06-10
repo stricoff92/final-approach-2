@@ -33,7 +33,7 @@ const COLOR_GROUND_FOREST = "#9dff5c";
 const COLOR_RW_FOREST = "#808080";
 
 const CLICK_RING_MAX_FRAME_AGE = 20;
-const CLICK_RING_WIDTH = 6;
-const CLICK_RING_MAX_RADIUS_CANVAS_PX = 50;
+const CLICK_RING_WIDTH = 12;
+const CLICK_RING_MAX_RADIUS_CANVAS_PX = 65;
 const COLOR_CLICK_RING_SINGLE = a => `rgb(0, 138, 57, ${a.toFixed(2)})`;
 const COLOR_CLICK_RING_DOUBLE = a => `rgb(138, 0, 138, ${a.toFixed(2)})`;
