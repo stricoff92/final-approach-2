@@ -6,3 +6,5 @@
 # copy non js assets to build directory
 rsync -av --progress src/ build/ --exclude js
 
+# add cache busting asset url params
+python3 addcb.py
