@@ -6,6 +6,7 @@ function runDisplayLoop() {
     clearCanvas(state);
 
     drawPageTitle(state);
+
     if (state.game.phase === PHASE_2_LIVE) {
         drawGameScene(state);
         drawGauges(state);
@@ -17,6 +18,7 @@ function runDisplayLoop() {
         drawLoadingIcon(state);
     }
     drawButtons(state);
+    drawClickRing(state);
 
     window.requestAnimationFrame(runDisplayLoop)
 }
@@ -104,19 +106,10 @@ function drawLoadingIcon(state) {
     state.ctx.stroke();
 }
 
-function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
-    const mapDx = mapCoord[0] - cameraPosition[0];
-    const mapDy = mapCoord[1] - cameraPosition[1];
-    return [
-        mapDx + camera.canvasHalfW,
-        camera.canvasH - (mapDy + camera.canvasHalfH),
-    ];
-}
-
 function drawGameScene(state) {
     const nowTS = performance.now();
     const plane = state.plane;
-    const mapDims = plane.dimensions[plane.flare];
+    const planeMapDims = plane.dimensions[plane.flare];
 
     // Draw ground/sky horizon
     const planeAltMeters = plane.posMapCoord[1] / state.map.mapUnitsPerMeter;
@@ -185,8 +178,8 @@ function drawGameScene(state) {
             state.camera,
         );
         state.ctx.beginPath();
-        state.ctx.strokeStyle = "#ff0";
-        state.ctx.lineWidth = 5;
+        state.ctx.strokeStyle = "#fff";
+        state.ctx.lineWidth = 8;
         state.ctx.moveTo(...paintLineP0);
         state.ctx.lineTo(...paintLineP1);
         state.ctx.stroke();
@@ -238,17 +231,140 @@ function drawGameScene(state) {
         state.ctx.stroke();
     }
 
+    // Draw altitude indicator if over min altutude
+    const runwayAltitudeM = state.map.rwP0MapCoord[1] * state.map.mapUnitsPerMeter;
+    const planeBottomAltitudeM = (
+        state.plane.posMapCoord[1]
+        - (
+            state.plane.dimensions[state.plane.flare][1] / 2
+            * state.map.mapUnitsPerMeter
+        )
+    ) / state.map.mapUnitsPerMeter;
+    if(!plane.crashFrame && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
+        // Altitude Text
+        const altText1P = [
+            state.camera.canvasHalfW,
+            Math.round(state.camera.canvasH * 0.6),
+        ];
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#000";
+        state.ctx.font = "20px Arial";
+        state.ctx.textBaseline = "middle";
+        state.ctx.textAlign = "left";
+        state.ctx.fillText("ground", ...altText1P);
+        const altText2P = [
+            altText1P[0],
+            altText1P[1] + 25,
+        ];
+        state.ctx.beginPath();
+        state.ctx.font = "bold 25px Arial";
+        state.ctx.fillText(`${planeBottomAltitudeM.toFixed(0)} M`, ...altText2P);
+
+        // Altitude Arrow
+        const altLineP1 = [
+            altText1P[0] - 5,
+            altText1P[1] - 7,
+        ];
+        const altLineP2 = [
+            altText2P[0] - 5,
+            state.camera.canvasH * 0.9,
+        ];
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#000"
+        state.ctx.lineWidth = 1;
+        state.ctx.moveTo(...altLineP1);
+        state.ctx.lineTo(...altLineP2);
+        state.ctx.stroke();
+        const altArrowHeadLen = 15
+        state.ctx.beginPath();
+        state.ctx.moveTo(...altLineP2);
+        state.ctx.lineTo(altLineP2[0] - altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
+        state.ctx.stroke();
+        state.ctx.beginPath();
+        state.ctx.moveTo(...altLineP2);
+        state.ctx.lineTo(altLineP2[0] + altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
+        state.ctx.stroke();
+    }
+
+    if(!plane.crashFrame && plane.posMapCoord[0] < state.map.rwP0MapCoord[0]) {
+        // Runway Distance Text
+        const distanceToRWM = (state.map.rwP0MapCoord[0] - plane.posMapCoord[0]) / state.map.mapUnitsPerMeter;
+        const rwDText1P = [
+            state.camera.canvasHalfW,
+            Math.round(state.camera.canvasH * 0.35),
+        ];
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#000";
+        state.ctx.font = "20px Arial";
+        state.ctx.textBaseline = "middle";
+        state.ctx.textAlign = "left";
+        state.ctx.fillText("runway", ...rwDText1P);
+        const rwDText2P = [
+            rwDText1P[0],
+            rwDText1P[1] + 25,
+        ];
+        state.ctx.beginPath();
+        state.ctx.font = "bold 25px Arial";
+        state.ctx.fillText(`${distanceToRWM.toFixed(0)} M`, ...rwDText2P);
+
+        // Runway Distance Arrow
+        const rwDLineP1 = [
+            rwDText2P[0],
+            rwDText2P[1] + 17,
+        ];
+        const rwDLineP2 = [
+            state.camera.canvasW * 0.9,
+            rwDText2P[1] + 17,
+        ];
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#000"
+        state.ctx.lineWidth = 1;
+        state.ctx.moveTo(...rwDLineP1);
+        state.ctx.lineTo(...rwDLineP2);
+        state.ctx.stroke();
+        const altArrowHeadLen = 15
+        state.ctx.beginPath();
+        state.ctx.moveTo(...rwDLineP2);
+        state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] - altArrowHeadLen / 2);
+        state.ctx.stroke();
+        state.ctx.beginPath();
+        state.ctx.moveTo(...rwDLineP2);
+        state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] + altArrowHeadLen / 2);
+        state.ctx.stroke();
+    }
+
+
 
     if(!plane.crashFrame) {
-        const canvasDims = mapDims.map(d => d * state.map.mapUnitsPerMeter);
-        const planeCanvasX1 = state.camera.canvasHalfW - (canvasDims[0] / 2);
-        const planeCanvasY1 = state.camera.canvasHalfH - (canvasDims[1] / 2);
+        // Draw Plane Shadow
+        const planeCanvasDims = planeMapDims.map(d => d * state.map.mapUnitsPerMeter);
+        const shadowCenterMapCoord = [
+            plane.posMapCoord[0] + state.plane.posMapCoord[1] * 0.4,
+            plane.posMapCoord[1] * -0.2,
+        ];
+        const shadowCenterCanvasCoord = mapCoordToCanvasCoord(
+            shadowCenterMapCoord, plane.posMapCoord, state.camera
+        );
+        const shadowCanvasDims = planeCanvasDims.map((d, ix) => d / (ix + 1));
+        state.ctx.beginPath();
+        state.ctx.fillStyle = `rgb(0, 0, 0, 0.27)`;
+        state.ctx.rect(
+            shadowCenterCanvasCoord[0] - shadowCanvasDims[0] / 2,
+            shadowCenterCanvasCoord[1] - shadowCanvasDims[1] / 2,
+            ...shadowCanvasDims
+        );
+        state.ctx.fill();
+
+        // Draw plane
+        const planeCanvasX1 = state.camera.canvasHalfW - (planeCanvasDims[0] / 2);
+        const planeCanvasY1 = state.camera.canvasHalfH - (planeCanvasDims[1] / 2);
+        state.ctx.beginPath();
         state.ctx.drawImage(
             plane.assets[plane.flare],
             planeCanvasX1,
             planeCanvasY1,
-            canvasDims[0],
-            canvasDims[1],
+            planeCanvasDims[0],
+            planeCanvasDims[1],
         );
     }
 
@@ -272,6 +388,26 @@ function drawGameScene(state) {
 }
 
 function drawGauges(state) {
+}
+
+function drawClickRing(state) {
+    if(state.game.lastClick.frameCreated !== null && state.game.phase === PHASE_2_LIVE) {
+        if(state.game.frame > state.game.lastClick.frameCreated + CLICK_RING_MAX_FRAME_AGE) {
+            return;
+        }
+        const percentRemaining = (CLICK_RING_MAX_FRAME_AGE - (state.game.frame - state.game.lastClick.frameCreated)) / CLICK_RING_MAX_FRAME_AGE;
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = state.game.lastClick.color(Math.max(0.1, 1 * percentRemaining));
+        state.ctx.lineWidth = CLICK_RING_WIDTH;
+        state.ctx.arc(
+            state.game.lastClick.canvasCoord[0],
+            state.game.lastClick.canvasCoord[1],
+            CLICK_RING_MAX_RADIUS_CANVAS_PX * (1 - percentRemaining),
+            0,
+            TWO_PI,
+        );
+        state.ctx.stroke()
+    }
 }
 
 

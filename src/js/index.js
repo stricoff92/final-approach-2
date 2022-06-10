@@ -34,6 +34,11 @@ document.addEventListener("DOMContentLoaded", function() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, false);
 
+    const canvas = document.getElementById("game-canvas");
+    if(urlContainsDebug()) {
+        canvas.style.border = "1px solid #f00";
+    }
+
     window.setGameState = function(gs) {
         window._gamestate = gs;
     }
@@ -63,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function() {
     window.setGameState(state);
 
     // Register single & double clicks on the canvas.
-    const canvas = document.getElementById("game-canvas");
+
     const singleClickDelayMS = 200;
     let lastSingleClickTS;
     let singleClickTimer;
@@ -79,8 +84,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         if(diffBeteenClicks > singleClickDelayMS) {
             singleClickTimer = setTimeout(() => {
-                const rect = canvas.getBoundingClientRect();
-                const clickCanvasCoord = [
+                let rect = canvas.getBoundingClientRect();
+                let clickCanvasCoord = [
                     Math.round(event.clientX - rect.left),
                     Math.round(event.clientY - rect.top),
                 ];
@@ -103,9 +108,25 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
+    window.addEventListener('keydown', event => {
+        const key = event.key;
+        const clickCanvasCoord = null;
+        switch (true) {
+            case event.key === "ArrowLeft" || event.key === "ArrowUp" || event.key === " ":
+                window.registerClick({
+                    clickCanvasCoord,
+                    isDoubleClick: true,
+                });
+                break;
+            case event.key === "ArrowRight" || event.key === "ArrowDown":
+                window.registerClick({
+                    clickCanvasCoord,
+                    isDoubleClick: false,
+                });
+        }
+    });
+
     setTimeout(runDataLoop);
     window.requestAnimationFrame(runDisplayLoop);
-
-
 
 });

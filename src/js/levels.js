@@ -76,7 +76,7 @@ function setPlaneProps(state) {
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
         state.plane.horizontalMS = knotsToMS(58);
-        state.plane.verticalMS = 0;
+        state.plane.verticalMS = feetPerMinToMS(-550);
 
         state.plane.lastLevelOutTS = performance.now();
         state.plane.lastLevelOutFrame = state.game.frame;
@@ -92,7 +92,7 @@ function setPlaneProps(state) {
         state.plane.flareTerminalHorizontalMS = knotsToMS(40);
         state.plane.flareHorizontalAccelerationMS2 = knotsToMS(-5);
         state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
-            return -0.02 * Math.pow(elapsedMS / 1000, 2) - 0.05;
+            return -0.02 * Math.pow(elapsedMS / 1000, 2) - 0.75;
         }
         state.plane.touchDownFlareMinMS = 18;
 
@@ -115,15 +115,15 @@ function setPlaneProps(state) {
 }
 
 function setMapProps(state) {
-    const mupm = 25
-    state.map.mapUnitsPerMeter = 25;
+    state.map.mapUnitsPerMeter = state.camera.canvasW > 700 ? 21 : 14;
+    const mupm = state.map.mapUnitsPerMeter;
     const level = state.game.level;
     if(level < 4) {
         state.map.terrain = TERRAIN_FOREST;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [1500 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 200 * mupm];
-        state.map.gsP1MapCoord = [1010 * mupm, 0];
+        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1050 * mupm, 0];
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
         if(level == 1) {
             state.map.windXVel = 0;

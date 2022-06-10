@@ -5,7 +5,7 @@ function createNewState(maxCompletedLevel) {
     maxCompletedLevel = maxCompletedLevel || 0;
     const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     return {
-        isDebug: window.location.search.indexOf("debug") !== -1,
+        isDebug: urlContainsDebug(),
         ctx,
         pageTitle: {
             text: "Select A Level",
@@ -22,6 +22,11 @@ function createNewState(maxCompletedLevel) {
             level: null,
             lastFrameTS: performance.now(),
             acceptControlCommands: false,
+            lastClick: {
+                canvasCoord: null,
+                frameCreated: null,
+                color: null,
+            }
         },
         camera: {
             canvasW: null,
@@ -196,10 +201,15 @@ function runDataLoop() {
     state = orientButtons(state);
     const nextClick = window.nextClick();
     if(nextClick) {
+        const isArrow = nextClick.clickCanvasCoord === null;
+        nextClick.clickCanvasCoord = nextClick.clickCanvasCoord || [state.camera.canvasHalfW, state.camera.canvasHalfH]
+        const isBottomHalfClick = nextClick.clickCanvasCoord[1] > state.camera.canvasHalfH;
+        let isFlareCmd;
         if(nextClick.isDoubleClick) {
             window.addCommand({
                 cmd: COMMAND_FLARE,
             });
+            isFlareCmd = true;
         } else {
             let isButtonClick = false;
             for(let i = 0; i < state.buttons.length; i++) {
@@ -214,10 +224,17 @@ function runDataLoop() {
                 }
             }
             if (!isButtonClick) {
-                window.addCommand({
-                    cmd: COMMAND_LEVEL_OUT,
-                });
+                const cmd = isArrow ? (nextClick.isDoubleClick ? COMMAND_FLARE : COMMAND_LEVEL_OUT) : isBottomHalfClick ? COMMAND_LEVEL_OUT : COMMAND_FLARE;
+                isFlareCmd = cmd === COMMAND_FLARE;
+                window.addCommand({ cmd });
             }
+        }
+        if (typeof isFlareCmd !== "undefined") {
+            state.game.lastClick = {
+                canvasCoord: deepCopy(nextClick.clickCanvasCoord),
+                frameCreated: state.game.frame,
+                color: isFlareCmd ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
+            };
         }
     }
 
@@ -279,14 +296,11 @@ function runDataLoop() {
             state = processGroundInteractions(state);
         }
 
-        if(state.game.frame %  25 === 0 && !state.plane.halted) {
+        if(state.game.frame %  10 === 0 && !state.plane.halted && !state.plane.touchedDown) {
             state.plane.previousPoints.unshift(
                 deepCopy(state.plane.posMapCoord)
             );
-            state.plane.previousPoints = state.plane.previousPoints.slice(0, 30);
-        }
-        if(state.plane.halted) {
-            state.plane.previousPoints = [];
+            state.plane.previousPoints = state.plane.previousPoints.slice(0, 10);
         }
 
         window.setGameState(state);
@@ -369,7 +383,7 @@ function processGroundInteractions(state) {
     if(plane.touchedDown) {
         // Plane has touched down and negatively accelerating
         if(plane.horizontalMS > 0) {
-            const deltaHVMF = plane.rwNegAccelerationMS / fps;
+            const deltaHVMF = plane.rwNegAccelerationMS * (!plane.flare ? 1 : 2) / fps;
             const newHorizontalMS = Math.max(0, plane.horizontalMS + deltaHVMF)
             state.plane.horizontalMS = newHorizontalMS;
             if(newHorizontalMS > 0) {
@@ -447,9 +461,13 @@ function processGroundInteractions(state) {
             state.plane.touchdownStats.isSmooth = plane.touchdownStats.bounces === 0;
             state.plane.touchdownStats.verticalMS = touchdownMS;
             state.plane.touchdownStats.isFlaired = plane.flare === IS_FLARING;
-            state.plane.touchdownStats.runwayWastedM = Math.round((
-                plane.posMapCoord[0] - state.map.gsP1MapCoord[0]
-            ) / state.map.mapUnitsPerMeter);
+            state.plane.touchdownStats.runwayWastedM = Math.max(
+                0,
+                Math.round(
+                    (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                    / state.map.mapUnitsPerMeter
+                )
+            );
 
             console.log("👉 touch down");
             console.log(state.plane.touchdownStats);
