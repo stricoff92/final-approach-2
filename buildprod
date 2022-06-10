@@ -1,10 +1,17 @@
 #!/bin/bash
 
-# transpile JS files
+echo "🤖 hello!"
+
+echo "🤖 removing old build files"
+rm -rf build/
+
+echo "🤖 transpiling files"
 ./node_modules/.bin/babel src --out-dir build --presets=@babel/env
 
-# copy non js assets to build directory
+echo "🤖 copying non js files"
 rsync -av --progress src/ build/ --exclude js
 
-# add cache busting asset url params
+echo "🤖 adding cache buster to urls"
 python3 addcb.py
+
+echo "🤖 bye!"
