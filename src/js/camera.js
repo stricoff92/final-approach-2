@@ -241,7 +241,7 @@ function drawGameScene(state) {
         )
     ) / state.map.mapUnitsPerMeter;
     if(!plane.crashFrame && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
-        // Text
+        // Altitude Text
         const altText1P = [
             state.camera.canvasHalfW,
             Math.round(state.camera.canvasH * 0.6),
@@ -260,7 +260,7 @@ function drawGameScene(state) {
         state.ctx.font = "bold 25px Arial";
         state.ctx.fillText(`${planeBottomAltitudeM.toFixed(0)} M`, ...altText2P);
 
-        // Arrow
+        // Altitude Arrow
         const altLineP1 = [
             altText1P[0] - 5,
             altText1P[1] - 7,
@@ -285,6 +285,54 @@ function drawGameScene(state) {
         state.ctx.lineTo(altLineP2[0] + altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
         state.ctx.stroke();
     }
+
+    if(!plane.crashFrame && plane.posMapCoord[0] < state.map.rwP0MapCoord[0]) {
+        // Runway Distance Text
+        const distanceToRWM = (state.map.rwP0MapCoord[0] - plane.posMapCoord[0]) / state.map.mapUnitsPerMeter;
+        const rwDText1P = [
+            state.camera.canvasHalfW,
+            Math.round(state.camera.canvasH * 0.35),
+        ];
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#000";
+        state.ctx.font = "20px Arial";
+        state.ctx.textBaseline = "middle";
+        state.ctx.textAlign = "left";
+        state.ctx.fillText("runway", ...rwDText1P);
+        const rwDText2P = [
+            rwDText1P[0],
+            rwDText1P[1] + 25,
+        ];
+        state.ctx.beginPath();
+        state.ctx.font = "bold 25px Arial";
+        state.ctx.fillText(`${distanceToRWM.toFixed(0)} M`, ...rwDText2P);
+
+        // Runway Distance Arrow
+        const rwDLineP1 = [
+            rwDText2P[0],
+            rwDText2P[1] + 17,
+        ];
+        const rwDLineP2 = [
+            state.camera.canvasW * 0.9,
+            rwDText2P[1] + 17,
+        ];
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#000"
+        state.ctx.lineWidth = 1;
+        state.ctx.moveTo(...rwDLineP1);
+        state.ctx.lineTo(...rwDLineP2);
+        state.ctx.stroke();
+        const altArrowHeadLen = 15
+        state.ctx.beginPath();
+        state.ctx.moveTo(...rwDLineP2);
+        state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] - altArrowHeadLen / 2);
+        state.ctx.stroke();
+        state.ctx.beginPath();
+        state.ctx.moveTo(...rwDLineP2);
+        state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] + altArrowHeadLen / 2);
+        state.ctx.stroke();
+    }
+
 
 
     if(!plane.crashFrame) {
