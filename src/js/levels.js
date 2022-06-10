@@ -76,7 +76,7 @@ function setPlaneProps(state) {
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
         state.plane.horizontalMS = knotsToMS(58);
-        state.plane.verticalMS = 0;
+        state.plane.verticalMS = feetPerMinToMS(-550);
 
         state.plane.lastLevelOutTS = performance.now();
         state.plane.lastLevelOutFrame = state.game.frame;
@@ -92,7 +92,7 @@ function setPlaneProps(state) {
         state.plane.flareTerminalHorizontalMS = knotsToMS(40);
         state.plane.flareHorizontalAccelerationMS2 = knotsToMS(-5);
         state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
-            return -0.02 * Math.pow(elapsedMS / 1000, 2) - 0.05;
+            return -0.02 * Math.pow(elapsedMS / 1000, 2) - 0.5;
         }
         state.plane.touchDownFlareMinMS = 18;
 

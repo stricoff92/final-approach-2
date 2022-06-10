@@ -84,8 +84,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         if(diffBeteenClicks > singleClickDelayMS) {
             singleClickTimer = setTimeout(() => {
-                const rect = canvas.getBoundingClientRect();
-                const clickCanvasCoord = [
+                let rect = canvas.getBoundingClientRect();
+                let clickCanvasCoord = [
                     Math.round(event.clientX - rect.left),
                     Math.round(event.clientY - rect.top),
                 ];
@@ -105,6 +105,37 @@ document.addEventListener("DOMContentLoaded", function() {
                 clickCanvasCoord,
                 isDoubleClick: true,
             });
+        }
+    });
+
+    window.addEventListener('keydown', event => {
+        const key = event.key;
+        const clickCanvasCoord = null;
+        switch (event.key) {
+            case "ArrowLeft":
+                window.registerClick({
+                    clickCanvasCoord,
+                    isDoubleClick: true,
+                });
+                break;
+            case "ArrowRight":
+                window.registerClick({
+                    clickCanvasCoord,
+                    isDoubleClick: false,
+                });
+                break;
+            case "ArrowUp":
+                window.registerClick({
+                    clickCanvasCoord,
+                    isDoubleClick: true,
+                });
+                break;
+            case "ArrowDown":
+                window.registerClick({
+                    clickCanvasCoord,
+                    isDoubleClick: false,
+                });
+                break;
         }
     });
 

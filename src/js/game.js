@@ -201,10 +201,15 @@ function runDataLoop() {
     state = orientButtons(state);
     const nextClick = window.nextClick();
     if(nextClick) {
+        const isArrow = nextClick.clickCanvasCoord === null;
+        nextClick.clickCanvasCoord = nextClick.clickCanvasCoord || [state.camera.canvasHalfW, state.camera.canvasHalfH]
+        const isBottomHalfClick = nextClick.clickCanvasCoord[1] > state.camera.canvasHalfH;
+        let isFlareCmd;
         if(nextClick.isDoubleClick) {
             window.addCommand({
                 cmd: COMMAND_FLARE,
             });
+            isFlareCmd = true;
         } else {
             let isButtonClick = false;
             for(let i = 0; i < state.buttons.length; i++) {
@@ -219,16 +224,16 @@ function runDataLoop() {
                 }
             }
             if (!isButtonClick) {
-                window.addCommand({
-                    cmd: COMMAND_LEVEL_OUT,
-                });
+                const cmd = isArrow ? (nextClick.isDoubleClick ? COMMAND_FLARE : COMMAND_LEVEL_OUT) : isBottomHalfClick ? COMMAND_LEVEL_OUT : COMMAND_FLARE;
+                isFlareCmd = cmd === COMMAND_FLARE;
+                window.addCommand({ cmd });
             }
         }
-        if (state.game.phase === PHASE_2_LIVE) {
+        if (typeof isFlareCmd !== "undefined") {
             state.game.lastClick = {
                 canvasCoord: deepCopy(nextClick.clickCanvasCoord),
                 frameCreated: state.game.frame,
-                color: nextClick.isDoubleClick ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
+                color: isFlareCmd ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
             };
         }
     }
@@ -291,14 +296,11 @@ function runDataLoop() {
             state = processGroundInteractions(state);
         }
 
-        if(state.game.frame %  25 === 0 && !state.plane.halted) {
+        if(state.game.frame %  13 === 0 && !state.plane.halted && !state.plane.touchedDown) {
             state.plane.previousPoints.unshift(
                 deepCopy(state.plane.posMapCoord)
             );
             state.plane.previousPoints = state.plane.previousPoints.slice(0, 30);
-        }
-        if(state.plane.halted) {
-            state.plane.previousPoints = [];
         }
 
         window.setGameState(state);
@@ -381,7 +383,7 @@ function processGroundInteractions(state) {
     if(plane.touchedDown) {
         // Plane has touched down and negatively accelerating
         if(plane.horizontalMS > 0) {
-            const deltaHVMF = plane.rwNegAccelerationMS / fps;
+            const deltaHVMF = plane.rwNegAccelerationMS * (!plane.flare ? 1 : 2) / fps;
             const newHorizontalMS = Math.max(0, plane.horizontalMS + deltaHVMF)
             state.plane.horizontalMS = newHorizontalMS;
             if(newHorizontalMS > 0) {
