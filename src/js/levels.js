@@ -92,7 +92,7 @@ function setPlaneProps(state) {
         state.plane.flareTerminalHorizontalMS = knotsToMS(40);
         state.plane.flareHorizontalAccelerationMS2 = knotsToMS(-5);
         state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
-            return -0.02 * Math.pow(elapsedMS / 1000, 2) - 0.5;
+            return -0.02 * Math.pow(elapsedMS / 1000, 2) - 0.75;
         }
         state.plane.touchDownFlareMinMS = 18;
 
@@ -116,7 +116,7 @@ function setPlaneProps(state) {
 
 function setMapProps(state) {
     const mupm = 25
-    state.map.mapUnitsPerMeter = 25;
+    state.map.mapUnitsPerMeter = state.camera.canvasW > 700 ? 21 : 14;
     const level = state.game.level;
     if(level < 4) {
         state.map.terrain = TERRAIN_FOREST;

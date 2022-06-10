@@ -111,31 +111,18 @@ document.addEventListener("DOMContentLoaded", function() {
     window.addEventListener('keydown', event => {
         const key = event.key;
         const clickCanvasCoord = null;
-        switch (event.key) {
-            case "ArrowLeft":
+        switch (true) {
+            case event.key === "ArrowLeft" || event.key === "ArrowUp" || event.key === " ":
                 window.registerClick({
                     clickCanvasCoord,
                     isDoubleClick: true,
                 });
                 break;
-            case "ArrowRight":
+            case event.key === "ArrowRight" || event.key === "ArrowDown":
                 window.registerClick({
                     clickCanvasCoord,
                     isDoubleClick: false,
                 });
-                break;
-            case "ArrowUp":
-                window.registerClick({
-                    clickCanvasCoord,
-                    isDoubleClick: true,
-                });
-                break;
-            case "ArrowDown":
-                window.registerClick({
-                    clickCanvasCoord,
-                    isDoubleClick: false,
-                });
-                break;
         }
     });
 
