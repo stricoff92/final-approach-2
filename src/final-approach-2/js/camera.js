@@ -165,8 +165,9 @@ function drawHelp(state) {
         state.camera.canvasHalfW, titleOffset
     );
     state.ctx.beginPath();
-    const imgSide = Math.min(state.camera.canvasH * 0.6, state.camera.canvasW);
-    state.ctx.drawImage(state.helpImg, 0, titleOffset + 20, imgSide, imgSide);
+    const imgSide = Math.min(state.camera.canvasH * 0.8, state.camera.canvasW);
+    const tlcX = (state.camera.canvasW - imgSide) / 2;
+    state.ctx.drawImage(state.helpImg, tlcX, titleOffset + 20, imgSide, imgSide);
 }
 
 function drawGameScene(state) {
