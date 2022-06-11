@@ -409,8 +409,8 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
     state.ctx.fill();
 
     const rwLenMeters = (rwCanvasP1[0] - rwCanvasP0[0]) / state.map.mapUnitsPerMeter;
-    const paintLineLengthMeters = 3;
-    const paintLineIntervalMeters = 12;
+    const paintLineLengthMeters = 9;
+    const paintLineIntervalMeters = 16;
     let rwMeterPtr = paintLineIntervalMeters;
     while(true)
     {
@@ -432,10 +432,8 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
         );
         const paintLineP1 = mapCoordToCanvasCoord(
             [
-                state.map.rwP0MapCoord[0]
-                    + rwMeterPtr * state.map.mapUnitsPerMeter
-                    + paintLineLengthMeters * state.map.mapUnitsPerMeter,
-                    state.map.rwP0MapCoord[1],
+                paintLineP0X + paintLineLengthMeters * state.map.mapUnitsPerMeter,
+                state.map.rwP0MapCoord[1],
             ],
             state.plane.posMapCoord,
             state.camera,
@@ -448,7 +446,7 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
             state.ctx.lineTo(...paintLineP1);
             state.ctx.stroke();
         }
-        rwMeterPtr += paintLineIntervalMeters;
+        rwMeterPtr += (paintLineLengthMeters + paintLineIntervalMeters);
     }
 
     // Draw tire strikes
