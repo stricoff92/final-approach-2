@@ -1,4 +1,10 @@
 
+function getHelpImg() {
+    const img = new Image();
+    img.src = "img/how-to-play.svg";
+    return img;
+}
+
 function createNewState(maxCompletedLevel) {
     const canvas = document.getElementById("game-canvas");
     const ctx = canvas.getContext("2d")
@@ -7,6 +13,7 @@ function createNewState(maxCompletedLevel) {
     return {
         isDebug: urlContainsDebug(),
         ctx,
+        helpImg: getHelpImg(),
         pageTitle: {
             text: "Select A Level",
             color: COLOR_PURPLE,
@@ -86,7 +93,16 @@ function createNewState(maxCompletedLevel) {
             gsP1MapCoord: null,
             tireStrikes: [],
         },
-        buttons: availableLevels.map(levelNumber => {
+        buttons: [{
+            type: BUTTON_TYPE_MAIN,
+            text: "Help",
+            boxCoord: null,
+            handler: () => {
+                window.addCommand({
+                    cmd: COMMAND_SHOW_HELP,
+                });
+            }
+        }].concat(availableLevels.map(levelNumber => {
             const disabled = levelNumber > (maxCompletedLevel + 1);
             const btn = {
                 type: BUTTON_TYPE_GRID,
@@ -101,7 +117,7 @@ function createNewState(maxCompletedLevel) {
                 }
             };
             return btn;
-        }),
+        })),
     }
 }
 
@@ -123,7 +139,7 @@ function orientButtons(state) {
         const gridBtnWidth = 125;
         const gridBtnHeight = 40;
         const gridBtnCol0XOffset = state.camera.canvasHalfW - (gridBtnWidth + gridBtnMargin)// 30;
-        const gridBtnRow0YOffset = 70;
+        const gridBtnRow0YOffset = 100;
         let rowPointer = 0;
         let colPointer = 0;
         const gridMaxRows = Math.min(5, Math.floor(
@@ -327,6 +343,22 @@ function runDataLoop() {
                 color: COLOR_PURPLE,
             }
             state.buttons = [];
+        }
+        if(
+            nextCmd.cmd === COMMAND_SHOW_HELP
+            && state.game.phase === PHASE_0_LOBBY
+        ) {
+            state.game.phase = PHASE_N1_SHOW_HELP;
+            state.pageTitle = null;
+            state.buttons = [{
+                type: BUTTON_TYPE_MAIN,
+                boxCoord: null,
+                text: 'Menu',
+                handler: () => {
+                    location.reload(); // fix this
+                    return;
+                },
+            }];
         }
     }
 

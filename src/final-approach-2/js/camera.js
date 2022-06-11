@@ -16,10 +16,11 @@ function runDisplayLoop() {
     }
     else if(state.game.phase === PHASE_1_COUNTDOWN) {
         drawLoadingIcon(state);
+    } else if (state.game.phase === PHASE_N1_SHOW_HELP) {
+        drawHelp(state);
     }
     drawButtons(state);
     drawClickRing(state);
-
     window.requestAnimationFrame(runDisplayLoop)
 }
 
@@ -77,13 +78,13 @@ function drawPageTitle(state) {
     if(state.pageTitle) {
         state.ctx.beginPath();
         state.ctx.fillStyle = state.pageTitle.color;
-        state.ctx.font = "bold 38px Arial";
+        state.ctx.font = "bold 32px Arial";
         state.ctx.textBaseline = "middle";
         state.ctx.textAlign = "center";
         state.ctx.fillText(
             state.pageTitle.text,
             state.camera.canvasHalfW,
-            30,
+            60,
         );
     }
 }
@@ -104,6 +105,24 @@ function drawLoadingIcon(state) {
         percent * TWO_PI,
     );
     state.ctx.stroke();
+}
+
+
+
+function drawHelp(state) {
+    state.ctx.beginPath();
+    state.ctx.fillStyle = "#f00";
+    state.ctx.font = "bold italic 36px Arial";
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "center";
+    const titleOffset = 70;
+    state.ctx.fillText(
+        "Land the plane.",
+        state.camera.canvasHalfW, titleOffset
+    );
+    state.ctx.beginPath();
+    const imgSide = Math.min(state.camera.canvasH * 0.6, state.camera.canvasW);
+    state.ctx.drawImage(state.helpImg, 0, titleOffset + 20, imgSide, imgSide);
 }
 
 function drawGameScene(state) {

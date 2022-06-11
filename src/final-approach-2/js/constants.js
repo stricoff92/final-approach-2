@@ -3,10 +3,12 @@ const NOT_IMPLEMENTED = "Not Implemented";
 
 const TWO_PI = Math.PI * 2;
 
+const PHASE_N1_SHOW_HELP = -1;
 const PHASE_0_LOBBY = 0;
 const PHASE_1_COUNTDOWN = 1;
 const PHASE_2_LIVE = 2;
 const PHASE_3_SCORESCREEN = 3;
+
 
 const PLANE_C152 = "c152";
 const PLANE_F18 = "f18";
@@ -25,6 +27,7 @@ const COMMAND_QUIT_LEVEL = 0;
 const COMMAND_LEVEL_OUT = 1;
 const COMMAND_FLARE = 2;
 const COMMAND_START_LEVEL = 3;
+const COMMAND_SHOW_HELP = 4;
 
 const COLOR_PURPLE = "#620080";
 const COLOR_BLACK = "#000";
