@@ -220,36 +220,25 @@ function runDataLoop() {
         const isArrow = nextClick.clickCanvasCoord === null;
         nextClick.clickCanvasCoord = nextClick.clickCanvasCoord || [state.camera.canvasHalfW, state.camera.canvasHalfH]
         const isBottomHalfClick = nextClick.clickCanvasCoord[1] > state.camera.canvasHalfH;
-        let isFlareCmd;
-        if(nextClick.isDoubleClick) {
-            window.addCommand({
-                cmd: COMMAND_FLARE,
-            });
-            isFlareCmd = true;
-        } else {
-            let isButtonClick = false;
-            for(let i = 0; i < state.buttons.length; i++) {
-                let clickInside = coordInsideBoxCoord(
-                    nextClick.clickCanvasCoord,
-                    state.buttons[i].boxCoord,
-                )
-                if (clickInside) {
-                    state.buttons[i].handler();
-                    isButtonClick = true;
-                    break;
-                }
-            }
-            if (!isButtonClick) {
-                const cmd = isArrow ? (nextClick.isDoubleClick ? COMMAND_FLARE : COMMAND_LEVEL_OUT) : isBottomHalfClick ? COMMAND_LEVEL_OUT : COMMAND_FLARE;
-                isFlareCmd = cmd === COMMAND_FLARE;
-                window.addCommand({ cmd });
+        let isButtonClick = false;
+        for(let i = 0; i < state.buttons.length; i++) {
+            let clickInside = coordInsideBoxCoord(
+                nextClick.clickCanvasCoord,
+                state.buttons[i].boxCoord,
+            )
+            if (clickInside) {
+                state.buttons[i].handler();
+                isButtonClick = true;
+                break;
             }
         }
-        if (typeof isFlareCmd !== "undefined") {
+        if (!isButtonClick) {
+            const cmd = isArrow ? (nextClick.isTopHalfOfScreenClick ? COMMAND_FLARE : COMMAND_LEVEL_OUT) : isBottomHalfClick ? COMMAND_LEVEL_OUT : COMMAND_FLARE;
+            window.addCommand({ cmd });
             state.game.lastClick = {
                 canvasCoord: deepCopy(nextClick.clickCanvasCoord),
                 frameCreated: state.game.frame,
-                color: isFlareCmd ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
+                color: cmd === COMMAND_FLARE ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
             };
         }
     }

@@ -67,45 +67,16 @@ document.addEventListener("DOMContentLoaded", function() {
     const state = updateCameraCanvasMetaData(createNewState());
     window.setGameState(state);
 
-    // Register single & double clicks on the canvas.
-
-    const singleClickDelayMS = 200;
-    let lastSingleClickTS;
-    let singleClickTimer;
-    let diffBeteenClicks;
+    // Register single clicks on the canvas.
     canvas.addEventListener("click", event => {
-        const nowTS = performance.now();
-        if(!lastSingleClickTS) {
-            lastSingleClickTS = nowTS;
-            diffBeteenClicks = singleClickDelayMS + 1;
-        } else {
-            diffBeteenClicks = nowTS - lastSingleClickTS;
-            lastSingleClickTS = nowTS;
-        }
-        if(diffBeteenClicks > singleClickDelayMS) {
-            singleClickTimer = setTimeout(() => {
-                let rect = canvas.getBoundingClientRect();
-                let clickCanvasCoord = [
-                    Math.round(event.clientX - rect.left),
-                    Math.round(event.clientY - rect.top),
-                ];
-                window.registerClick({
-                    clickCanvasCoord,
-                    isDoubleClick: false,
-                });
-            }, singleClickDelayMS);
-        } else {
-            clearTimeout(singleClickTimer);
-            const rect = canvas.getBoundingClientRect();
-            const clickCanvasCoord = [
-                Math.round(event.clientX - rect.left),
-                Math.round(event.clientY - rect.top),
-            ];
-            window.registerClick({
-                clickCanvasCoord,
-                isDoubleClick: true,
-            });
-        }
+        let rect = canvas.getBoundingClientRect();
+        let clickCanvasCoord = [
+            Math.round(event.clientX - rect.left),
+            Math.round(event.clientY - rect.top),
+        ];
+        window.registerClick({
+            clickCanvasCoord,
+        });
     });
 
     window.addEventListener('keydown', event => {
@@ -115,13 +86,13 @@ document.addEventListener("DOMContentLoaded", function() {
             case event.key === "ArrowLeft" || event.key === "ArrowUp" || event.key === " ":
                 window.registerClick({
                     clickCanvasCoord,
-                    isDoubleClick: true,
+                    isTopHalfOfScreenClick: true,
                 });
                 break;
             case event.key === "ArrowRight" || event.key === "ArrowDown":
                 window.registerClick({
                     clickCanvasCoord,
-                    isDoubleClick: false,
+                    isTopHalfOfScreenClick: false,
                 });
         }
     });
