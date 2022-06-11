@@ -452,18 +452,33 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
 
     // Draw tire strikes
     state.map.tireStrikes.forEach(ts => {
-        const tireStrikeLifespanMS = 1600;
-        const ageMS = nowTS - ts.createdTS;
-        if(ageMS > tireStrikeLifespanMS) {
-            return;
-        }
-        const radiusCurve = ageSeconds => Math.pow(ageSeconds, 2) * 0.5 + 0.5;
-        const percentAge = ageMS / tireStrikeLifespanMS;
-        const alpha = 1 - percentAge;
-        const radius = Math.max(0.2, radiusCurve(ageMS / 1000)) * state.map.mapUnitsPerMeter;
         const tsCanvasPoint = mapCoordToCanvasCoord(
             ts.originMapPoint, state.plane.posMapCoord, state.camera,
         );
+        // Draw mark on runway
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "rgb(0, 0, 0, 0.6)";
+        state.ctx.lineWidth = 6;
+        state.ctx.moveTo(
+            tsCanvasPoint[0] - (0.75 * state.map.mapUnitsPerMeter),
+            tsCanvasPoint[1],
+        );
+        state.ctx.lineTo(
+            tsCanvasPoint[0] + (0.75 * state.map.mapUnitsPerMeter),
+            tsCanvasPoint[1],
+        );
+        state.ctx.stroke();
+
+        // Draw "rising haze" effect if strike was recent
+        const tireStrikeRHLifespanMS = 1600;
+        const ageMS = nowTS - ts.createdTS;
+        if(ageMS > tireStrikeRHLifespanMS) {
+            return;
+        }
+        const radiusCurve = ageSeconds => Math.pow(ageSeconds, 2) * 0.5 + 0.5;
+        const percentAge = ageMS / tireStrikeRHLifespanMS;
+        const alpha = 1 - percentAge;
+        const radius = Math.max(0.2, radiusCurve(ageMS / 1000)) * state.map.mapUnitsPerMeter;
         const xOffset = -1 * state.map.mapUnitsPerMeter * percentAge;
         const yOffset = 2 * state.map.mapUnitsPerMeter * percentAge;
 

@@ -461,14 +461,17 @@ function processGroundInteractions(state) {
         const bigBounceMin = state.plane.minTouchdownVerticalMS * 0.666;
         let addRubberStrike = true;
 
+        console.log({
+            touchdownMS,
+            flare: state.plane.flare,
+            bigBounceMin,
+            noBounceMin,
+        });
+
         // check for plane crash into runway
         if (isCrash)
         {
             console.log("👉 crash");
-            console.log({
-                touchdownMS,
-                flare: state.plane.flare,
-            });
             state.plane.crashFrame++;
             addRubberStrike = false;
         }
