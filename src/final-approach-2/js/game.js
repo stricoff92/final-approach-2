@@ -332,6 +332,8 @@ function runDataLoop() {
                 color: COLOR_PURPLE,
             }
             state.buttons = [];
+            state = setPlaneProps(state);
+            state = setMapProps(state);
         }
         if(
             nextCmd.cmd === COMMAND_SHOW_HELP
@@ -359,9 +361,6 @@ function runDataLoop() {
             state.game.frame = 1;
             state.game.phase = PHASE_2_LIVE,
             state.game.acceptControlCommands = true;
-
-            state = setPlaneProps(state);
-            state = setMapProps(state);
 
             state.buttons = [{
                 type: BUTTON_TYPE_MAIN,
