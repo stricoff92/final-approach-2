@@ -137,7 +137,7 @@ function orientButtons(state) {
         const gridBtnsCount = gridBtns.length;
         const gridBtnMargin = 4;
         const gridBtnWidth = 125;
-        const gridBtnHeight = 28;
+        const gridBtnHeight = 35;
         const gridBtnCol0XOffset = state.camera.canvasHalfW - (gridBtnWidth + gridBtnMargin)// 30;
         const gridBtnRow0YOffset = 100;
         let rowPointer = 0;

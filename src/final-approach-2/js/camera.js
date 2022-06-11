@@ -202,18 +202,20 @@ function drawGameScene(state) {
     }
 
     // Draw runway
+    const cameraMapCoordXMin = scTopLeftMapCoord[0];
+    const cameraMapCoordXMax = scTopRightMapCoord[0];
     const runwayVisible = Boolean((
-        state.map.rwP0MapCoord[0] >= scTopRightMapCoord[0]
-        && state.map.rwP0MapCoord[0] <= scTopLeftMapCoord[0]
+        state.map.rwP0MapCoord[0] >= cameraMapCoordXMin
+        && state.map.rwP0MapCoord[0] <= cameraMapCoordXMax
     ) || (
-        state.map.rwP1MapCoord[0] >= scTopRightMapCoord[0]
-        && state.map.rwP1MapCoord[0] <= scTopLeftMapCoord[0]
+        state.map.rwP1MapCoord[0] >= cameraMapCoordXMin
+        && state.map.rwP1MapCoord[0] <= cameraMapCoordXMax
     ) || (
-        state.map.rwP0MapCoord[0] <= scTopRightMapCoord[0]
-        && state.map.rwP1MapCoord[0] >= scTopLeftMapCoord[0]
+        state.map.rwP0MapCoord[0] <= cameraMapCoordXMin
+        && state.map.rwP1MapCoord[0] >= cameraMapCoordXMax
     ));
     if(runwayVisible) {
-        _drawRunway(state);
+        _drawRunway(state, nowTS, cameraMapCoordXMax);
     }
 
     // Draw Glide Slope
@@ -388,7 +390,7 @@ function drawGameScene(state) {
     }
 }
 
-function _drawRunway(state) {
+function _drawRunway(state, nowTS, cameraMapCoordXMax) {
     const runwayHalfVisualHMeters = 4.3 * state.map.mapUnitsPerMeter;
     const rwCanvasP0 = mapCoordToCanvasCoord(
         state.map.rwP0MapCoord, state.plane.posMapCoord, state.camera
@@ -409,16 +411,20 @@ function _drawRunway(state) {
     const rwLenMeters = (rwCanvasP1[0] - rwCanvasP0[0]) / state.map.mapUnitsPerMeter;
     const paintLineLengthMeters = 3;
     const paintLineIntervalMeters = 12;
-    let rwMeterPtr = paintLineLengthMeters;
+    let rwMeterPtr = paintLineIntervalMeters;
     while(true)
     {
-        if(rwMeterPtr >= rwLenMeters - paintLineLengthMeters) {
+        if(rwMeterPtr >= rwLenMeters - paintLineIntervalMeters) {
             break;
         }
 
+        const paintLineP0X = state.map.rwP0MapCoord[0] + rwMeterPtr * state.map.mapUnitsPerMeter;
+        if(paintLineP0X > cameraMapCoordXMax) {
+            break;
+        }
         const paintLineP0 = mapCoordToCanvasCoord(
             [
-                state.map.rwP0MapCoord[0] + rwMeterPtr * state.map.mapUnitsPerMeter,
+                paintLineP0X,
                 state.map.rwP0MapCoord[1],
             ],
             state.plane.posMapCoord,
@@ -434,12 +440,14 @@ function _drawRunway(state) {
             state.plane.posMapCoord,
             state.camera,
         );
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = "#fff";
-        state.ctx.lineWidth = 8;
-        state.ctx.moveTo(...paintLineP0);
-        state.ctx.lineTo(...paintLineP1);
-        state.ctx.stroke();
+        if(paintLineP1[0] >= 0) {
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = "#fff";
+            state.ctx.lineWidth = 8;
+            state.ctx.moveTo(...paintLineP0);
+            state.ctx.lineTo(...paintLineP1);
+            state.ctx.stroke();
+        }
         rwMeterPtr += paintLineIntervalMeters;
     }
 
@@ -460,7 +468,7 @@ function _drawRunway(state) {
         const xOffset = -1 * state.map.mapUnitsPerMeter * percentAge;
         const yOffset = 2 * state.map.mapUnitsPerMeter * percentAge;
 
-        state.ctx.beginPath()
+        state.ctx.beginPath();
         state.ctx.fillStyle = `rgb(50, 50, 50, ${ alpha })`;
         state.ctx.arc(
             tsCanvasPoint[0] + xOffset,
