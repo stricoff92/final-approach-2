@@ -359,14 +359,19 @@ function drawGameScene(state) {
         );
         state.ctx.fill();
 
+        const shakeLifespanMS = 450;
+        const tireStrikeLen = state.map.tireStrikes.length;
+        const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
+        const showVisualSkake = Boolean(lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanMS >= nowTS);
+
         // Draw plane
         const planeCanvasX1 = state.camera.canvasHalfW - (planeCanvasDims[0] / 2);
         const planeCanvasY1 = state.camera.canvasHalfH - (planeCanvasDims[1] / 2);
         state.ctx.beginPath();
         state.ctx.drawImage(
             plane.assets[plane.flare],
-            planeCanvasX1,
-            planeCanvasY1,
+            planeCanvasX1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
+            planeCanvasY1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
             planeCanvasDims[0],
             planeCanvasDims[1],
         );
