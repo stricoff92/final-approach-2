@@ -137,7 +137,7 @@ function orientButtons(state) {
         const gridBtnsCount = gridBtns.length;
         const gridBtnMargin = 4;
         const gridBtnWidth = 125;
-        const gridBtnHeight = 28;
+        const gridBtnHeight = 35;
         const gridBtnCol0XOffset = state.camera.canvasHalfW - (gridBtnWidth + gridBtnMargin)// 30;
         const gridBtnRow0YOffset = 100;
         let rowPointer = 0;
@@ -220,36 +220,25 @@ function runDataLoop() {
         const isArrow = nextClick.clickCanvasCoord === null;
         nextClick.clickCanvasCoord = nextClick.clickCanvasCoord || [state.camera.canvasHalfW, state.camera.canvasHalfH]
         const isBottomHalfClick = nextClick.clickCanvasCoord[1] > state.camera.canvasHalfH;
-        let isFlareCmd;
-        if(nextClick.isDoubleClick) {
-            window.addCommand({
-                cmd: COMMAND_FLARE,
-            });
-            isFlareCmd = true;
-        } else {
-            let isButtonClick = false;
-            for(let i = 0; i < state.buttons.length; i++) {
-                let clickInside = coordInsideBoxCoord(
-                    nextClick.clickCanvasCoord,
-                    state.buttons[i].boxCoord,
-                )
-                if (clickInside) {
-                    state.buttons[i].handler();
-                    isButtonClick = true;
-                    break;
-                }
-            }
-            if (!isButtonClick) {
-                const cmd = isArrow ? (nextClick.isDoubleClick ? COMMAND_FLARE : COMMAND_LEVEL_OUT) : isBottomHalfClick ? COMMAND_LEVEL_OUT : COMMAND_FLARE;
-                isFlareCmd = cmd === COMMAND_FLARE;
-                window.addCommand({ cmd });
+        let isButtonClick = false;
+        for(let i = 0; i < state.buttons.length; i++) {
+            let clickInside = coordInsideBoxCoord(
+                nextClick.clickCanvasCoord,
+                state.buttons[i].boxCoord,
+            )
+            if (clickInside) {
+                state.buttons[i].handler();
+                isButtonClick = true;
+                break;
             }
         }
-        if (typeof isFlareCmd !== "undefined") {
+        if (!isButtonClick) {
+            const cmd = isArrow ? (nextClick.isTopHalfOfScreenClick ? COMMAND_FLARE : COMMAND_LEVEL_OUT) : isBottomHalfClick ? COMMAND_LEVEL_OUT : COMMAND_FLARE;
+            window.addCommand({ cmd });
             state.game.lastClick = {
                 canvasCoord: deepCopy(nextClick.clickCanvasCoord),
                 frameCreated: state.game.frame,
-                color: isFlareCmd ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
+                color: cmd === COMMAND_FLARE ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
             };
         }
     }
@@ -343,6 +332,8 @@ function runDataLoop() {
                 color: COLOR_PURPLE,
             }
             state.buttons = [];
+            state = setPlaneProps(state);
+            state = setMapProps(state);
         }
         if(
             nextCmd.cmd === COMMAND_SHOW_HELP
@@ -370,9 +361,6 @@ function runDataLoop() {
             state.game.frame = 1;
             state.game.phase = PHASE_2_LIVE,
             state.game.acceptControlCommands = true;
-
-            state = setPlaneProps(state);
-            state = setMapProps(state);
 
             state.buttons = [{
                 type: BUTTON_TYPE_MAIN,
@@ -437,6 +425,7 @@ function processGroundInteractions(state) {
                                 planeBottomMapCoordY,
                             ]),
                             createdTS: performance.now(),
+                            shakeMeters: 0.03,
                         });
                         console.log("👉 end of flare");
                     }
@@ -473,14 +462,17 @@ function processGroundInteractions(state) {
         const bigBounceMin = state.plane.minTouchdownVerticalMS * 0.666;
         let addRubberStrike = true;
 
+        console.log({
+            touchdownMS,
+            flare: state.plane.flare,
+            bigBounceMin,
+            noBounceMin,
+        });
+
         // check for plane crash into runway
         if (isCrash)
         {
             console.log("👉 crash");
-            console.log({
-                touchdownMS,
-                flare: state.plane.flare,
-            });
             state.plane.crashFrame++;
             addRubberStrike = false;
         }
@@ -519,12 +511,17 @@ function processGroundInteractions(state) {
         }
 
         if (addRubberStrike) {
+            const shakeSizeCurve = tdMs => Math.max(
+                0.03,
+                Math.abs(tdMs) / 15
+            );
             state.map.tireStrikes.push({
                 originMapPoint: deepCopy([
                     plane.posMapCoord[0],
                     planeBottomMapCoordY,
                 ]),
                 createdTS: performance.now(),
+                shakeMeters: shakeSizeCurve(touchdownMS),
             });
         }
     }

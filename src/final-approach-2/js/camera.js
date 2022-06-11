@@ -1,5 +1,30 @@
 
 
+function getCanvasCornerMapCoords(state) {
+    const cornerTopLeftMapCoord = [
+        state.plane.posMapCoord[0] - state.camera.canvasHalfW,
+        state.plane.posMapCoord[1] - state.camera.canvasHalfH,
+    ];
+    const cornerTopRightMapCoord = [
+        state.plane.posMapCoord[0] + state.camera.canvasHalfW,
+        state.plane.posMapCoord[1] - state.camera.canvasHalfH,
+    ];
+    const cornerBottomLeftMapCoord = [
+        state.plane.posMapCoord[0] - state.camera.canvasHalfW,
+        state.plane.posMapCoord[1] + state.camera.canvasHalfH,
+    ];
+    const cornerBottomRightMapCoord = [
+        state.plane.posMapCoord[0] + state.camera.canvasHalfW,
+        state.plane.posMapCoord[1] + state.camera.canvasHalfH,
+    ];
+    return [
+        cornerTopLeftMapCoord,
+        cornerTopRightMapCoord,
+        cornerBottomLeftMapCoord,
+        cornerBottomRightMapCoord,
+    ];
+}
+
 function runDisplayLoop() {
 
     const state = window.readGameState();
@@ -9,7 +34,6 @@ function runDisplayLoop() {
 
     if (state.game.phase === PHASE_2_LIVE) {
         drawGameScene(state);
-        drawGauges(state);
         if(state.isDebug) {
             drawDebugData(state);
         }
@@ -26,6 +50,26 @@ function runDisplayLoop() {
 
 function clearCanvas(state) {
     state.ctx.clearRect(0, 0, state.camera.canvasW * 2, state.camera.canvasH * 2)
+}
+
+function drawClickRing(state) {
+    if(state.game.lastClick.frameCreated !== null && state.game.phase === PHASE_2_LIVE) {
+        if(state.game.frame > state.game.lastClick.frameCreated + CLICK_RING_MAX_FRAME_AGE) {
+            return;
+        }
+        const percentRemaining = (CLICK_RING_MAX_FRAME_AGE - (state.game.frame - state.game.lastClick.frameCreated)) / CLICK_RING_MAX_FRAME_AGE;
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = state.game.lastClick.color(Math.max(0.1, 1 * percentRemaining));
+        state.ctx.lineWidth = CLICK_RING_WIDTH;
+        state.ctx.arc(
+            state.game.lastClick.canvasCoord[0],
+            state.game.lastClick.canvasCoord[1],
+            CLICK_RING_MAX_RADIUS_CANVAS_PX * (1 - percentRemaining),
+            0,
+            TWO_PI,
+        );
+        state.ctx.stroke()
+    }
 }
 
 function drawButtons(state) {
@@ -121,14 +165,22 @@ function drawHelp(state) {
         state.camera.canvasHalfW, titleOffset
     );
     state.ctx.beginPath();
-    const imgSide = Math.min(state.camera.canvasH * 0.6, state.camera.canvasW);
-    state.ctx.drawImage(state.helpImg, 0, titleOffset + 20, imgSide, imgSide);
+    const imgSide = Math.min(state.camera.canvasH * 0.8, state.camera.canvasW);
+    const tlcX = (state.camera.canvasW - imgSide) / 2;
+    state.ctx.drawImage(state.helpImg, tlcX, titleOffset + 20, imgSide, imgSide);
 }
 
 function drawGameScene(state) {
     const nowTS = performance.now();
     const plane = state.plane;
     const planeMapDims = plane.dimensions[plane.flare];
+
+    const [
+        scTopLeftMapCoord,
+        scTopRightMapCoord,
+        scBottomLeftMapCoord,
+        scBottomRightMapCoord,
+    ] = getCanvasCornerMapCoords(state);
 
     // Draw ground/sky horizon
     const planeAltMeters = plane.posMapCoord[1] / state.map.mapUnitsPerMeter;
@@ -150,89 +202,22 @@ function drawGameScene(state) {
         state.ctx.fill();
     }
 
-    // draw runway
-    const runwayHalfVisualHMeters = 4.3 * state.map.mapUnitsPerMeter;
-    const rwCanvasP0 = mapCoordToCanvasCoord(
-        state.map.rwP0MapCoord, plane.posMapCoord, state.camera
-    );
-    const rwCanvasP1 = mapCoordToCanvasCoord(
-        state.map.rwP1MapCoord, plane.posMapCoord, state.camera,
-    );
-    state.ctx.beginPath()
-    state.ctx.fillStyle = COLOR_RW_FOREST;
-    state.ctx.rect(
-        rwCanvasP0[0],
-        rwCanvasP0[1] - runwayHalfVisualHMeters,
-        rwCanvasP1[0] - rwCanvasP0[0],
-        runwayHalfVisualHMeters * 2,
-    );
-    state.ctx.fill();
-
-    const rwLenMeters = (rwCanvasP1[0] - rwCanvasP0[0]) / state.map.mapUnitsPerMeter;
-    const paintLineLengthMeters = 3;
-    const paintLineIntervalMeters = 12;
-    let rwMeterPtr = paintLineLengthMeters;
-    while(true)
-    {
-        if(rwMeterPtr >= rwLenMeters - paintLineLengthMeters) {
-            break;
-        }
-
-        const paintLineP0 = mapCoordToCanvasCoord(
-            [
-                state.map.rwP0MapCoord[0] + rwMeterPtr * state.map.mapUnitsPerMeter,
-                state.map.rwP0MapCoord[1],
-            ],
-            plane.posMapCoord,
-            state.camera,
-        );
-        const paintLineP1 = mapCoordToCanvasCoord(
-            [
-                state.map.rwP0MapCoord[0]
-                    + rwMeterPtr * state.map.mapUnitsPerMeter
-                    + paintLineLengthMeters * state.map.mapUnitsPerMeter,
-                    state.map.rwP0MapCoord[1],
-            ],
-            plane.posMapCoord,
-            state.camera,
-        );
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = "#fff";
-        state.ctx.lineWidth = 8;
-        state.ctx.moveTo(...paintLineP0);
-        state.ctx.lineTo(...paintLineP1);
-        state.ctx.stroke();
-        rwMeterPtr += paintLineIntervalMeters;
+    // Draw runway
+    const cameraMapCoordXMin = scTopLeftMapCoord[0];
+    const cameraMapCoordXMax = scTopRightMapCoord[0];
+    const runwayVisible = Boolean((
+        state.map.rwP0MapCoord[0] >= cameraMapCoordXMin
+        && state.map.rwP0MapCoord[0] <= cameraMapCoordXMax
+    ) || (
+        state.map.rwP1MapCoord[0] >= cameraMapCoordXMin
+        && state.map.rwP1MapCoord[0] <= cameraMapCoordXMax
+    ) || (
+        state.map.rwP0MapCoord[0] <= cameraMapCoordXMin
+        && state.map.rwP1MapCoord[0] >= cameraMapCoordXMax
+    ));
+    if(runwayVisible) {
+        _drawRunway(state, nowTS, cameraMapCoordXMax);
     }
-
-    // Draw tire strikes
-    state.map.tireStrikes.forEach(ts => {
-        const tireStrikeLifespanMS = 1600;
-        const ageMS = nowTS - ts.createdTS;
-        if(ageMS > tireStrikeLifespanMS) {
-            return;
-        }
-        const radiusCurve = ageSeconds => Math.pow(ageSeconds, 2) * 0.5 + 0.5;
-        const percentAge = ageMS / tireStrikeLifespanMS;
-        const alpha = 1 - percentAge;
-        const radius = Math.max(0.2, radiusCurve(ageMS / 1000)) * state.map.mapUnitsPerMeter;
-        const tsCanvasPoint = mapCoordToCanvasCoord(
-            ts.originMapPoint, plane.posMapCoord, state.camera,
-        );
-        const xOffset = -1 * state.map.mapUnitsPerMeter * percentAge;
-        const yOffset = 2 * state.map.mapUnitsPerMeter * percentAge;
-
-        state.ctx.beginPath()
-        state.ctx.fillStyle = `rgb(50, 50, 50, ${ alpha })`;
-        state.ctx.arc(
-            tsCanvasPoint[0] + xOffset,
-            tsCanvasPoint[1] - yOffset,
-            radius,
-            0,
-            TWO_PI,
-        );
-        state.ctx.fill();
-    });
 
     // Draw Glide Slope
     if(Math.random() < 0.9) {
@@ -374,14 +359,19 @@ function drawGameScene(state) {
         );
         state.ctx.fill();
 
+        const shakeLifespanMS = 450;
+        const tireStrikeLen = state.map.tireStrikes.length;
+        const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
+        const showVisualSkake = Boolean(lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanMS >= nowTS);
+
         // Draw plane
         const planeCanvasX1 = state.camera.canvasHalfW - (planeCanvasDims[0] / 2);
         const planeCanvasY1 = state.camera.canvasHalfH - (planeCanvasDims[1] / 2);
         state.ctx.beginPath();
         state.ctx.drawImage(
             plane.assets[plane.flare],
-            planeCanvasX1,
-            planeCanvasY1,
+            planeCanvasX1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
+            planeCanvasY1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
             planeCanvasDims[0],
             planeCanvasDims[1],
         );
@@ -406,27 +396,108 @@ function drawGameScene(state) {
     }
 }
 
-function drawGauges(state) {
-}
+function _drawRunway(state, nowTS, cameraMapCoordXMax) {
+    const runwayHalfVisualHMeters = 4.3 * state.map.mapUnitsPerMeter;
+    const rwCanvasP0 = mapCoordToCanvasCoord(
+        state.map.rwP0MapCoord, state.plane.posMapCoord, state.camera
+    );
+    const rwCanvasP1 = mapCoordToCanvasCoord(
+        state.map.rwP1MapCoord, state.plane.posMapCoord, state.camera,
+    );
+    state.ctx.beginPath()
+    state.ctx.fillStyle = COLOR_RW_FOREST;
+    state.ctx.rect(
+        rwCanvasP0[0],
+        rwCanvasP0[1] - runwayHalfVisualHMeters,
+        rwCanvasP1[0] - rwCanvasP0[0],
+        runwayHalfVisualHMeters * 2,
+    );
+    state.ctx.fill();
 
-function drawClickRing(state) {
-    if(state.game.lastClick.frameCreated !== null && state.game.phase === PHASE_2_LIVE) {
-        if(state.game.frame > state.game.lastClick.frameCreated + CLICK_RING_MAX_FRAME_AGE) {
+    const rwLenMeters = (rwCanvasP1[0] - rwCanvasP0[0]) / state.map.mapUnitsPerMeter;
+    const paintLineLengthMeters = 9;
+    const paintLineIntervalMeters = 16;
+    let rwMeterPtr = paintLineIntervalMeters;
+    while(true)
+    {
+        if(rwMeterPtr >= rwLenMeters - paintLineIntervalMeters) {
+            break;
+        }
+
+        const paintLineP0X = state.map.rwP0MapCoord[0] + rwMeterPtr * state.map.mapUnitsPerMeter;
+        if(paintLineP0X > cameraMapCoordXMax) {
+            break;
+        }
+        const paintLineP0 = mapCoordToCanvasCoord(
+            [
+                paintLineP0X,
+                state.map.rwP0MapCoord[1],
+            ],
+            state.plane.posMapCoord,
+            state.camera,
+        );
+        const paintLineP1 = mapCoordToCanvasCoord(
+            [
+                paintLineP0X + paintLineLengthMeters * state.map.mapUnitsPerMeter,
+                state.map.rwP0MapCoord[1],
+            ],
+            state.plane.posMapCoord,
+            state.camera,
+        );
+        if(paintLineP1[0] >= 0) {
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = "#fff";
+            state.ctx.lineWidth = 8;
+            state.ctx.moveTo(...paintLineP0);
+            state.ctx.lineTo(...paintLineP1);
+            state.ctx.stroke();
+        }
+        rwMeterPtr += (paintLineLengthMeters + paintLineIntervalMeters);
+    }
+
+    // Draw tire strikes
+    state.map.tireStrikes.forEach(ts => {
+        const tsCanvasPoint = mapCoordToCanvasCoord(
+            ts.originMapPoint, state.plane.posMapCoord, state.camera,
+        );
+        // Draw mark on runway
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "rgb(0, 0, 0, 0.6)";
+        state.ctx.lineWidth = 6;
+        state.ctx.moveTo(
+            tsCanvasPoint[0] - (0.75 * state.map.mapUnitsPerMeter),
+            tsCanvasPoint[1],
+        );
+        state.ctx.lineTo(
+            tsCanvasPoint[0] + (0.75 * state.map.mapUnitsPerMeter),
+            tsCanvasPoint[1],
+        );
+        state.ctx.stroke();
+
+        // Draw "rising haze" effect if strike was recent
+        const tireStrikeRHLifespanMS = 1600;
+        const ageMS = nowTS - ts.createdTS;
+        if(ageMS > tireStrikeRHLifespanMS) {
             return;
         }
-        const percentRemaining = (CLICK_RING_MAX_FRAME_AGE - (state.game.frame - state.game.lastClick.frameCreated)) / CLICK_RING_MAX_FRAME_AGE;
+        const radiusCurve = ageSeconds => Math.pow(ageSeconds, 2) * 0.5 + 0.5;
+        const percentAge = ageMS / tireStrikeRHLifespanMS;
+        const alpha = 1 - percentAge;
+        const radius = Math.max(0.2, radiusCurve(ageMS / 1000)) * state.map.mapUnitsPerMeter;
+        const xOffset = -1 * state.map.mapUnitsPerMeter * percentAge;
+        const yOffset = 2 * state.map.mapUnitsPerMeter * percentAge;
+
         state.ctx.beginPath();
-        state.ctx.strokeStyle = state.game.lastClick.color(Math.max(0.1, 1 * percentRemaining));
-        state.ctx.lineWidth = CLICK_RING_WIDTH;
+        state.ctx.fillStyle = `rgb(50, 50, 50, ${ alpha })`;
         state.ctx.arc(
-            state.game.lastClick.canvasCoord[0],
-            state.game.lastClick.canvasCoord[1],
-            CLICK_RING_MAX_RADIUS_CANVAS_PX * (1 - percentRemaining),
+            tsCanvasPoint[0] + xOffset,
+            tsCanvasPoint[1] - yOffset,
+            radius,
             0,
             TWO_PI,
         );
-        state.ctx.stroke()
-    }
+        state.ctx.fill();
+    });
 }
 
 
