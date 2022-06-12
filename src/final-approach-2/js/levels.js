@@ -131,6 +131,10 @@ function setMapProps(state) {
             state.map.windXMin = -4;
             state.map.windXMax = 4;
             state.map.windXTarg = 0;
+            state.map.cloudLayer = {
+                topY: 120 * mupm,
+                bottomY: 85 * mupm,
+            };
         } else if (level == 2) {
             throw NOT_IMPLEMENTED;
         } else if(level == 3) {

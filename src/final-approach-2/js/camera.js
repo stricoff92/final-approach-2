@@ -182,25 +182,7 @@ function drawGameScene(state) {
         scBottomRightMapCoord,
     ] = getCanvasCornerMapCoords(state);
 
-    // Draw ground/sky horizon
-    const planeAltMeters = plane.posMapCoord[1] / state.map.mapUnitsPerMeter;
-    const maxAltToShowHorizonMeters = 100;
-    if(planeAltMeters > maxAltToShowHorizonMeters) {
-        state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_SKY_FOREST;
-        state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
-        state.ctx.fill();
-    } else {
-        const percentSky = planeAltMeters / maxAltToShowHorizonMeters;
-        state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_SKY_FOREST;
-        state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH * percentSky)
-        state.ctx.fill();
-        state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_GROUND_FOREST;
-        state.ctx.rect(0, state.camera.canvasH * percentSky, state.camera.canvasW, state.camera.canvasH)
-        state.ctx.fill();
-    }
+    _drawHorizonAndCloudsLayers(state);
 
     // Draw runway
     const cameraMapCoordXMin = scTopLeftMapCoord[0];
@@ -393,6 +375,57 @@ function drawGameScene(state) {
             );
             state.ctx.fill();
         }
+    }
+}
+
+function _drawHorizonAndCloudsLayers(state) {
+    const mupm = state.map.mapUnitsPerMeter
+    const cl = state.map.cloudLayer;
+    const planeYPos = state.plane.posMapCoord[1];
+
+    const cloudsBelow = cl.topY < planeYPos;
+    const cloudsAbove = cl.bottomY > planeYPos;
+
+    const gradientSize = 30 * mupm;
+    const toCloudsGradientStart = cl.topY + gradientSize;
+    const fromCloudsGradientEnd = cl.bottomY - gradientSize;
+
+    if(cloudsBelow) {
+        console.log("cloudsBelow")
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_SKY_FOREST;
+        state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
+        state.ctx.fill();
+
+        if(planeYPos < toCloudsGradientStart) {
+            const percentGray = (toCloudsGradientStart - planeYPos) / gradientSize;
+            state.ctx.beginPath();
+            state.ctx.fillStyle = COLOR_CLOUD_LAYER(percentGray);
+            state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
+            state.ctx.fill();
+        }
+    }
+    else if (cloudsAbove) {
+        console.log("cloudsAbove")
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_GROUND_FOREST;
+        state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
+        state.ctx.fill();
+
+        if(planeYPos > fromCloudsGradientEnd) {
+            const percentGray = (planeYPos - fromCloudsGradientEnd) / gradientSize;
+            state.ctx.beginPath();
+            state.ctx.fillStyle = COLOR_CLOUD_LAYER(percentGray);
+            state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
+            state.ctx.fill();
+        }
+    }
+    else {
+        console.log("INSIDE CLOUDS")
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_CLOUD_LAYER(1);
+        state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
+        state.ctx.fill();
     }
 }
 

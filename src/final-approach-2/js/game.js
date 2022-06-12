@@ -87,6 +87,7 @@ function createNewState(maxCompletedLevel) {
             windXMin: null,
             windXMax: null,
             windXTarg: null,
+            cloudLayer: null,
             rwP0MapCoord: null,
             rwP1MapCoord: null,
             gsP0MapCoord: null,
