@@ -182,7 +182,7 @@ function drawGameScene(state) {
         scBottomRightMapCoord,
     ] = getCanvasCornerMapCoords(state);
 
-    _drawHorizonAndCloudsLayers(state);
+    _drawHorizonAndCloudsLayer(state);
 
     // Draw runway
     const cameraMapCoordXMin = scTopLeftMapCoord[0];
@@ -378,7 +378,7 @@ function drawGameScene(state) {
     }
 }
 
-function _drawHorizonAndCloudsLayers(state) {
+function _drawHorizonAndCloudsLayer(state) {
     const mupm = state.map.mapUnitsPerMeter
     const cl = state.map.cloudLayer;
     const planeYPos = state.plane.posMapCoord[1];
@@ -391,7 +391,6 @@ function _drawHorizonAndCloudsLayers(state) {
     const fromCloudsGradientEnd = cl.bottomY - gradientSize;
 
     if(cloudsBelow) {
-        console.log("cloudsBelow")
         state.ctx.beginPath();
         state.ctx.fillStyle = COLOR_SKY_FOREST;
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
@@ -406,7 +405,6 @@ function _drawHorizonAndCloudsLayers(state) {
         }
     }
     else if (cloudsAbove) {
-        console.log("cloudsAbove")
         state.ctx.beginPath();
         state.ctx.fillStyle = COLOR_GROUND_FOREST;
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
@@ -421,7 +419,6 @@ function _drawHorizonAndCloudsLayers(state) {
         }
     }
     else {
-        console.log("INSIDE CLOUDS")
         state.ctx.beginPath();
         state.ctx.fillStyle = COLOR_CLOUD_LAYER(1);
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
