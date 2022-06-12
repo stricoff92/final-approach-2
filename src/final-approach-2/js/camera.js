@@ -474,9 +474,7 @@ function _drawExplosionEffect(state) {
     );
     state.ctx.fill();
 
-    let drawMark = true;
     if(state.plane.crashFrame <= CRASH_EFFECT_1_MAX_FRAME) {
-        drawMark = false;
         let bottomAlpha = 0.5;
         let phase1PercentComplete = state.plane.crashFrame / CRASH_EFFECT_1_MAX_FRAME;
         let phase1Alpha = bottomAlpha + 0.5 * (1 - phase1PercentComplete);
@@ -519,21 +517,6 @@ function _drawExplosionEffect(state) {
         );
         state.ctx.fill()
     }
-
-    // if(drawMark) {
-    //     const markCanvasCoord = mapCoordToCanvasCoord(
-    //         state.plane.posMapCoord, state.plane.posMapCoord, state.camera,
-    //     );
-    //     state.ctx.beginPath();
-    //     state.ctx.fillStyle = "rgb(0, 0, 0, 0.7)";
-    //     state.ctx.ellipse(
-    //         markCanvasCoord[0], markCanvasCoord[1],
-    //         2.5 * mupm, 0.4 * mupm,
-    //         0,
-    //         0, TWO_PI,
-    //     );
-    //     state.ctx.fill();
-    // }
 
     window._debrisObjects.forEach(debris => {
         let doCanvasCoord = mapCoordToCanvasCoord(
