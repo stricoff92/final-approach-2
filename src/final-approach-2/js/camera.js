@@ -460,28 +460,52 @@ function _drawHorizonAndCloudsLayer(state) {
 
 function _drawExplosionEffect(state) {
     const mupm = state.map.mapUnitsPerMeter;
+
+    const markCanvasCoord = mapCoordToCanvasCoord(
+        state.plane.posMapCoord, state.plane.posMapCoord, state.camera,
+    );
+    state.ctx.beginPath();
+    state.ctx.fillStyle = "rgb(0, 0, 0, 0.7)";
+    state.ctx.ellipse(
+        markCanvasCoord[0], markCanvasCoord[1],
+        2.5 * mupm, 0.4 * mupm,
+        0,
+        0, TWO_PI,
+    );
+    state.ctx.fill();
+
+    let drawMark = true;
     if(state.plane.crashFrame <= CRASH_EFFECT_1_MAX_FRAME) {
-        const expMapX = state.plane.posMapCoord[0] + getRandomFloat(-1, 1) * mupm;
-        const expMapY = state.plane.posMapCoord[1] + getRandomFloat(-1, 1) * mupm;
+        drawMark = false;
+        let bottomAlpha = 0.5;
+        let phase1PercentComplete = state.plane.crashFrame / CRASH_EFFECT_1_MAX_FRAME;
+        let phase1Alpha = bottomAlpha + 0.5 * (1 - phase1PercentComplete);
+        const expMapX = state.plane.posMapCoord[0] + getRandomFloat(-2, 2) * mupm;
+        const expMapY = state.plane.posMapCoord[1] + getRandomFloat(-0.5, 2.5) * mupm;
         const expCanvasCoord = mapCoordToCanvasCoord(
             [expMapX, expMapY], state.plane.posMapCoord, state.camera,
         );
         const expRadius = getRandomFloat(4, 6) * mupm;
 
         state.ctx.beginPath()
-        state.ctx.fillStyle = `rgb(99, 92, 85, ${ getRandomFloat(0.65, 0.95) })`;
-        state.ctx.arc(expCanvasCoord[0], expCanvasCoord[1], expRadius, 0, TWO_PI);
+        state.ctx.fillStyle = `rgb(99, 92, 85, ${ phase1Alpha.toFixed(2) })`;
+        state.ctx.ellipse(
+            expCanvasCoord[0], expCanvasCoord[1],
+            expRadius * getRandomFloat(0.8, 1.3),
+            expRadius * getRandomFloat(0.8, 1.3),
+            0,
+            0, TWO_PI,);
         state.ctx.fill();
     }
     else if (state.plane.crashFrame <= CRASH_EFFECT_2_MAX_FRAME) {
         const percentComplete = (
             state.plane.crashFrame - CRASH_EFFECT_1_MAX_FRAME
         ) / (CRASH_EFFECT_2_MAX_FRAME - CRASH_EFFECT_1_MAX_FRAME);
-        const radius = (6 + 5 * percentComplete) * mupm;
-        const xRise = 1 * percentComplete * mupm;
+        const radius = (4 + 7 * percentComplete) * mupm;
+        const yRise = 4 * percentComplete * mupm;
         const alpha = 0.5 * (1 - percentComplete);
         const hazeCanvasCoord = mapCoordToCanvasCoord(
-            [state.plane.posMapCoord[0] + xRise, state.plane.posMapCoord[1]],
+            [state.plane.posMapCoord[0], state.plane.posMapCoord[1] + yRise],
             state.plane.posMapCoord,
             state.camera,
         );
@@ -496,6 +520,21 @@ function _drawExplosionEffect(state) {
         state.ctx.fill()
     }
 
+    // if(drawMark) {
+    //     const markCanvasCoord = mapCoordToCanvasCoord(
+    //         state.plane.posMapCoord, state.plane.posMapCoord, state.camera,
+    //     );
+    //     state.ctx.beginPath();
+    //     state.ctx.fillStyle = "rgb(0, 0, 0, 0.7)";
+    //     state.ctx.ellipse(
+    //         markCanvasCoord[0], markCanvasCoord[1],
+    //         2.5 * mupm, 0.4 * mupm,
+    //         0,
+    //         0, TWO_PI,
+    //     );
+    //     state.ctx.fill();
+    // }
+
     window._debrisObjects.forEach(debris => {
         let doCanvasCoord = mapCoordToCanvasCoord(
             debris.mapCoords, state.plane.posMapCoord, state.camera,
@@ -509,6 +548,8 @@ function _drawExplosionEffect(state) {
         );
         state.ctx.fill();
     });
+
+
 }
 
 function _drawCloudEffects(
