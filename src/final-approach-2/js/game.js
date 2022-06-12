@@ -565,7 +565,7 @@ function createDebrisObjects(state) {
                     3,
                     state.plane.horizontalMS * getRandomFloat(0.6, 2.5)
                 ) * (Math.random() < 0.4 ? -1 : 1),
-            yVelocityMS: state.plane.verticalMS * getRandomFloat(-2.5, 2.5)
+            yVelocityMS: state.plane.verticalMS * getRandomFloat(-2.5, 2.5),
         });
     }
 }
