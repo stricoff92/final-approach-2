@@ -5,7 +5,7 @@ function getHelpImg() {
     return img;
 }
 
-function createNewState(maxCompletedLevel) {
+function createNewState(maxCompletedLevel, skipHelpScreen) {
 
     window._cloudEffects = [];
 
@@ -17,12 +17,9 @@ function createNewState(maxCompletedLevel) {
         isDebug: urlContainsDebug(),
         ctx,
         helpImg: getHelpImg(),
-        pageTitle: {
-            text: "Select A Level",
-            color: COLOR_PURPLE,
-        },
+        pageTitle: skipHelpScreen ?  {text: "Select A Level", color: COLOR_PURPLE} : null,
         game: {
-            phase: PHASE_0_LOBBY,
+            phase: skipHelpScreen ? PHASE_0_LOBBY : PHASE_N1_SHOW_HELP,
             maxCountDownFrames: 60,
             countDownFrames: 0,
             frame: 0,
@@ -98,16 +95,7 @@ function createNewState(maxCompletedLevel) {
             tireStrikes: [],
             sunImg: null,
         },
-        buttons: [{
-            type: BUTTON_TYPE_MAIN,
-            text: "Help",
-            boxCoord: null,
-            handler: () => {
-                window.addCommand({
-                    cmd: COMMAND_SHOW_HELP,
-                });
-            }
-        }].concat(availableLevels.map(levelNumber => {
+        buttons: skipHelpScreen ? availableLevels.map(levelNumber => {
             const disabled = levelNumber > (maxCompletedLevel + 1);
             const btn = {
                 type: BUTTON_TYPE_GRID,
@@ -122,7 +110,7 @@ function createNewState(maxCompletedLevel) {
                 }
             };
             return btn;
-        })),
+        }) : [],
     }
 }
 
@@ -237,7 +225,7 @@ function runDataLoop() {
                 break;
             }
         }
-        if (!isButtonClick) {
+        if (!isButtonClick && state.game.phase === PHASE_2_LIVE) {
             const cmd = isArrow ? (nextClick.isTopHalfOfScreenClick ? COMMAND_FLARE : COMMAND_LEVEL_OUT) : isBottomHalfClick ? COMMAND_LEVEL_OUT : COMMAND_FLARE;
             window.addCommand({ cmd });
             state.game.lastClick = {
@@ -245,6 +233,30 @@ function runDataLoop() {
                 frameCreated: state.game.frame,
                 color: cmd === COMMAND_FLARE ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
             };
+        }
+        else if (state.game.phase === PHASE_N1_SHOW_HELP) {
+            state.game.phase = PHASE_0_LOBBY;
+            state.pageTitle = {
+                text: "Select A Level",
+                color: COLOR_PURPLE,
+            };
+            const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            state.buttons = availableLevels.map(levelNumber => {
+                const disabled = levelNumber > (state.game.maxCompletedLevel + 1);
+                const btn = {
+                    type: BUTTON_TYPE_GRID,
+                    text: disabled ? '🔒' : `Level ${levelNumber}`,
+                    boxCoord: null,
+                    disabled,
+                    handler: disabled ? ()=>{} : () => {
+                        window.addCommand({
+                            cmd: COMMAND_START_LEVEL,
+                            args: [ levelNumber ],
+                        });
+                    }
+                };
+                return btn;
+            });
         }
     }
 
@@ -271,7 +283,7 @@ function runDataLoop() {
             if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
                     updateCameraCanvasMetaData(
-                        createNewState(state.game.maxCompletedLevel)
+                        createNewState(state.game.maxCompletedLevel, true)
                     )
                 );
                 setTimeout(runDataLoop);

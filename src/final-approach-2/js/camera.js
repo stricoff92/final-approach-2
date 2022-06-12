@@ -159,7 +159,7 @@ function drawHelp(state) {
     state.ctx.font = "bold italic 36px Arial";
     state.ctx.textBaseline = "middle";
     state.ctx.textAlign = "center";
-    const titleOffset = 70;
+    const titleOffset = 15;
     state.ctx.fillText(
         "Land the plane.",
         state.camera.canvasHalfW, titleOffset
@@ -167,7 +167,17 @@ function drawHelp(state) {
     state.ctx.beginPath();
     const imgSide = Math.min(state.camera.canvasH * 0.8, state.camera.canvasW);
     const tlcX = (state.camera.canvasW - imgSide) / 2;
-    state.ctx.drawImage(state.helpImg, tlcX, titleOffset + 20, imgSide, imgSide);
+    state.ctx.drawImage(state.helpImg, tlcX, titleOffset + 16, imgSide, imgSide);
+
+    state.ctx.beginPath()
+    state.ctx.font = "20px Arial";
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "top";
+    state.ctx.fillText(
+        "Tap to continue",
+        state.camera.canvasHalfW,
+        titleOffset + 20 + imgSide + 6
+    );
 }
 
 function drawGameScene(state) {
