@@ -8,6 +8,7 @@ function getHelpImg() {
 function createNewState(maxCompletedLevel, skipHelpScreen) {
 
     window._cloudEffects = [];
+    window._debrisObjects = [];
 
     const canvas = document.getElementById("game-canvas");
     const ctx = canvas.getContext("2d")
@@ -302,6 +303,7 @@ function runDataLoop() {
 
         if(state.plane.crashFrame) {
             state.plane.crashFrame++;
+            adjustDebrisPositions(state);
         }
 
         // Adjust state for plane flying through the air
@@ -426,6 +428,7 @@ function processGroundInteractions(state) {
                     // Plane overan the runway
                     console.log("👉 overran runway");
                     state.plane.crashFrame++;
+                    createDebrisObjects(state);
                 }
                 else {
                     if(
@@ -461,6 +464,7 @@ function processGroundInteractions(state) {
     // Plane crashed into the ground
     if(!overRunway && planeBottomMapCoordY <= 0) {
         state.plane.crashFrame++;
+        createDebrisObjects(state);
         return state;
     }
 
@@ -489,6 +493,7 @@ function processGroundInteractions(state) {
             console.log("👉 crash");
             state.plane.crashFrame++;
             addRubberStrike = false;
+            createDebrisObjects(state);
         }
         else if(!isCrash && touchdownMS >= noBounceMin) {
             // touchdown
@@ -539,7 +544,37 @@ function processGroundInteractions(state) {
             });
         }
     }
-
     return state;
 }
 
+
+function createDebrisObjects(state) {
+    if(window._debrisObjects.length) {
+        throw NOT_IMPLEMENTED;
+    }
+    const mupm = state.map.mapUnitsPerMeter;
+    const count = getRandomInt(10, 21);
+    for(let i=0; i < count; i++) {
+        window._debrisObjects.push({
+            mapCoords: [
+                state.plane.posMapCoord[0] + getRandomFloat(-3.5, 3.5) * mupm,
+                state.plane.posMapCoord[1] + getRandomFloat(-3.5, 3.5) * mupm,
+            ],
+            radius: getRandomFloat(0.15, 0.5) * mupm,
+            xVeloctyMS: Math.max(
+                    3,
+                    state.plane.horizontalMS * getRandomFloat(0.6, 2.5)
+                ) * (Math.random() < 0.4 ? -1 : 1),
+            yVelocityMS: state.plane.verticalMS * getRandomFloat(-2.5, 2.5)
+        });
+    }
+}
+
+function adjustDebrisPositions(state) {
+    const fps = state.game.dataFPS;
+    const mupm = state.map.mapUnitsPerMeter;
+    for(let i in window._debrisObjects) {
+        window._debrisObjects[i].mapCoords[0] += (window._debrisObjects[i].xVeloctyMS * mupm / fps);
+        window._debrisObjects[i].mapCoords[1] += (window._debrisObjects[i].yVelocityMS * mupm / fps);
+    }
+}

@@ -495,6 +495,20 @@ function _drawExplosionEffect(state) {
         );
         state.ctx.fill()
     }
+
+    window._debrisObjects.forEach(debris => {
+        let doCanvasCoord = mapCoordToCanvasCoord(
+            debris.mapCoords, state.plane.posMapCoord, state.camera,
+        );
+        state.ctx.beginPath()
+        state.ctx.fillStyle = "#000";
+        state.ctx.arc(
+            doCanvasCoord[0], doCanvasCoord[1],
+            debris.radius,
+            0, TWO_PI,
+        );
+        state.ctx.fill();
+    });
 }
 
 function _drawCloudEffects(
