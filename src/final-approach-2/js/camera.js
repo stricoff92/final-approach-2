@@ -170,7 +170,7 @@ function drawHelp(state) {
     state.ctx.drawImage(state.helpImg, tlcX, titleOffset + 16, imgSide, imgSide);
 
     state.ctx.beginPath()
-    state.ctx.font = "20px Arial";
+    state.ctx.font = "24px Arial";
     state.ctx.textBaseline = "middle";
     state.ctx.textAlign = "top";
     state.ctx.fillText(
