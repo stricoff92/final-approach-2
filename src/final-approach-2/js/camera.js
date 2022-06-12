@@ -368,6 +368,9 @@ function drawGameScene(state) {
             planeCanvasDims[1],
         );
     }
+    else {
+        _drawExplosionEffect(state);
+    }
 
     _drawCloudEffects(
         state,
@@ -452,6 +455,45 @@ function _drawHorizonAndCloudsLayer(state) {
         state.ctx.fillStyle = COLOR_CLOUD_LAYER(1);
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
+    }
+}
+
+function _drawExplosionEffect(state) {
+    const mupm = state.map.mapUnitsPerMeter;
+    if(state.plane.crashFrame <= CRASH_EFFECT_1_MAX_FRAME) {
+        const expMapX = state.plane.posMapCoord[0] + getRandomFloat(-1, 1) * mupm;
+        const expMapY = state.plane.posMapCoord[1] + getRandomFloat(-1, 1) * mupm;
+        const expCanvasCoord = mapCoordToCanvasCoord(
+            [expMapX, expMapY], state.plane.posMapCoord, state.camera,
+        );
+        const expRadius = getRandomFloat(4, 6) * mupm;
+
+        state.ctx.beginPath()
+        state.ctx.fillStyle = `rgb(99, 92, 85, ${ getRandomFloat(0.5, 0.95) })`;
+        state.ctx.arc(expCanvasCoord[0], expCanvasCoord[1], expRadius, 0, TWO_PI);
+        state.ctx.fill();
+    }
+    else if (state.plane.crashFrame <= CRASH_EFFECT_2_MAX_FRAME) {
+        const percentComplete = (
+            state.plane.crashFrame - CRASH_EFFECT_1_MAX_FRAME
+        ) / (CRASH_EFFECT_2_MAX_FRAME - CRASH_EFFECT_1_MAX_FRAME);
+        const radius = (6 + 5 * percentComplete) * mupm;
+        const xRise = 1 * percentComplete * mupm;
+        const alpha = 0.5 * (1 - percentComplete);
+        const hazeCanvasCoord = mapCoordToCanvasCoord(
+            [state.plane.posMapCoord[0] + xRise, state.plane.posMapCoord[1]],
+            state.plane.posMapCoord,
+            state.camera,
+        );
+        state.ctx.beginPath()
+        state.ctx.fillStyle = `rgb(99, 92, 85, ${ alpha.toFixed(2) })`;
+        state.ctx.arc(
+            hazeCanvasCoord[0],
+            hazeCanvasCoord[1],
+            radius,
+            0, TWO_PI,
+        );
+        state.ctx.fill()
     }
 }
 

@@ -302,9 +302,6 @@ function runDataLoop() {
 
         if(state.plane.crashFrame) {
             state.plane.crashFrame++;
-            if(state.plane.crashFrame > 200) {
-                // Score screen
-            }
         }
 
         // Adjust state for plane flying through the air

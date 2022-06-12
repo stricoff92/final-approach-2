@@ -43,3 +43,6 @@ const CLICK_RING_WIDTH = 12;
 const CLICK_RING_MAX_RADIUS_CANVAS_PX = 65;
 const COLOR_CLICK_RING_SINGLE = a => `rgb(0, 138, 57, ${a.toFixed(2)})`;
 const COLOR_CLICK_RING_DOUBLE = a => `rgb(138, 0, 138, ${a.toFixed(2)})`;
+
+const CRASH_EFFECT_1_MAX_FRAME = 60;
+const CRASH_EFFECT_2_MAX_FRAME = 160;
