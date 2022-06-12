@@ -462,7 +462,12 @@ function _drawExplosionEffect(state) {
     const mupm = state.map.mapUnitsPerMeter;
 
     const markCanvasCoord = mapCoordToCanvasCoord(
-        state.plane.posMapCoord, state.plane.posMapCoord, state.camera,
+        [
+            state.plane.posMapCoord[0],
+            state.plane.posMapCoord[1] - state.plane.dimensions[0][1] / 2 * mupm,
+        ],
+        state.plane.posMapCoord,
+        state.camera,
     );
     state.ctx.beginPath();
     state.ctx.fillStyle = "rgb(0, 0, 0, 0.7)";
