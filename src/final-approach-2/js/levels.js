@@ -147,5 +147,9 @@ function setMapProps(state) {
         state.map.terrain = TERRAIN_OCEAN;
         throw NOT_IMPLEMENTED;
     }
+
+    state.map.sunImg = new Image();
+    state.map.sunImg.src = "img/sun.svg";
+
     return state;
 }

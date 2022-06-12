@@ -403,6 +403,18 @@ function _drawHorizonAndCloudsLayer(state) {
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
 
+        state.ctx.beginPath();
+        const imgSideLen = Math.min(
+            state.camera.canvasHalfW * 0.6,
+            state.camera.canvasHalfH * 0.6,
+        )
+        state.ctx.drawImage(
+            state.map.sunImg,
+            5, 5,
+            imgSideLen,
+            imgSideLen,
+        );
+
         if(planeYPos < toCloudsGradientStart) {
             const percentGray = (toCloudsGradientStart - planeYPos) / gradientSize;
             state.ctx.beginPath();

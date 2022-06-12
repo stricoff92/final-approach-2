@@ -96,6 +96,7 @@ function createNewState(maxCompletedLevel) {
             gsP0MapCoord: null,
             gsP1MapCoord: null,
             tireStrikes: [],
+            sunImg: null,
         },
         buttons: [{
             type: BUTTON_TYPE_MAIN,
