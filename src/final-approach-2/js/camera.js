@@ -509,11 +509,6 @@ function _drawCloudEffects(
 
     if(state.game.frame % 12 === 0 && (planeYPos <= cl.topY && planeYPos >= cl.bottomY)) {
         const newCloudRadius = getRandomFloat(5 * mupm, 18 * mupm);
-        console.log({
-            canvasMinMapCoordY,
-            canvasMaxMapCoordY,
-            newCloudRadius,
-        })
         const newCloudPosY = getRandomFloat(
             canvasMinMapCoordY - newCloudRadius * 0.7,
             canvasMaxMapCoordY + newCloudRadius * 0.7,
