@@ -143,8 +143,8 @@ function drawLoadingIcon(state) {
     state.ctx.lineWidth = 18 * percent;
     state.ctx.arc(
         state.camera.canvasHalfW,
-        140,
-        65,
+        150,
+        40,
         0,
         percent * TWO_PI,
     );
