@@ -36,6 +36,7 @@ const COLOR_GROUND_FOREST = "#9dff5c";
 const COLOR_RW_FOREST = "#808080";
 
 const COLOR_CLOUD_LAYER = a => `rgb(219, 219, 219, ${a.toFixed(2)})`;
+const CLOUD_GRADIENT_SIZE_M = 30;
 
 const CLICK_RING_MAX_FRAME_AGE = 20;
 const CLICK_RING_WIDTH = 12;

@@ -3,19 +3,19 @@
 function getCanvasCornerMapCoords(state) {
     const cornerTopLeftMapCoord = [
         state.plane.posMapCoord[0] - state.camera.canvasHalfW,
-        state.plane.posMapCoord[1] - state.camera.canvasHalfH,
+        state.plane.posMapCoord[1] + state.camera.canvasHalfH,
     ];
     const cornerTopRightMapCoord = [
         state.plane.posMapCoord[0] + state.camera.canvasHalfW,
-        state.plane.posMapCoord[1] - state.camera.canvasHalfH,
+        state.plane.posMapCoord[1] + state.camera.canvasHalfH,
     ];
     const cornerBottomLeftMapCoord = [
         state.plane.posMapCoord[0] - state.camera.canvasHalfW,
-        state.plane.posMapCoord[1] + state.camera.canvasHalfH,
+        state.plane.posMapCoord[1] - state.camera.canvasHalfH,
     ];
     const cornerBottomRightMapCoord = [
         state.plane.posMapCoord[0] + state.camera.canvasHalfW,
-        state.plane.posMapCoord[1] + state.camera.canvasHalfH,
+        state.plane.posMapCoord[1] - state.camera.canvasHalfH,
     ];
     return [
         cornerTopLeftMapCoord,
@@ -359,6 +359,13 @@ function drawGameScene(state) {
         );
     }
 
+    _drawCloudEffects(
+        state,
+        scBottomLeftMapCoord[1],
+        scTopLeftMapCoord[1],
+        scTopRightMapCoord[0],
+    );
+
     if(!plane.touchedDown && !plane.crashFrame) {
         for(let i = 0; i < plane.previousPoints.length; i++) {
             let mapCoord = plane.previousPoints[i];
@@ -386,7 +393,7 @@ function _drawHorizonAndCloudsLayer(state) {
     const cloudsBelow = cl.topY < planeYPos;
     const cloudsAbove = cl.bottomY > planeYPos;
 
-    const gradientSize = 30 * mupm;
+    const gradientSize = CLOUD_GRADIENT_SIZE_M * mupm;
     const toCloudsGradientStart = cl.topY + gradientSize;
     const fromCloudsGradientEnd = cl.bottomY - gradientSize;
 
@@ -423,6 +430,63 @@ function _drawHorizonAndCloudsLayer(state) {
         state.ctx.fillStyle = COLOR_CLOUD_LAYER(1);
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
+    }
+}
+
+function _drawCloudEffects(
+    state,
+    canvasMinMapCoordY,
+    canvasMaxMapCoordY,
+    canvasMaxMapCoordX,
+) {
+    const cl = state.map.cloudLayer;
+    const planeYPos = state.plane.posMapCoord[1];
+    const mupm = state.map.mapUnitsPerMeter;
+
+    if(state.game.frame % 12 === 0 && (planeYPos <= cl.topY && planeYPos >= cl.bottomY)) {
+        const newCloudRadius = getRandomFloat(5 * mupm, 18 * mupm);
+        console.log({
+            canvasMinMapCoordY,
+            canvasMaxMapCoordY,
+            newCloudRadius,
+        })
+        const newCloudPosY = getRandomFloat(
+            canvasMinMapCoordY - newCloudRadius * 0.7,
+            canvasMaxMapCoordY + newCloudRadius * 0.7,
+        );
+        const newCloudPosX = canvasMaxMapCoordX + newCloudRadius;
+        window._cloudEffects.push(deepCopy({
+            mapCoord: [newCloudPosX, newCloudPosY],
+            radiusX: newCloudRadius * getRandomFloat(1, 1.5),
+            radiusY: newCloudRadius * getRandomFloat(0.6, 1),
+        }));
+    }
+
+    const ixToRemove = [];
+    for(let i in window._cloudEffects) {
+        let ce = window._cloudEffects[i];
+        let ceCanvasCoord = mapCoordToCanvasCoord(
+            ce.mapCoord, state.plane.posMapCoord, state.camera,
+        );
+        if(ceCanvasCoord + ce.radiusX < 0) {
+            ixToRemove.push(i);
+        }
+        else {
+            state.ctx.beginPath();
+            state.ctx.fillStyle = "rgb(200, 200, 200, 0.25)";
+            state.ctx.ellipse(
+                ceCanvasCoord[0], ceCanvasCoord[1],
+                ce.radiusX, ce.radiusY,
+                0,
+                0, TWO_PI,
+            );
+            state.ctx.fill();
+        }
+    }
+    if(ixToRemove.length) {
+        window._cloudEffects = window._cloudEffects.filter((_ce, ix) => {
+            return ixToRemove.indexOf(ix) != -1
+        })
     }
 }
 

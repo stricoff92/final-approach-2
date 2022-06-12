@@ -6,6 +6,9 @@ function getHelpImg() {
 }
 
 function createNewState(maxCompletedLevel) {
+
+    window._cloudEffects = [];
+
     const canvas = document.getElementById("game-canvas");
     const ctx = canvas.getContext("2d")
     maxCompletedLevel = maxCompletedLevel || 0;
