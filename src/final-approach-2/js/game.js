@@ -5,9 +5,10 @@ function getHelpImg() {
     return img;
 }
 
-function createNewState(maxCompletedLevel) {
+function createNewState(maxCompletedLevel, skipHelpScreen) {
 
     window._cloudEffects = [];
+    window._debrisObjects = [];
 
     const canvas = document.getElementById("game-canvas");
     const ctx = canvas.getContext("2d")
@@ -17,12 +18,9 @@ function createNewState(maxCompletedLevel) {
         isDebug: urlContainsDebug(),
         ctx,
         helpImg: getHelpImg(),
-        pageTitle: {
-            text: "Select A Level",
-            color: COLOR_PURPLE,
-        },
+        pageTitle: skipHelpScreen ?  {text: "Select A Level", color: COLOR_PURPLE} : null,
         game: {
-            phase: PHASE_0_LOBBY,
+            phase: skipHelpScreen ? PHASE_0_LOBBY : PHASE_N1_SHOW_HELP,
             maxCountDownFrames: 60,
             countDownFrames: 0,
             frame: 0,
@@ -98,16 +96,7 @@ function createNewState(maxCompletedLevel) {
             tireStrikes: [],
             sunImg: null,
         },
-        buttons: [{
-            type: BUTTON_TYPE_MAIN,
-            text: "Help",
-            boxCoord: null,
-            handler: () => {
-                window.addCommand({
-                    cmd: COMMAND_SHOW_HELP,
-                });
-            }
-        }].concat(availableLevels.map(levelNumber => {
+        buttons: skipHelpScreen ? availableLevels.map(levelNumber => {
             const disabled = levelNumber > (maxCompletedLevel + 1);
             const btn = {
                 type: BUTTON_TYPE_GRID,
@@ -122,7 +111,7 @@ function createNewState(maxCompletedLevel) {
                 }
             };
             return btn;
-        })),
+        }) : [],
     }
 }
 
@@ -237,7 +226,7 @@ function runDataLoop() {
                 break;
             }
         }
-        if (!isButtonClick) {
+        if (!isButtonClick && state.game.phase === PHASE_2_LIVE) {
             const cmd = isArrow ? (nextClick.isTopHalfOfScreenClick ? COMMAND_FLARE : COMMAND_LEVEL_OUT) : isBottomHalfClick ? COMMAND_LEVEL_OUT : COMMAND_FLARE;
             window.addCommand({ cmd });
             state.game.lastClick = {
@@ -245,6 +234,30 @@ function runDataLoop() {
                 frameCreated: state.game.frame,
                 color: cmd === COMMAND_FLARE ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
             };
+        }
+        else if (state.game.phase === PHASE_N1_SHOW_HELP) {
+            state.game.phase = PHASE_0_LOBBY;
+            state.pageTitle = {
+                text: "Select A Level",
+                color: COLOR_PURPLE,
+            };
+            const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            state.buttons = availableLevels.map(levelNumber => {
+                const disabled = levelNumber > (state.game.maxCompletedLevel + 1);
+                const btn = {
+                    type: BUTTON_TYPE_GRID,
+                    text: disabled ? '🔒' : `Level ${levelNumber}`,
+                    boxCoord: null,
+                    disabled,
+                    handler: disabled ? ()=>{} : () => {
+                        window.addCommand({
+                            cmd: COMMAND_START_LEVEL,
+                            args: [ levelNumber ],
+                        });
+                    }
+                };
+                return btn;
+            });
         }
     }
 
@@ -271,7 +284,7 @@ function runDataLoop() {
             if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
                     updateCameraCanvasMetaData(
-                        createNewState(state.game.maxCompletedLevel)
+                        createNewState(state.game.maxCompletedLevel, true)
                     )
                 );
                 setTimeout(runDataLoop);
@@ -290,9 +303,7 @@ function runDataLoop() {
 
         if(state.plane.crashFrame) {
             state.plane.crashFrame++;
-            if(state.plane.crashFrame > 200) {
-                // Score screen
-            }
+            adjustDebrisPositions(state);
         }
 
         // Adjust state for plane flying through the air
@@ -417,6 +428,7 @@ function processGroundInteractions(state) {
                     // Plane overan the runway
                     console.log("👉 overran runway");
                     state.plane.crashFrame++;
+                    createDebrisObjects(state);
                 }
                 else {
                     if(
@@ -452,6 +464,7 @@ function processGroundInteractions(state) {
     // Plane crashed into the ground
     if(!overRunway && planeBottomMapCoordY <= 0) {
         state.plane.crashFrame++;
+        createDebrisObjects(state);
         return state;
     }
 
@@ -480,6 +493,7 @@ function processGroundInteractions(state) {
             console.log("👉 crash");
             state.plane.crashFrame++;
             addRubberStrike = false;
+            createDebrisObjects(state);
         }
         else if(!isCrash && touchdownMS >= noBounceMin) {
             // touchdown
@@ -530,7 +544,37 @@ function processGroundInteractions(state) {
             });
         }
     }
-
     return state;
 }
 
+
+function createDebrisObjects(state) {
+    if(window._debrisObjects.length) {
+        throw NOT_IMPLEMENTED;
+    }
+    const mupm = state.map.mapUnitsPerMeter;
+    const count = getRandomInt(10, 21);
+    for(let i=0; i < count; i++) {
+        window._debrisObjects.push({
+            mapCoords: [
+                state.plane.posMapCoord[0] + getRandomFloat(-3.5, 3.5) * mupm,
+                state.plane.posMapCoord[1] + getRandomFloat(-3.5, 3.5) * mupm,
+            ],
+            radius: getRandomFloat(0.15, 0.5) * mupm,
+            xVeloctyMS: Math.max(
+                    3,
+                    state.plane.horizontalMS * getRandomFloat(0.6, 2.5)
+                ) * (Math.random() < 0.4 ? -1 : 1),
+            yVelocityMS: state.plane.verticalMS * getRandomFloat(-2.5, 2.5),
+        });
+    }
+}
+
+function adjustDebrisPositions(state) {
+    const fps = state.game.dataFPS;
+    const mupm = state.map.mapUnitsPerMeter;
+    for(let i in window._debrisObjects) {
+        window._debrisObjects[i].mapCoords[0] += (window._debrisObjects[i].xVeloctyMS * mupm / fps);
+        window._debrisObjects[i].mapCoords[1] += (window._debrisObjects[i].yVelocityMS * mupm / fps);
+    }
+}

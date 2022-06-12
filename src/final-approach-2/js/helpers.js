@@ -56,6 +56,12 @@ function getRandomFloat(min, max) {
     return Math.random() * (max - min) + min;
 }
 
+function getRandomInt(min, max) {
+    // min inclusive, max exclusive
+    return Math.floor(Math.random() * (max - min) + min);
+}
+
+
 function feetPerMinToMS(fpm) {
     return fpm / 60 / 3
 }
