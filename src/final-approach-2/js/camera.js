@@ -469,7 +469,7 @@ function _drawExplosionEffect(state) {
         const expRadius = getRandomFloat(4, 6) * mupm;
 
         state.ctx.beginPath()
-        state.ctx.fillStyle = `rgb(99, 92, 85, ${ getRandomFloat(0.5, 0.95) })`;
+        state.ctx.fillStyle = `rgb(99, 92, 85, ${ getRandomFloat(0.65, 0.95) })`;
         state.ctx.arc(expCanvasCoord[0], expCanvasCoord[1], expRadius, 0, TWO_PI);
         state.ctx.fill();
     }
