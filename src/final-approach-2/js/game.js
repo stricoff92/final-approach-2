@@ -6,6 +6,9 @@ function getHelpImg() {
 }
 
 function createNewState(maxCompletedLevel) {
+
+    window._cloudEffects = [];
+
     const canvas = document.getElementById("game-canvas");
     const ctx = canvas.getContext("2d")
     maxCompletedLevel = maxCompletedLevel || 0;
@@ -87,11 +90,13 @@ function createNewState(maxCompletedLevel) {
             windXMin: null,
             windXMax: null,
             windXTarg: null,
+            cloudLayer: null,
             rwP0MapCoord: null,
             rwP1MapCoord: null,
             gsP0MapCoord: null,
             gsP1MapCoord: null,
             tireStrikes: [],
+            sunImg: null,
         },
         buttons: [{
             type: BUTTON_TYPE_MAIN,

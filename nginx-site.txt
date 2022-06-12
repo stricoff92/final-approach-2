@@ -1,0 +1,25 @@
+
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	server_name _;
+
+	return 301 https://$host$request_uri;
+}
+
+server {
+	listen 443 ssl;
+	listen [::]:443 ssl;
+	ssl_certificate /etc/letsencrypt/live/uwuigames.com/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/uwuigames.com/privkey.pem;
+
+
+	server_name _;
+
+    index index.html;
+	location / {
+		root /var/www/uwuigames/;
+	}
+}
+

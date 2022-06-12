@@ -1,5 +1,5 @@
 {
-  "name": "final-approach-2",
+  "name": "uwuigames",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stricoff92/final-approach-2.git"
+    "url": "git+https://github.com/uwuigames/website.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/stricoff92/final-approach-2/issues"
+    "url": "https://github.com/uwuigames/website/issues"
   },
-  "homepage": "https://github.com/stricoff92/final-approach-2#readme",
+  "homepage": "https://github.com/uwuigames/website#readme",
   "devDependencies": {
     "@babel/preset-env": "^7.18.2",
     "@babel/cli": "^7.17.10",

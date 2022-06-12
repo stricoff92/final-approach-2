@@ -7,8 +7,8 @@ import re
 def hash_value(val: str) -> str:
     return hashlib.md5(val.encode()).hexdigest()
 
-def add_param(html_param, cb):
-    return html_param[0: len(html_param) - 1] + f"?cb={cb}" + "\""
+def add_param(html_param: str, v: str) -> str:
+    return html_param[0: len(html_param) - 1] + f"?v={v}" + "\""
 
 if __name__ == "__main__":
 
@@ -33,12 +33,12 @@ if __name__ == "__main__":
                 html_param = js_m.group()
                 new_line = line.replace(html_param, add_param(html_param, cb_value))
                 outText.write(new_line + "\n")
-                print("adding CB to line " + line.replace(' ', ''))
+                print("adding version param to line " + line.replace(' ', ''))
             elif css_m:
                 html_param = css_m.group()
                 new_line = line.replace(html_param, add_param(html_param, cb_value))
                 outText.write(new_line + "\n")
-                print("adding CB to line " + line.replace(' ', ''))
+                print("adding version param to line " + line.replace(' ', ''))
             else:
                 outText.write(line + "\n")
 
