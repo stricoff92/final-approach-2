@@ -281,7 +281,7 @@ function runDataLoop() {
         }
     }
 
-    if(state.game.phase === PHASE_2_LIVE) {
+    if(state.game.phase === PHASE_2_LIVE || state.game.phase === PHASE_3_SCORESCREEN) {
         let commands = [];
         while(true) {
             let cmd = window.nextCommand()
@@ -337,7 +337,7 @@ function runDataLoop() {
             state = processGroundInteractions(state);
         }
 
-        if(state.plane.halted) {
+        if(state.plane.halted && state.game.phase !== PHASE_3_SCORESCREEN) {
             state = calculateScore(state);
             state.game.phase = PHASE_3_SCORESCREEN;
         }
