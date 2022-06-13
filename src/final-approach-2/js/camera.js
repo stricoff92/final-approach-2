@@ -734,7 +734,6 @@ function drawScoreScreen(state) {
     const rowYSize = 47;
     const rowYSizeMedium = 42;
     const rowYSizeSmall = 38;
-
     let yOffset = sbHeightTopOffset + 30
 
     // Level completed
