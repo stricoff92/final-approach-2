@@ -124,8 +124,8 @@ function setMapProps(state) {
         state.map.rwP1MapCoord = [1800 * mupm, 0];
         state.map.gsP0MapCoord = [0, 250 * mupm];
         state.map.gsP1MapCoord = [1050 * mupm, 0];
-        // state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
-        state.plane.posMapCoord = [940 * mupm, 20 * mupm];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        // state.plane.posMapCoord = [940 * mupm, 20 * mupm]; // Spawn near runway.
         if(level == 1) {
             state.map.windXVel = 0;
             state.map.windVolitility = 0.05;
