@@ -199,7 +199,7 @@ function orientButtons(state) {
 
     if(mainBtns.length) {
         const mainBtnsCount = mainBtns.length;
-        const mainBtnHeight = 38;
+        const mainBtnHeight = MAIN_BUTTON_Y_LENGTH;
         const mainBtnWidth = 100;
         let x1Pointer = state.camera.canvasW - mainBtnWidth;
         for(let i = 0; i < mainBtnsCount; i++) {

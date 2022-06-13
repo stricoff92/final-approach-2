@@ -702,7 +702,138 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
 }
 
 function drawScoreScreen(state) {
+    const sbAgeMS = performance.now() - state.game.score.scorePhaseStartedTS;
 
+    const sbXMaxPX = 500;
+    const sbXMinOffset = 10;
+    const sbWidth = Math.min(sbXMaxPX, state.camera.canvasW - sbXMinOffset * 2);
+    const sbXOffset = (state.camera.canvasW - sbWidth) / 2
+
+    const sbYMaxPX = 800;
+    const sbHeightTopOffset = MAIN_BUTTON_Y_LENGTH + 10;
+    const sbHeightMinBottomOffset = 10;
+    const sbHeight = Math.min(
+        sbYMaxPX,
+        state.camera.canvasH - (sbHeightTopOffset  + sbHeightMinBottomOffset)
+    );
+
+    // 0-500 MS: purple container fade in
+    const fadeInPercent = Math.min(1, sbAgeMS / 500)
+    const maxAlpha = 0.78;
+    const currentAlhpa = maxAlpha * fadeInPercent;
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_SCORE_BOARD_BACKGROUND(currentAlhpa);
+    state.ctx.rect(sbXOffset, sbHeightTopOffset, sbWidth, sbHeight);
+    state.ctx.fill();
+    if(fadeInPercent < 1) {
+        return;
+    }
+
+    const col1XOffset = sbXOffset + 10;
+    const col2XOffset = sbXOffset + sbWidth - 10;
+    const rowYSize = 47;
+    const rowYSizeMedium = 42;
+    const rowYSizeSmall = 38;
+
+    let yOffset = sbHeightTopOffset + 30
+
+    // Level completed
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "center";
+    state.ctx.fillStyle = "#fff";
+    state.ctx.font = "normal 36px Arial";
+    state.ctx.fillText(
+        "Level " + state.game.level + " ✅",
+        state.camera.canvasHalfW,
+        yOffset
+    );
+
+    // Landing description
+    yOffset += rowYSizeSmall;
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "center";
+    state.ctx.font = "italic 26px Arial";
+    state.ctx.fillText(
+        "\"" + state.game.score.overall.value + " landing\"",
+        state.camera.canvasHalfW,
+        yOffset,
+    );
+
+    // Vertical speed
+    yOffset += rowYSizeMedium;
+    state.ctx.beginPath();
+    state.ctx.textAlign = "left";
+    state.ctx.textBaseline = "middle";
+    state.ctx.font = "normal 24px Arial";
+    state.ctx.fillText(
+        "Vertical Speed",
+        col1XOffset,
+        yOffset
+    );
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "right";
+    state.ctx.font = "normal 24px Arial";
+    state.ctx.fillText(
+        (state.game.score.verticalSpeed.emphasize ? "⭐ " : "")
+        + state.game.score.verticalSpeed.value,
+        col2XOffset,
+        yOffset,
+    );
+    // ACCURACY
+    yOffset += rowYSize;
+    state.ctx.beginPath();
+    state.ctx.textAlign = "left";
+    state.ctx.font = "normal 30px Arial";
+    state.ctx.fillText(
+        "Accuracy",
+        col1XOffset,
+        yOffset
+    );
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "right";
+    state.ctx.font = "normal 24px Arial";
+    state.ctx.fillText(
+        (state.game.score.accuracy.emphasize ? "⭐ " : "")
+        + state.game.score.accuracy.value,
+        col2XOffset,
+        yOffset,
+    );
+    // Total score / high score
+    yOffset += rowYSize;
+    state.ctx.beginPath();
+    state.ctx.textAlign = "left";
+    state.ctx.font = "bold 30px Arial";
+    state.ctx.fillStyle = "#ff0";
+    state.ctx.fillText(
+        "Score",
+        col1XOffset,
+        yOffset
+    );
+
+    const displayedPercent = Math.min(1, sbAgeMS / 2200);
+    const totalScore = Math.round(
+        state.game.score.overall.points
+        + state.game.score.verticalSpeed.points
+        + state.game.score.accuracy.points
+    );
+    const scoreToShow = Math.round(totalScore * displayedPercent);
+    state.ctx.beginPath();
+    state.ctx.textAlign = "right";
+    state.ctx.font = "bold 30px Arial";
+    if(displayedPercent < 1) {
+        state.ctx.fillStyle = `rgb(${getRandomInt(200, 255)} ${getRandomInt(200, 255)} ${getRandomInt(0, 100)})`
+    } else {
+        state.ctx.fillStyle = "#ff0";
+    }
+    state.ctx.fillText(
+        scoreToShow,
+        col2XOffset,
+        yOffset,
+    );
 }
 
 function drawDebugData(state) {
