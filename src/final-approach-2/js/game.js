@@ -65,8 +65,11 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             touchDownFlareMinMS: null,
             minTouchdownVerticalMS: null,
             touchdownStats: {
+                runwayUsedStartX: null,
+                runwayUsedEndX: null,
                 runwayUsedM: null,
                 runwayWastedM: null,
+                distanceToGlideSlopeM: null,
                 verticalMS: null,
                 isSmooth: false,
                 isRough: false,
@@ -317,6 +320,11 @@ function runDataLoop() {
             state = processGroundInteractions(state);
         }
 
+        if(state.plane.halted) {
+            state = calculateScore(state);
+            state.game.phase = PHASE_3_SCORESCREEN;
+        }
+
         if(state.game.frame %  10 === 0 && !state.plane.halted && !state.plane.touchedDown) {
             state.plane.previousPoints.unshift(
                 deepCopy(state.plane.posMapCoord)
@@ -451,6 +459,11 @@ function processGroundInteractions(state) {
         } else {
             console.log("👉 halted");
             state.plane.halted = true;
+            state.plane.touchdownStats.runwayUsedEndX = plane.posMapCoord[0];
+            state.plane.touchdownStats.runwayUsedM = (
+                state.plane.touchdownStats.runwayUsedEndX
+                - state.plane.touchdownStats.runwayUsedStartX
+            ) / state.map.mapUnitsPerMeter;
         }
         return state;
     }
@@ -504,6 +517,13 @@ function processGroundInteractions(state) {
             state.plane.touchdownStats.isSmooth = plane.touchdownStats.bounces === 0;
             state.plane.touchdownStats.verticalMS = touchdownMS;
             state.plane.touchdownStats.isFlaired = plane.flare === IS_FLARING;
+            state.plane.touchdownStats.runwayUsedStartX = plane.posMapCoord[0];
+            state.plane.distanceToGlideSlopeM = Math.abs(
+                Math.round(
+                    (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                    / state.map.mapUnitsPerMeter
+                )
+            )
             state.plane.touchdownStats.runwayWastedM = Math.max(
                 0,
                 Math.round(

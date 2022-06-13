@@ -153,3 +153,8 @@ function setMapProps(state) {
 
     return state;
 }
+
+
+function calculateScore(state) {
+    return state;
+}

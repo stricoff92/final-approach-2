@@ -32,7 +32,7 @@ function runDisplayLoop() {
 
     drawPageTitle(state);
 
-    if (state.game.phase === PHASE_2_LIVE) {
+    if (state.game.phase === PHASE_2_LIVE || state.game.phase === PHASE_3_SCORESCREEN) {
         drawGameScene(state);
         if(state.isDebug) {
             drawDebugData(state);
@@ -43,6 +43,11 @@ function runDisplayLoop() {
     } else if (state.game.phase === PHASE_N1_SHOW_HELP) {
         drawHelp(state);
     }
+
+    if (state.game.phase === PHASE_3_SCORESCREEN) {
+        drawScoreScreen(state);
+    }
+
     drawButtons(state);
     drawClickRing(state);
     window.requestAnimationFrame(runDisplayLoop)
@@ -696,6 +701,9 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
     });
 }
 
+function drawScoreScreen(state) {
+
+}
 
 function drawDebugData(state) {
     // Text info
