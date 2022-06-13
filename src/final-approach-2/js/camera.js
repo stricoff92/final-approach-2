@@ -32,7 +32,7 @@ function runDisplayLoop() {
 
     drawPageTitle(state);
 
-    if (state.game.phase === PHASE_2_LIVE) {
+    if (state.game.phase === PHASE_2_LIVE || state.game.phase === PHASE_3_SCORESCREEN) {
         drawGameScene(state);
         if(state.isDebug) {
             drawDebugData(state);
@@ -43,6 +43,11 @@ function runDisplayLoop() {
     } else if (state.game.phase === PHASE_N1_SHOW_HELP) {
         drawHelp(state);
     }
+
+    if (state.game.phase === PHASE_3_SCORESCREEN) {
+        drawScoreScreen(state);
+    }
+
     drawButtons(state);
     drawClickRing(state);
     window.requestAnimationFrame(runDisplayLoop)
@@ -696,6 +701,177 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
     });
 }
 
+function drawScoreScreen(state) {
+    const sbAgeMS = performance.now() - state.game.score.scorePhaseStartedTS;
+
+    const sbXMaxPX = 500;
+    const sbXMinOffset = 10;
+    const sbWidth = Math.min(sbXMaxPX, state.camera.canvasW - sbXMinOffset * 2);
+    const sbXOffset = (state.camera.canvasW - sbWidth) / 2
+
+    const sbYMaxPX = 800;
+    const sbHeightTopOffset = MAIN_BUTTON_Y_LENGTH + 10;
+    const sbHeightMinBottomOffset = 10;
+    const sbHeight = Math.min(
+        sbYMaxPX,
+        state.camera.canvasH - (sbHeightTopOffset  + sbHeightMinBottomOffset)
+    );
+
+    // 0-500 MS: purple container fade in
+    const fadeInPercent = Math.min(1, sbAgeMS / 500)
+    const maxAlpha = 0.78;
+    const currentAlhpa = maxAlpha * fadeInPercent;
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_SCORE_BOARD_BACKGROUND(currentAlhpa);
+    state.ctx.rect(sbXOffset, sbHeightTopOffset, sbWidth, sbHeight);
+    state.ctx.fill();
+    if(fadeInPercent < 1) {
+        return;
+    }
+
+    const col1XOffset = sbXOffset + 10;
+    const col2XOffset = sbXOffset + sbWidth - 10;
+    const rowYSizeMedium = 38;
+    let yOffset = sbHeightTopOffset + 30
+
+    // Level completed
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "center";
+    state.ctx.fillStyle = "#fff";
+    state.ctx.font = "normal 36px Arial";
+    state.ctx.fillText(
+        "Level " + state.game.level + " ✅",
+        state.camera.canvasHalfW,
+        yOffset
+    );
+
+    // Landing description (700MS)
+    if(sbAgeMS < 700) {
+        return;
+    }
+    yOffset += rowYSizeMedium;
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "center";
+    state.ctx.font = "italic 26px Arial";
+    state.ctx.fillText(
+        "\"" + state.game.score.overall.value + " landing\"",
+        state.camera.canvasHalfW,
+        yOffset,
+    );
+
+    // Vertical speed (900MS)
+    if(sbAgeMS < 900) {
+        return;
+    }
+    yOffset += rowYSizeMedium;
+    state.ctx.beginPath();
+    state.ctx.textAlign = "left";
+    state.ctx.textBaseline = "middle";
+    state.ctx.font = "normal 24px Arial";
+    state.ctx.fillText(
+        "Vertical Speed",
+        col1XOffset,
+        yOffset
+    );
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "right";
+    state.ctx.font = "normal 24px Arial";
+    state.ctx.fillText(
+        (state.game.score.verticalSpeed.emphasize ? "⭐ " : "")
+        + state.game.score.verticalSpeed.value,
+        col2XOffset,
+        yOffset,
+    );
+    // ACCURACY (1100MS)
+    if(sbAgeMS < 1100) {
+        return;
+    }
+    yOffset += rowYSizeMedium;
+    state.ctx.beginPath();
+    state.ctx.textAlign = "left";
+    state.ctx.font = "normal 30px Arial";
+    state.ctx.fillText(
+        "Accuracy",
+        col1XOffset,
+        yOffset
+    );
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "right";
+    state.ctx.font = "normal 24px Arial";
+    state.ctx.fillText(
+        (state.game.score.accuracy.emphasize ? "⭐ " : "")
+        + state.game.score.accuracy.value,
+        col2XOffset,
+        yOffset,
+    );
+    // Total score (1300ms -> 2100MS)
+    if(sbAgeMS < 1300) {
+        return;
+    }
+    yOffset += rowYSizeMedium;
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "left";
+    state.ctx.font = "bold 30px Arial";
+    state.ctx.fillStyle = "#ff0";
+    state.ctx.fillText(
+        "Score",
+        col1XOffset,
+        yOffset
+    );
+    const displayedPercent = Math.min(1, (sbAgeMS - 1300) / 800);
+    const totalScore = state.game.score.total;
+    const scoreToShow = Math.round(totalScore * displayedPercent);
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "right";
+    state.ctx.font = "bold 30px Arial";
+    if(displayedPercent < 1) {
+        state.ctx.fillStyle = `rgb(${getRandomInt(200, 255)} ${getRandomInt(200, 255)} ${getRandomInt(0, 100)})`
+    } else {
+        state.ctx.fillStyle = "#ff0";
+    }
+    state.ctx.fillText(
+        scoreToShow,
+        col2XOffset,
+        yOffset,
+    );
+    // High score
+    if(displayedPercent >= 1) {
+        yOffset += rowYSizeMedium;
+        if(state.game.score.isNewHighScore) {
+            state.ctx.beginPath();
+            state.ctx.textBaseline = "middle";
+            state.ctx.textAlign = "center";
+            state.ctx.font = "normal 28px Arial";
+            state.ctx.fillStyle = "#ff0";
+            state.ctx.fillText(
+                "🎉 New High Score 🎉",
+                state.camera.canvasHalfW,
+                yOffset,
+            );
+        }
+        else if(state.game.score.currentHighScore !== null) {
+            state.ctx.beginPath();
+            state.ctx.textBaseline = "middle";
+            state.ctx.textAlign = "center";
+            state.ctx.font = "italic 24px Arial";
+            state.ctx.fillStyle = "#fff";
+            state.ctx.fillText(
+                "high score: " + state.game.score.currentHighScore,
+                state.camera.canvasHalfW,
+                yOffset,
+            );
+        }
+        else {
+            console.warn("no high score data to show")
+        }
+    }
+}
 
 function drawDebugData(state) {
     // Text info

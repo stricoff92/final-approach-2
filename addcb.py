@@ -1,4 +1,7 @@
 
+#!/usr/bin/python3
+
+
 import datetime as dt
 from io import StringIO
 import hashlib
@@ -13,8 +16,8 @@ def add_param(html_param: str, v: str) -> str:
 if __name__ == "__main__":
 
     cb_value = hash_value(dt.datetime.now().isoformat())
-    js_patt = re.compile(r'src=\"js\/[a-z_]+\.js\"')
-    css_patt = re.compile(r'href=\"css\/[a-z_]+\.css\"')
+    js_patt = re.compile(r'src=\"\/?js\/[a-z_]+\.js\"')
+    css_patt = re.compile(r'href=\"\/?css\/[a-z_]+\.css\"')
 
     index_files = [
         "build/final-approach-2/index.html",

@@ -34,6 +34,26 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
                 canvasCoord: null,
                 frameCreated: null,
                 color: null,
+            },
+            score: {
+                total: null,
+                scorePhaseStartedTS: null,
+                isNewHighScore: false,
+                currentHighScore: null,
+                overall: {
+                    value: null,
+                    points: null,
+                },
+                verticalSpeed: {
+                    value: null,
+                    points: null,
+                    emphasize: false,
+                },
+                accuracy: {
+                    value: null,
+                    points: null,
+                    emphasize: false,
+                },
             }
         },
         camera: {
@@ -65,8 +85,11 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             touchDownFlareMinMS: null,
             minTouchdownVerticalMS: null,
             touchdownStats: {
+                runwayUsedStartX: null,
+                runwayUsedEndX: null,
                 runwayUsedM: null,
                 runwayWastedM: null,
+                distanceToGlideSlopeM: null,
                 verticalMS: null,
                 isSmooth: false,
                 isRough: false,
@@ -179,7 +202,7 @@ function orientButtons(state) {
 
     if(mainBtns.length) {
         const mainBtnsCount = mainBtns.length;
-        const mainBtnHeight = 38;
+        const mainBtnHeight = MAIN_BUTTON_Y_LENGTH;
         const mainBtnWidth = 100;
         let x1Pointer = state.camera.canvasW - mainBtnWidth;
         for(let i = 0; i < mainBtnsCount; i++) {
@@ -261,7 +284,7 @@ function runDataLoop() {
         }
     }
 
-    if(state.game.phase === PHASE_2_LIVE) {
+    if(state.game.phase === PHASE_2_LIVE || state.game.phase === PHASE_3_SCORESCREEN) {
         let commands = [];
         while(true) {
             let cmd = window.nextCommand()
@@ -315,6 +338,26 @@ function runDataLoop() {
         // that is touching the ground.
         if(!state.plane.crashFrame && !state.plane.halted) {
             state = processGroundInteractions(state);
+        }
+
+        if(state.plane.halted && state.game.phase !== PHASE_3_SCORESCREEN) {
+            state = calculateScore(state);
+            state.game.phase = PHASE_3_SCORESCREEN;
+            state.game.maxCompletedLevel = Math.max(
+                state.game.level,
+                state.game.maxCompletedLevel,
+            );
+            const totalScore = state.game.score.total;
+            setCookie(
+                getCNamMaxCompletedLevel(),
+                state.game.maxCompletedLevel.toFixed(0),
+            );
+            if(state.game.score.isNewHighScore) {
+                setCookie(
+                    getCNameHighScore(state.game.level),
+                    totalScore.toFixed(0),
+                );
+            }
         }
 
         if(state.game.frame %  10 === 0 && !state.plane.halted && !state.plane.touchedDown) {
@@ -451,6 +494,11 @@ function processGroundInteractions(state) {
         } else {
             console.log("👉 halted");
             state.plane.halted = true;
+            state.plane.touchdownStats.runwayUsedEndX = plane.posMapCoord[0];
+            state.plane.touchdownStats.runwayUsedM = (
+                state.plane.touchdownStats.runwayUsedEndX
+                - state.plane.touchdownStats.runwayUsedStartX
+            ) / state.map.mapUnitsPerMeter;
         }
         return state;
     }
@@ -504,12 +552,15 @@ function processGroundInteractions(state) {
             state.plane.touchdownStats.isSmooth = plane.touchdownStats.bounces === 0;
             state.plane.touchdownStats.verticalMS = touchdownMS;
             state.plane.touchdownStats.isFlaired = plane.flare === IS_FLARING;
+            state.plane.touchdownStats.runwayUsedStartX = plane.posMapCoord[0];
+            state.plane.touchdownStats.distanceToGlideSlopeM = Math.abs(
+                (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                / state.map.mapUnitsPerMeter
+            )
             state.plane.touchdownStats.runwayWastedM = Math.max(
                 0,
-                Math.round(
-                    (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
-                    / state.map.mapUnitsPerMeter
-                )
+                (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                / state.map.mapUnitsPerMeter
             );
 
             console.log("👉 touch down");
