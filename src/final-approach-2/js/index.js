@@ -31,6 +31,10 @@ function resizeCanvas(updateState) {
 document.addEventListener("DOMContentLoaded", function() {
     console.log("DOMContentLoaded");
 
+    if(window.location.search.indexOf("clearcookies") !== -1) {
+        deleteAllCookies();
+    }
+
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, false);
 
@@ -63,8 +67,12 @@ document.addEventListener("DOMContentLoaded", function() {
         window._click_queue.push(data);
     }
 
+    const maxCompletedLevel = parseInt(
+        getCookie(getCNamMaxCompletedLevel()) || "0"
+    );
+
+    const state = updateCameraCanvasMetaData(createNewState(maxCompletedLevel));
     console.log("camera state updated")
-    const state = updateCameraCanvasMetaData(createNewState());
     window.setGameState(state);
 
     // Register single clicks on the canvas.

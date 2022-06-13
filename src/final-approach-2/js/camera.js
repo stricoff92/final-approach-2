@@ -814,11 +814,7 @@ function drawScoreScreen(state) {
     );
 
     const displayedPercent = Math.min(1, sbAgeMS / 2200);
-    const totalScore = Math.round(
-        state.game.score.overall.points
-        + state.game.score.verticalSpeed.points
-        + state.game.score.accuracy.points
-    );
+    const totalScore = state.game.score.total;
     const scoreToShow = Math.round(totalScore * displayedPercent);
     state.ctx.beginPath();
     state.ctx.textAlign = "right";

@@ -161,6 +161,8 @@ function calculateScore(state) {
     const levelMultiplier = level == 1 ? 1 : (1 + level / 15)
     const tdStats = state.plane.touchdownStats;
 
+    const currentHighScore = getCookie(getCNameHighScore(level));
+
     // Overall
     if(tdStats.isSmooth) {
         if(tdStats.isFlaired) {
@@ -207,6 +209,18 @@ function calculateScore(state) {
     state.game.score.accuracy.value = `${tdStats.distanceToGlideSlopeM.toFixed(2)} M`;
     state.game.score.accuracy.points = accScoreCurve(tdStats.distanceToGlideSlopeM) * levelMultiplier;
     state.game.score.accuracy.emphasize = tdStats.distanceToGlideSlopeM <= 1;
+
+    state.game.score.total = Math.round(
+        state.game.score.accuracy.points
+        + state.game.score.verticalSpeed.points
+        + state.game.score.overall.points
+    );
+
+    state.game.score.isNewHighScore = Boolean(
+        currentHighScore === null
+        || parseInt(currentHighScore) < state.game.score.total
+    );
+    state.game.score.currentHighScore = currentHighScore;
 
     state.game.score.scorePhaseStartedTS = deepCopy(state.game.lastFrameTS);
     console.log({ score: state.game.score });

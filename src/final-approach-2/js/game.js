@@ -36,7 +36,10 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
                 color: null,
             },
             score: {
+                total: null,
                 scorePhaseStartedTS: null,
+                isNewHighScore: false,
+                currentHighScore: null,
                 overall: {
                     value: null,
                     points: null,
@@ -340,6 +343,21 @@ function runDataLoop() {
         if(state.plane.halted && state.game.phase !== PHASE_3_SCORESCREEN) {
             state = calculateScore(state);
             state.game.phase = PHASE_3_SCORESCREEN;
+            state.game.maxCompletedLevel = Math.max(
+                state.game.level,
+                state.game.maxCompletedLevel,
+            );
+            const totalScore = state.game.score.total;
+            setCookie(
+                getCNamMaxCompletedLevel(),
+                state.game.maxCompletedLevel.toFixed(0),
+            );
+            if(state.game.score.isNewHighScore) {
+                setCookie(
+                    getCNameHighScore(state.game.level),
+                    totalScore.toFixed(0),
+                );
+            }
         }
 
         if(state.game.frame %  10 === 0 && !state.plane.halted && !state.plane.touchedDown) {
