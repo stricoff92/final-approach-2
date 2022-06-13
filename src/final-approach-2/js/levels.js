@@ -156,5 +156,58 @@ function setMapProps(state) {
 
 
 function calculateScore(state) {
+    const level = state.game.level;
+    const levelMultiplier = level == 1 ? 1 : (1 + level / 15)
+    const tdStats = state.plane.touchdownStats;
+
+    // Overall
+    if(tdStats.isSmooth) {
+        if(tdStats.isFlaired) {
+            state.game.score.overall.value = "Smooth";
+            state.game.score.overall.points = 600 * levelMultiplier;
+        }
+        else {
+            state.game.score.overall.value = "Good";
+            state.game.score.overall.points = 400 * levelMultiplier;
+        }
+    }
+    else if (tdStats.isRough) {
+        state.game.score.overall.value = "Rough";
+        state.game.score.overall.points = 0 * levelMultiplier;
+    }
+    else {
+        state.game.score.overall.value = "Ok";
+        state.game.score.overall.points = 200 * levelMultiplier;
+    }
+
+    // Vertical Speed
+    let vsScoreCurve;
+    if (state.plane.asset === PLANE_C152) {
+        vsScoreCurve = vms => Math.max(0, -40 * Math.pow(vms, 2) + 600)
+    }
+    else {
+        throw NOT_IMPLEMENTED;
+    }
+    state.game.score.verticalSpeed.value = `${tdStats.verticalMS.toFixed(2)} M/S`;
+    state.game.score.verticalSpeed.points = vsScoreCurve(tdStats.verticalMS) * levelMultiplier;
+    state.game.score.verticalSpeed.emphasize = Math.abs(tdStats.verticalMS) <= 0.15;
+
+    // Accuracy
+    let accScoreCurve;
+    if (state.plane.asset === PLANE_C152) {
+        accScoreCurve = distance => {
+            const aBonus = Math.abs(distance) <= 1 ? 2.5 : 1;
+            return Math.max(0, -0.2 * Math.pow(distance, 2) + 600) * aBonus;
+        }
+    }
+    else {
+        throw NOT_IMPLEMENTED;
+    }
+    state.game.score.accuracy.value = `${tdStats.distanceToGlideSlopeM.toFixed(2)} M`;
+    state.game.score.accuracy.points = accScoreCurve(tdStats.distanceToGlideSlopeM) * levelMultiplier;
+    state.game.score.accuracy.emphasize = tdStats.distanceToGlideSlopeM <= 1;
+
+    state.game.score.scorePhaseStartedTS = deepCopy(state.game.lastFrameTS);
+    console.log({ score: state.game.score });
     return state;
 }

@@ -34,6 +34,23 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
                 canvasCoord: null,
                 frameCreated: null,
                 color: null,
+            },
+            score: {
+                scorePhaseStartedTS: null,
+                overall: {
+                    value: null,
+                    points: null,
+                },
+                verticalSpeed: {
+                    value: null,
+                    points: null,
+                    emphasize: false,
+                },
+                accuracy: {
+                    value: null,
+                    points: null,
+                    emphasize: false,
+                },
             }
         },
         camera: {
@@ -518,18 +535,14 @@ function processGroundInteractions(state) {
             state.plane.touchdownStats.verticalMS = touchdownMS;
             state.plane.touchdownStats.isFlaired = plane.flare === IS_FLARING;
             state.plane.touchdownStats.runwayUsedStartX = plane.posMapCoord[0];
-            state.plane.distanceToGlideSlopeM = Math.abs(
-                Math.round(
-                    (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
-                    / state.map.mapUnitsPerMeter
-                )
+            state.plane.touchdownStats.distanceToGlideSlopeM = Math.abs(
+                (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                / state.map.mapUnitsPerMeter
             )
             state.plane.touchdownStats.runwayWastedM = Math.max(
                 0,
-                Math.round(
-                    (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
-                    / state.map.mapUnitsPerMeter
-                )
+                (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                / state.map.mapUnitsPerMeter
             );
 
             console.log("👉 touch down");
