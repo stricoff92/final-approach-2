@@ -731,9 +731,7 @@ function drawScoreScreen(state) {
 
     const col1XOffset = sbXOffset + 10;
     const col2XOffset = sbXOffset + sbWidth - 10;
-    const rowYSize = 47;
-    const rowYSizeMedium = 42;
-    const rowYSizeSmall = 38;
+    const rowYSizeMedium = 38;
     let yOffset = sbHeightTopOffset + 30
 
     // Level completed
@@ -748,8 +746,11 @@ function drawScoreScreen(state) {
         yOffset
     );
 
-    // Landing description
-    yOffset += rowYSizeSmall;
+    // Landing description (700MS)
+    if(sbAgeMS < 700) {
+        return;
+    }
+    yOffset += rowYSizeMedium;
     state.ctx.beginPath();
     state.ctx.textBaseline = "middle";
     state.ctx.textAlign = "center";
@@ -760,7 +761,10 @@ function drawScoreScreen(state) {
         yOffset,
     );
 
-    // Vertical speed
+    // Vertical speed (900MS)
+    if(sbAgeMS < 900) {
+        return;
+    }
     yOffset += rowYSizeMedium;
     state.ctx.beginPath();
     state.ctx.textAlign = "left";
@@ -781,8 +785,11 @@ function drawScoreScreen(state) {
         col2XOffset,
         yOffset,
     );
-    // ACCURACY
-    yOffset += rowYSize;
+    // ACCURACY (1100MS)
+    if(sbAgeMS < 1100) {
+        return;
+    }
+    yOffset += rowYSizeMedium;
     state.ctx.beginPath();
     state.ctx.textAlign = "left";
     state.ctx.font = "normal 30px Arial";
@@ -801,9 +808,13 @@ function drawScoreScreen(state) {
         col2XOffset,
         yOffset,
     );
-    // Total score / high score
-    yOffset += rowYSize;
+    // Total score (1300ms -> 2100MS)
+    if(sbAgeMS < 1300) {
+        return;
+    }
+    yOffset += rowYSizeMedium;
     state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
     state.ctx.textAlign = "left";
     state.ctx.font = "bold 30px Arial";
     state.ctx.fillStyle = "#ff0";
@@ -812,11 +823,11 @@ function drawScoreScreen(state) {
         col1XOffset,
         yOffset
     );
-
-    const displayedPercent = Math.min(1, sbAgeMS / 2200);
+    const displayedPercent = Math.min(1, (sbAgeMS - 1300) / 800);
     const totalScore = state.game.score.total;
     const scoreToShow = Math.round(totalScore * displayedPercent);
     state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
     state.ctx.textAlign = "right";
     state.ctx.font = "bold 30px Arial";
     if(displayedPercent < 1) {
@@ -829,6 +840,37 @@ function drawScoreScreen(state) {
         col2XOffset,
         yOffset,
     );
+    // High score
+    if(displayedPercent >= 1) {
+        yOffset += rowYSizeMedium;
+        if(state.game.score.isNewHighScore) {
+            state.ctx.beginPath();
+            state.ctx.textBaseline = "middle";
+            state.ctx.textAlign = "center";
+            state.ctx.font = "normal 28px Arial";
+            state.ctx.fillStyle = "#ff0";
+            state.ctx.fillText(
+                "🎉 New High Score 🎉",
+                state.camera.canvasHalfW,
+                yOffset,
+            );
+        }
+        else if(state.game.score.currentHighScore !== null) {
+            state.ctx.beginPath();
+            state.ctx.textBaseline = "middle";
+            state.ctx.textAlign = "center";
+            state.ctx.font = "italic 24px Arial";
+            state.ctx.fillStyle = "#fff";
+            state.ctx.fillText(
+                "high score: " + state.game.score.currentHighScore,
+                state.camera.canvasHalfW,
+                yOffset,
+            );
+        }
+        else {
+            console.warn("no high score data to show")
+        }
+    }
 }
 
 function drawDebugData(state) {

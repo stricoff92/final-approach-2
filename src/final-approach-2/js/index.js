@@ -31,10 +31,6 @@ function resizeCanvas(updateState) {
 document.addEventListener("DOMContentLoaded", function() {
     console.log("DOMContentLoaded");
 
-    if(window.location.search.indexOf("clearcookies") !== -1) {
-        deleteAllCookies();
-    }
-
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, false);
 
