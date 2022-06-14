@@ -69,6 +69,7 @@ function setPlaneProps(state) {
         throw new Error("level not set");
     }
     if(state.game.level < 6) {
+        // C152
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
         state.plane.rwNegAccelerationMS = knotsToMS(-6);
@@ -90,16 +91,16 @@ function setPlaneProps(state) {
             if(!windMS) {
                 return f(elapsedMS);
             }
+            let windAdj;
             if(windMS < 0) {
-                // More airfoil velocity, less -acceleration
-                const windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
-                return f(elapsedMS) * windAdj;
+                // Headwind, less -acceleration
+                windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
             }
             else {
-                // Less airfoil velocity, more -acceleration
-                const windAdj = minMaxValue(0.005 * Math.pow(windMS, 2) + 1, 1, 2);
-                return f(elapsedMS) * windAdj;
+                // Tailwind, more -acceleration
+                windAdj = minMaxValue(0.005 * Math.pow(windMS, 2) + 1, 1, 2);
             }
+            return f(elapsedMS) * windAdj;
         }
 
         state.plane.flareTerminalHorizontalMS = knotsToMS(40);
@@ -123,6 +124,8 @@ function setPlaneProps(state) {
             [5.95, 2.05], // flare    (nose us)
         );
 
+    } else {
+        throw NOT_IMPLEMENTED;
     }
     return state;
 }
@@ -140,17 +143,20 @@ function setMapProps(state) {
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
         // state.plane.posMapCoord = [940 * mupm, 20 * mupm]; // Spawn near runway.
         if(level == 1) {
-            state.map.windXVel = 0;
-            state.map.windVolitility = 0.05;
-            state.map.windXMin = -4;
-            state.map.windXMax = 4;
-            state.map.windXTarg = 0;
             state.map.cloudLayer = {
                 topY: 120 * mupm,
                 bottomY: 85 * mupm,
             };
         } else if (level == 2) {
-            throw NOT_IMPLEMENTED;
+            state.map.windXVel = 0; // +=tailwind, -=headwind
+            state.map.windMaxDeltaPerSecond = 1;
+            state.map.windXMin = -5;
+            state.map.windXMax = 5;
+            state.map.windXTarg = 0;
+            state.map.cloudLayer = {
+                topY: 140 * mupm,
+                bottomY: 70 * mupm,
+            };
         } else if(level == 3) {
             throw NOT_IMPLEMENTED;
         }

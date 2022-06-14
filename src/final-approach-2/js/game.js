@@ -107,7 +107,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             terrain: null,
             mapUnitsPerMeter: null,
             windXVel: null,
-            windVolitility: null,
+            windMaxDeltaPerSecond: null,
             windXMin: null,
             windXMax: null,
             windXTarg: null,

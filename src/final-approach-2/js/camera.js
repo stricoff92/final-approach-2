@@ -161,12 +161,12 @@ function drawLoadingIcon(state) {
 function drawHelp(state) {
     state.ctx.beginPath();
     state.ctx.fillStyle = "#f00";
-    state.ctx.font = "bold italic 36px Arial";
+    state.ctx.font = "bold 28px Arial";
     state.ctx.textBaseline = "middle";
     state.ctx.textAlign = "center";
     const titleOffset = 15;
     state.ctx.fillText(
-        "Land the plane.",
+        "Land the Plane",
         state.camera.canvasHalfW, titleOffset
     );
     state.ctx.beginPath();
