@@ -101,11 +101,13 @@ function setPlaneProps(state) {
             let windAdj;
             if(windMS < 0) {
                 // Headwind, less -acceleration
+                // Adj between 0.1 and 1
                 windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
             }
             else {
                 // Tailwind, more -acceleration
-                windAdj = minMaxValue(0.005 * Math.pow(windMS, 2) + 1, 1, 2);
+                // Adj between 1 and 3
+                windAdj = minMaxValue(0.008 * Math.pow(windMS, 2) + 1, 1, 3);
             }
             return f(elapsedMS) * windAdj;
         }
@@ -185,6 +187,23 @@ function setMapProps(state) {
         state.map.cloudLayer = {
             topY: 150 * mupm,
             bottomY: 60 * mupm,
+        };
+    }
+    else if (level === 4) {
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1050 * mupm, 0];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.windXVel = 0; // +=tailwind, -=headwind
+        state.map.windMaxDeltaPerSecond = 6;
+        state.map.windXMin = 1;
+        state.map.windXMax = 10;
+        state.map.windXTarg = 0;
+        state.map.cloudLayer = {
+            topY: 160 * mupm,
+            bottomY: 50 * mupm,
         };
     }
     else {
