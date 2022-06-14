@@ -86,15 +86,19 @@ function setPlaneProps(state) {
 
         state.plane.leveledOutTerminalVerticalMS = feetPerMinToMS(-1800);
         state.plane.leveledOutVerticalAccelerationMS2Curve = (elapsedMS, windMS) => {
+            const f = elapsedMS => -0.125 * Math.pow(elapsedMS / 1000, 2) - 1.5;
             if(!windMS) {
-                return -0.125 * Math.pow(elapsedMS / 1000, 2) - 1.5;
+                return f(elapsedMS);
             }
             if(windMS < 0) {
                 // More airfoil velocity, less -acceleration
-                const headWindAdjCurve = windMS => minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1)
+                const windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
+                return f(elapsedMS) * windAdj;
             }
             else {
                 // Less airfoil velocity, more -acceleration
+                const windAdj = minMaxValue(0.005 * Math.pow(windMS, 2) + 1, 1, 2);
+                return f(elapsedMS) * windAdj;
             }
         }
 
