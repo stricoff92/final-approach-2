@@ -507,22 +507,23 @@ function _drawWindIndicator(state) {
     if(state.map.windMaxDeltaPerSecond === null) {
         return;
     }
-    if(Math.abs(state.map.windXVel) < 0.1) {
-        return;
-    }
     const windArrowY1 = state.camera.canvasH / 4;
     const windLabelY1 = windArrowY1 - 5;
-    const arrowMaxLenth = state.camera.canvasHalfW * 0.85;
-    const arrowHeight = 14;
-    const arrowHeadPointY = windArrowY1 + arrowHeight / 2;
-    const arrowHeadTopY = windArrowY1 - 7
-    const arrowHeadBottomY = windArrowY1 + arrowHeight + 7
     state.ctx.beginPath();
     state.ctx.textBaseline = "bottom";
     state.ctx.textAlign = "center";
     state.ctx.fillStyle = COLOR_PURPLE;
     state.ctx.font = "bold 28px Courier New";
     state.ctx.fillText("WIND", state.camera.canvasHalfW, windLabelY1);
+    if(Math.abs(state.map.windXVel) < 0.1) {
+        return;
+    }
+    const arrowMaxLenth = state.camera.canvasHalfW * 0.85;
+    const arrowHeight = 14;
+    const arrowHeadPointY = windArrowY1 + arrowHeight / 2;
+    const arrowHeadTopY = windArrowY1 - 7
+    const arrowHeadBottomY = windArrowY1 + arrowHeight + 7;
+    const headBuff = 3;
     if(state.map.windXVel > 0) {
         // Head wind, forward arrow.
         const arrowLength = arrowMaxLenth * (state.map.windXVel / WIND_MAX_MAGNITUDE_MS);
@@ -538,11 +539,11 @@ function _drawWindIndicator(state) {
         state.ctx.beginPath();
         state.ctx.fillStyle = COLOR_PURPLE;
         state.ctx.moveTo(
-            state.camera.canvasHalfW + arrowLength,
+            state.camera.canvasHalfW + (arrowLength - headBuff),
             arrowHeadTopY,
         );
         state.ctx.lineTo(
-            state.camera.canvasHalfW + arrowLength,
+            state.camera.canvasHalfW + (arrowLength - headBuff),
             arrowHeadBottomY,
         );
         state.ctx.lineTo(
@@ -567,11 +568,11 @@ function _drawWindIndicator(state) {
         state.ctx.beginPath();
         state.ctx.fillStyle = COLOR_PURPLE;
         state.ctx.moveTo(
-            state.camera.canvasHalfW - arrowLength,
+            state.camera.canvasHalfW - (arrowLength - headBuff),
             arrowHeadTopY,
         );
         state.ctx.lineTo(
-            state.camera.canvasHalfW - arrowLength,
+            state.camera.canvasHalfW - (arrowLength - headBuff),
             arrowHeadBottomY,
         );
         state.ctx.lineTo(
