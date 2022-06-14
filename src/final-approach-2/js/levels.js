@@ -8,6 +8,7 @@ function innerAdjustPlanePosition(state) {
 
     const fps = state.game.dataFPS;
     const plane = state.plane;
+    const mupm = state.map.mapUnitsPerMeter
     const nowTS = performance.now();
 
     // Calculate these new values
@@ -61,11 +62,11 @@ function innerAdjustPlanePosition(state) {
     state.plane.horizontalMS = newHorizontalMS;
     state.plane.verticalMS = newVerticalMS;
     state.plane.posMapCoord[0] += (
-        (newHorizontalMS * state.map.mapUnitsPerMeter / fps)
-        + (state.map.windXVel === null ? 0 : state.map.windXVel / fps * 3)
+        (newHorizontalMS * mupm / fps)
+        + (state.map.windXVel === null ? 0 : state.map.windXVel * mupm / fps)
     );
     state.plane.posMapCoord[1] += (
-        newVerticalMS * state.map.mapUnitsPerMeter / fps
+        newVerticalMS * mupm / fps
     );
 
     return state;
