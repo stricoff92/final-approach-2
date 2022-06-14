@@ -2,6 +2,10 @@
 function innerAdjustPlanePosition(state) {
     state.game.acceptControlCommands = state.plane.flare === IS_NOT_FLARING;
 
+    if(state.isPaused) {
+        return state;
+    }
+
     const fps = state.game.dataFPS;
     const plane = state.plane;
     const nowTS = performance.now();
@@ -40,7 +44,10 @@ function innerAdjustPlanePosition(state) {
     }
     else {
         const elapsedLeveledOutMS = nowTS - plane.lastLevelOutTS;
-        const verticalAccMS = plane.leveledOutVerticalAccelerationMS2Curve(elapsedLeveledOutMS);
+        const verticalAccMS = plane.leveledOutVerticalAccelerationMS2Curve(
+            elapsedLeveledOutMS,
+            state.map.windXVel,
+        );
         const verticalAccMF = verticalAccMS / fps;
         newVerticalMS = plane.verticalMS + verticalAccMF;
 
@@ -134,37 +141,59 @@ function setMapProps(state) {
     state.map.mapUnitsPerMeter = state.camera.canvasW > 700 ? 21 : 14;
     const mupm = state.map.mapUnitsPerMeter;
     const level = state.game.level;
-    if(level < 4) {
+    if(level === 1) {
         state.map.terrain = TERRAIN_FOREST;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1800 * mupm, 0];
         state.map.gsP0MapCoord = [0, 250 * mupm];
         state.map.gsP1MapCoord = [1050 * mupm, 0];
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
-        // state.plane.posMapCoord = [940 * mupm, 20 * mupm]; // Spawn near runway.
-        if(level == 1) {
-            state.map.cloudLayer = {
-                topY: 120 * mupm,
-                bottomY: 85 * mupm,
-            };
-        } else if (level == 2) {
-            state.map.windXVel = 0; // +=tailwind, -=headwind
-            state.map.windMaxDeltaPerSecond = 1;
-            state.map.windXMin = -5;
-            state.map.windXMax = 5;
-            state.map.windXTarg = 0;
-            state.map.cloudLayer = {
-                topY: 140 * mupm,
-                bottomY: 70 * mupm,
-            };
-        } else if(level == 3) {
-            throw NOT_IMPLEMENTED;
-        }
-    } else if(level < 7) {
-        state.map.terrain = TERRAIN_DESERT;
+        state.map.cloudLayer = {
+            topY: 120 * mupm,
+            bottomY: 85 * mupm,
+        };
+    }
+    else if (level === 2) {
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1050 * mupm, 0];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.windXVel = 0; // +=tailwind, -=headwind
+        state.map.windMaxDeltaPerSecond = 2;
+        state.map.windXMin = -5;
+        state.map.windXMax = 5;
+        state.map.windXTarg = 0;
+        state.map.cloudLayer = {
+            topY: 140 * mupm,
+            bottomY: 70 * mupm,
+        };
+    }
+    else if (level === 3) {
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1050 * mupm, 0];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.windXVel = 0; // +=tailwind, -=headwind
+        state.map.windMaxDeltaPerSecond = 4;
+        state.map.windXMin = -6;
+        state.map.windXMax = 6;
+        state.map.windXTarg = 0;
+        state.map.cloudLayer = {
+            topY: 150 * mupm,
+            bottomY: 60 * mupm,
+        };
+    }
+    else {
         throw NOT_IMPLEMENTED;
-    } else {
-        state.map.terrain = TERRAIN_OCEAN;
+    }
+    if(
+        state.map.windXMin < (WIND_MAX_MAGNITUDE_MS * -1)
+        || state.map.windXMax > WIND_MAX_MAGNITUDE_MS
+    ) {
         throw NOT_IMPLEMENTED;
     }
 

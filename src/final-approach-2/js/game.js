@@ -126,7 +126,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
                 text: disabled ? '🔒' : `Level ${levelNumber}`,
                 boxCoord: null,
                 disabled,
-                handler: disabled ? ()=>{} : () => {
+                handler: disabled ? ()=>{console.log("btn disabled")} : () => {
                     window.addCommand({
                         cmd: COMMAND_START_LEVEL,
                         args: [ levelNumber ],
@@ -331,6 +331,7 @@ function runDataLoop() {
 
         // Adjust state for plane flying through the air
         if(!state.plane.touchedDown && !state.plane.crashFrame) {
+            state = adjustMapWindValues(state);
             state = state.plane.adjustPlanePosition(state);
         }
 
@@ -595,6 +596,47 @@ function processGroundInteractions(state) {
             });
         }
     }
+    return state;
+}
+
+function adjustMapWindValues(state) {
+    if(state.map.windMaxDeltaPerSecond === null){
+        return state;
+    }
+
+    const fps = state.game.dataFPS;
+    let delta
+    if(state.map.windXVel < state.map.windXTarg) {
+        // Increase windMS to reach target.
+        delta = Math.min(
+            state.map.windXTarg - state.map.windXVel,
+            getRandomFloat(
+                state.map.windMaxDeltaPerSecond / 4,
+                state.map.windMaxDeltaPerSecond
+            ) / fps,
+        );
+        state.map.windXVel += delta
+    }
+    else if(state.map.windXVel > state.map.windXTarg) {
+        // Decrease windMS to reach target.
+        delta = Math.max(
+            state.map.windXTarg - state.map.windXVel,
+            getRandomFloat(
+                -1 * state.map.windMaxDeltaPerSecond,
+                -1 * state.map.windMaxDeltaPerSecond / 4,
+            ) / fps,
+        );
+        state.map.windXVel += delta;
+    }
+    else {
+        // Set new target
+        state.map.windXTarg = getRandomFloat(
+            state.map.windXMin,
+            state.map.windXMax,
+        );
+    }
+
+
     return state;
 }
 

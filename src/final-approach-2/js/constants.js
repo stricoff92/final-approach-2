@@ -50,3 +50,5 @@ const COLOR_SCORE_BOARD_BACKGROUND = a => `rgb(80, 0, 105, ${a.toFixed(2)})`;
 
 const CRASH_EFFECT_1_MAX_FRAME = 60;
 const CRASH_EFFECT_2_MAX_FRAME = 160;
+
+const WIND_MAX_MAGNITUDE_MS = 15;
