@@ -61,6 +61,15 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
 
+function minMaxValue(value, min, max) {
+    if(value < min) {
+        return min;
+    }
+    if (value > max) {
+        return max;
+    }
+    return value;
+}
 
 function feetPerMinToMS(fpm) {
     return fpm / 60 / 3
