@@ -2,8 +2,13 @@
 function innerAdjustPlanePosition(state) {
     state.game.acceptControlCommands = state.plane.flare === IS_NOT_FLARING;
 
+    if(state.isPaused) {
+        return state;
+    }
+
     const fps = state.game.dataFPS;
     const plane = state.plane;
+    const mupm = state.map.mapUnitsPerMeter
     const nowTS = performance.now();
 
     // Calculate these new values
@@ -40,7 +45,10 @@ function innerAdjustPlanePosition(state) {
     }
     else {
         const elapsedLeveledOutMS = nowTS - plane.lastLevelOutTS;
-        const verticalAccMS = plane.leveledOutVerticalAccelerationMS2Curve(elapsedLeveledOutMS);
+        const verticalAccMS = plane.leveledOutVerticalAccelerationMS2Curve(
+            elapsedLeveledOutMS,
+            state.map.windXVel,
+        );
         const verticalAccMF = verticalAccMS / fps;
         newVerticalMS = plane.verticalMS + verticalAccMF;
 
@@ -51,14 +59,14 @@ function innerAdjustPlanePosition(state) {
         )
     }
 
-
     state.plane.horizontalMS = newHorizontalMS;
     state.plane.verticalMS = newVerticalMS;
     state.plane.posMapCoord[0] += (
-        newHorizontalMS * state.map.mapUnitsPerMeter / fps
+        (newHorizontalMS * mupm / fps)
+        + (state.map.windXVel === null ? 0 : state.map.windXVel * mupm / fps)
     );
     state.plane.posMapCoord[1] += (
-        newVerticalMS * state.map.mapUnitsPerMeter / fps
+        newVerticalMS * mupm / fps
     );
 
     return state;
@@ -68,7 +76,8 @@ function setPlaneProps(state) {
     if(!state.game.level) {
         throw new Error("level not set");
     }
-    if(state.game.level < 6) {
+    if(state.game.level <= 5) {
+        // C152
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
         state.plane.rwNegAccelerationMS = knotsToMS(-6);
@@ -85,8 +94,23 @@ function setPlaneProps(state) {
         state.plane.leveledOutTerminalHorizontalMS = knotsToMS(69);
 
         state.plane.leveledOutTerminalVerticalMS = feetPerMinToMS(-1800);
-        state.plane.leveledOutVerticalAccelerationMS2Curve = elapsedMS => {
-            return -0.125 * Math.pow(elapsedMS / 1000, 2) - 1.5;
+        state.plane.leveledOutVerticalAccelerationMS2Curve = (elapsedMS, windMS) => {
+            const f = elapsedMS => -0.125 * Math.pow(elapsedMS / 1000, 2) - 1.5;
+            if(!windMS) {
+                return f(elapsedMS);
+            }
+            let windAdj;
+            if(windMS < 0) {
+                // Headwind, less -acceleration
+                // Adj between 0.1 and 1
+                windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
+            }
+            else {
+                // Tailwind, more -acceleration
+                // Adj between 1 and 7
+                windAdj = minMaxValue(0.03 * Math.pow(windMS, 2) + 1, 1, 7);
+            }
+            return f(elapsedMS) * windAdj;
         }
 
         state.plane.flareTerminalHorizontalMS = knotsToMS(40);
@@ -110,6 +134,11 @@ function setPlaneProps(state) {
             [5.95, 2.05], // flare    (nose us)
         );
 
+    } else if(state.game.level <= 10) {
+        throw NOT_IMPLEMENTED;
+    }
+    else {
+        throw NOT_IMPLEMENTED;
     }
     return state;
 }
@@ -118,34 +147,76 @@ function setMapProps(state) {
     state.map.mapUnitsPerMeter = state.camera.canvasW > 700 ? 21 : 14;
     const mupm = state.map.mapUnitsPerMeter;
     const level = state.game.level;
-    if(level < 4) {
+    if(level === 1) {
         state.map.terrain = TERRAIN_FOREST;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1800 * mupm, 0];
         state.map.gsP0MapCoord = [0, 250 * mupm];
         state.map.gsP1MapCoord = [1050 * mupm, 0];
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
-        // state.plane.posMapCoord = [940 * mupm, 20 * mupm]; // Spawn near runway.
-        if(level == 1) {
-            state.map.windXVel = 0;
-            state.map.windVolitility = 0.05;
-            state.map.windXMin = -4;
-            state.map.windXMax = 4;
-            state.map.windXTarg = 0;
-            state.map.cloudLayer = {
-                topY: 120 * mupm,
-                bottomY: 85 * mupm,
-            };
-        } else if (level == 2) {
-            throw NOT_IMPLEMENTED;
-        } else if(level == 3) {
-            throw NOT_IMPLEMENTED;
-        }
-    } else if(level < 7) {
-        state.map.terrain = TERRAIN_DESERT;
+        state.map.cloudLayer = {
+            topY: 120 * mupm,
+            bottomY: 85 * mupm,
+        };
+    }
+    else if (level === 2) {
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1050 * mupm, 0];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.windXVel = 0; // +=tailwind, -=headwind
+        state.map.windMaxDeltaPerSecond = 2;
+        state.map.windXMin = -5;
+        state.map.windXMax = 5;
+        state.map.windXTarg = 0;
+        state.map.cloudLayer = {
+            topY: 140 * mupm,
+            bottomY: 70 * mupm,
+        };
+    }
+    else if (level === 3) {
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1050 * mupm, 0];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.windXVel = 0; // +=tailwind, -=headwind
+        state.map.windMaxDeltaPerSecond = 4;
+        state.map.windXMin = -6;
+        state.map.windXMax = 6;
+        state.map.windXTarg = 0;
+        state.map.cloudLayer = {
+            topY: 150 * mupm,
+            bottomY: 60 * mupm,
+        };
+    }
+    else if (level === 4) {
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1050 * mupm, 0];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.windXVel = 0; // +=tailwind, -=headwind
+        state.map.windMaxDeltaPerSecond = 6;
+        state.map.windXMin = 1;
+        state.map.windXMax = 10;
+        state.map.windXTarg = 0;
+        state.map.cloudLayer = {
+            topY: 160 * mupm,
+            bottomY: 50 * mupm,
+        };
+    }
+    else {
         throw NOT_IMPLEMENTED;
-    } else {
-        state.map.terrain = TERRAIN_OCEAN;
+    }
+    if(
+        state.map.windXMin < (WIND_MAX_MAGNITUDE_MS * -1)
+        || state.map.windXMax > WIND_MAX_MAGNITUDE_MS
+    ) {
         throw NOT_IMPLEMENTED;
     }
 

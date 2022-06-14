@@ -161,12 +161,12 @@ function drawLoadingIcon(state) {
 function drawHelp(state) {
     state.ctx.beginPath();
     state.ctx.fillStyle = "#f00";
-    state.ctx.font = "bold italic 36px Arial";
+    state.ctx.font = "bold 28px Arial";
     state.ctx.textBaseline = "middle";
     state.ctx.textAlign = "center";
     const titleOffset = 15;
     state.ctx.fillText(
-        "Land the plane.",
+        "Land the Plane",
         state.camera.canvasHalfW, titleOffset
     );
     state.ctx.beginPath();
@@ -189,6 +189,7 @@ function drawGameScene(state) {
     const nowTS = performance.now();
     const plane = state.plane;
     const planeMapDims = plane.dimensions[plane.flare];
+    const mupm = state.map.mapUnitsPerMeter;
 
     const [
         scTopLeftMapCoord,
@@ -232,6 +233,59 @@ function drawGameScene(state) {
         state.ctx.stroke();
     }
 
+    let planeCanvasX1, planeCanvasY1;
+    if(!plane.crashFrame) {
+        // Draw Plane Shadow
+        const planeCanvasDims = planeMapDims.map(d => d * state.map.mapUnitsPerMeter);
+        const shadowCenterMapCoord = [
+            plane.posMapCoord[0] + state.plane.posMapCoord[1] * 0.4,
+            plane.posMapCoord[1] * -0.2,
+        ];
+        const shadowCenterCanvasCoord = mapCoordToCanvasCoord(
+            shadowCenterMapCoord, plane.posMapCoord, state.camera
+        );
+        const shadowCanvasDims = planeCanvasDims.map((d, ix) => d / (ix + 1));
+        state.ctx.beginPath();
+        state.ctx.fillStyle = `rgb(0, 0, 0, 0.27)`;
+        state.ctx.rect(
+            shadowCenterCanvasCoord[0] - shadowCanvasDims[0] / 2,
+            shadowCenterCanvasCoord[1] - shadowCanvasDims[1] / 2,
+            ...shadowCanvasDims
+        );
+        state.ctx.fill();
+
+        const shakeLifespanMS = 450;
+        const tireStrikeLen = state.map.tireStrikes.length;
+        const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
+        const showVisualSkake = Boolean(lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanMS >= nowTS);
+
+        // Draw plane
+        planeCanvasX1 = state.camera.canvasHalfW - (planeCanvasDims[0] / 2);
+        planeCanvasY1 = state.camera.canvasHalfH - (planeCanvasDims[1] / 2);
+        state.ctx.beginPath();
+        state.ctx.drawImage(
+            plane.assets[plane.flare],
+            planeCanvasX1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
+            planeCanvasY1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
+            planeCanvasDims[0],
+            planeCanvasDims[1],
+        );
+    }
+    else {
+        _drawExplosionEffect(state);
+    }
+
+    _drawCloudEffects(
+        state,
+        scBottomLeftMapCoord[1],
+        scTopLeftMapCoord[1],
+        scTopRightMapCoord[0],
+    );
+
+    if(!plane.crashFrame && !plane.touchedDown) {
+        _drawWindIndicator(state);
+    }
+
     // Draw altitude indicator if over min altutude
     const runwayAltitudeM = state.map.rwP0MapCoord[1] * state.map.mapUnitsPerMeter;
     const planeBottomAltitudeM = (
@@ -245,7 +299,8 @@ function drawGameScene(state) {
         // Altitude Text
         const altText1P = [
             state.camera.canvasHalfW,
-            Math.round(state.camera.canvasH * 0.6),
+            // Math.round(state.camera.canvasH * 0.6),
+            planeCanvasY1 + 60
         ];
         state.ctx.beginPath();
         state.ctx.fillStyle = "#000";
@@ -286,103 +341,6 @@ function drawGameScene(state) {
         state.ctx.lineTo(altLineP2[0] + altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
         state.ctx.stroke();
     }
-
-    if(!plane.crashFrame && plane.posMapCoord[0] < state.map.rwP0MapCoord[0]) {
-        // Runway Distance Text
-        const distanceToRWM = (state.map.rwP0MapCoord[0] - plane.posMapCoord[0]) / state.map.mapUnitsPerMeter;
-        const rwDText1P = [
-            state.camera.canvasHalfW,
-            Math.round(state.camera.canvasH * 0.35),
-        ];
-        state.ctx.beginPath();
-        state.ctx.fillStyle = "#000";
-        state.ctx.font = "20px Arial";
-        state.ctx.textBaseline = "middle";
-        state.ctx.textAlign = "left";
-        state.ctx.fillText("runway", ...rwDText1P);
-        const rwDText2P = [
-            rwDText1P[0],
-            rwDText1P[1] + 25,
-        ];
-        state.ctx.beginPath();
-        state.ctx.font = "bold 25px Arial";
-        state.ctx.fillText(`${distanceToRWM.toFixed(0)} M`, ...rwDText2P);
-
-        // Runway Distance Arrow
-        const rwDLineP1 = [
-            rwDText2P[0],
-            rwDText2P[1] + 17,
-        ];
-        const rwDLineP2 = [
-            state.camera.canvasW * 0.9,
-            rwDText2P[1] + 17,
-        ];
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = "#000"
-        state.ctx.lineWidth = 1;
-        state.ctx.moveTo(...rwDLineP1);
-        state.ctx.lineTo(...rwDLineP2);
-        state.ctx.stroke();
-        const altArrowHeadLen = 15
-        state.ctx.beginPath();
-        state.ctx.moveTo(...rwDLineP2);
-        state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] - altArrowHeadLen / 2);
-        state.ctx.stroke();
-        state.ctx.beginPath();
-        state.ctx.moveTo(...rwDLineP2);
-        state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] + altArrowHeadLen / 2);
-        state.ctx.stroke();
-    }
-
-
-
-    if(!plane.crashFrame) {
-        // Draw Plane Shadow
-        const planeCanvasDims = planeMapDims.map(d => d * state.map.mapUnitsPerMeter);
-        const shadowCenterMapCoord = [
-            plane.posMapCoord[0] + state.plane.posMapCoord[1] * 0.4,
-            plane.posMapCoord[1] * -0.2,
-        ];
-        const shadowCenterCanvasCoord = mapCoordToCanvasCoord(
-            shadowCenterMapCoord, plane.posMapCoord, state.camera
-        );
-        const shadowCanvasDims = planeCanvasDims.map((d, ix) => d / (ix + 1));
-        state.ctx.beginPath();
-        state.ctx.fillStyle = `rgb(0, 0, 0, 0.27)`;
-        state.ctx.rect(
-            shadowCenterCanvasCoord[0] - shadowCanvasDims[0] / 2,
-            shadowCenterCanvasCoord[1] - shadowCanvasDims[1] / 2,
-            ...shadowCanvasDims
-        );
-        state.ctx.fill();
-
-        const shakeLifespanMS = 450;
-        const tireStrikeLen = state.map.tireStrikes.length;
-        const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
-        const showVisualSkake = Boolean(lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanMS >= nowTS);
-
-        // Draw plane
-        const planeCanvasX1 = state.camera.canvasHalfW - (planeCanvasDims[0] / 2);
-        const planeCanvasY1 = state.camera.canvasHalfH - (planeCanvasDims[1] / 2);
-        state.ctx.beginPath();
-        state.ctx.drawImage(
-            plane.assets[plane.flare],
-            planeCanvasX1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
-            planeCanvasY1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
-            planeCanvasDims[0],
-            planeCanvasDims[1],
-        );
-    }
-    else {
-        _drawExplosionEffect(state);
-    }
-
-    _drawCloudEffects(
-        state,
-        scBottomLeftMapCoord[1],
-        scTopLeftMapCoord[1],
-        scTopRightMapCoord[0],
-    );
 
     if(!plane.touchedDown && !plane.crashFrame) {
         for(let i = 0; i < plane.previousPoints.length; i++) {
@@ -543,6 +501,86 @@ function _drawExplosionEffect(state) {
     });
 
 
+}
+
+function _drawWindIndicator(state) {
+    if(state.map.windMaxDeltaPerSecond === null) {
+        return;
+    }
+    const windArrowY1 = state.camera.canvasH / 4;
+    const windLabelY1 = windArrowY1 - 5;
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "center";
+    state.ctx.fillStyle = COLOR_PURPLE;
+    state.ctx.font = "bold 28px Courier New";
+    state.ctx.fillText("WIND", state.camera.canvasHalfW, windLabelY1);
+    if(Math.abs(state.map.windXVel) < 0.1) {
+        return;
+    }
+    const arrowMaxLenth = state.camera.canvasHalfW * 0.85;
+    const arrowHeight = 14;
+    const arrowHeadPointY = windArrowY1 + arrowHeight / 2;
+    const arrowHeadTopY = windArrowY1 - 7
+    const arrowHeadBottomY = windArrowY1 + arrowHeight + 7;
+    const headBuff = 3;
+    if(state.map.windXVel > 0) {
+        // Head wind, forward arrow.
+        const arrowLength = arrowMaxLenth * (state.map.windXVel / WIND_MAX_MAGNITUDE_MS);
+        state.ctx.beginPath()
+        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.rect(
+            state.camera.canvasHalfW, windArrowY1,
+            arrowLength, arrowHeight,
+        );
+        state.ctx.fill();
+        // Arrow head
+        const arrowHeadPointX = state.camera.canvasHalfW + arrowLength + 12;
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.moveTo(
+            state.camera.canvasHalfW + (arrowLength - headBuff),
+            arrowHeadTopY,
+        );
+        state.ctx.lineTo(
+            state.camera.canvasHalfW + (arrowLength - headBuff),
+            arrowHeadBottomY,
+        );
+        state.ctx.lineTo(
+            arrowHeadPointX,
+            arrowHeadPointY,
+        )
+        state.ctx.fill();
+    }
+    else {
+        // Tail wind, backwards arrow.
+        const arrowLength = arrowMaxLenth * (-1 * state.map.windXVel / WIND_MAX_MAGNITUDE_MS);
+        const arrowX1 = state.camera.canvasHalfW - arrowLength;
+        state.ctx.beginPath()
+        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.rect(
+            arrowX1, windArrowY1,
+            arrowLength, arrowHeight,
+        );
+        state.ctx.fill();
+        // Arrow head
+        const arrowHeadPointX = state.camera.canvasHalfW - (arrowLength + 12);
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.moveTo(
+            state.camera.canvasHalfW - (arrowLength - headBuff),
+            arrowHeadTopY,
+        );
+        state.ctx.lineTo(
+            state.camera.canvasHalfW - (arrowLength - headBuff),
+            arrowHeadBottomY,
+        );
+        state.ctx.lineTo(
+            arrowHeadPointX,
+            arrowHeadPointY,
+        )
+        state.ctx.fill();
+    }
 }
 
 function _drawCloudEffects(
@@ -903,6 +941,15 @@ function drawDebugData(state) {
         state.ctx.fillText(`Y m/s: ${state.plane.verticalMS.toFixed(2)}`, xOffset, yPointer);
         yPointer -= yInterval;
     }
+
+    // Wind
+    if(state.map.windXVel !== null && state.map.windXTarg !== null) {
+        state.ctx.fillText(`windXVel: ${state.map.windXVel.toFixed(2)}`, xOffset, yPointer);
+        yPointer -= yInterval;
+        state.ctx.fillText(`windXTarg: ${state.map.windXTarg.toFixed(2)}`, xOffset, yPointer);
+        yPointer -= yInterval;
+    }
+
     // Draw map scape
     if(state.map.mapUnitsPerMeter && state.camera.canvasH) {
         const msXOffset = 25;
