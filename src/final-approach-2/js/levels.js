@@ -76,7 +76,7 @@ function setPlaneProps(state) {
     if(!state.game.level) {
         throw new Error("level not set");
     }
-    if(state.game.level < 6) {
+    if(state.game.level <= 5) {
         // C152
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
@@ -134,7 +134,10 @@ function setPlaneProps(state) {
             [5.95, 2.05], // flare    (nose us)
         );
 
-    } else {
+    } else if(state.game.level <= 10) {
+        throw NOT_IMPLEMENTED;
+    }
+    else {
         throw NOT_IMPLEMENTED;
     }
     return state;
