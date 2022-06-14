@@ -300,7 +300,8 @@ function drawGameScene(state) {
         const altText1P = [
             state.camera.canvasHalfW,
             // Math.round(state.camera.canvasH * 0.6),
-            planeCanvasY1 + 60
+            state.camera.canvasHalfH + state.plane.dimensions[0][1] * mupm
+            // planeCanvasY1 + 60
         ];
         state.ctx.beginPath();
         state.ctx.fillStyle = "#000";

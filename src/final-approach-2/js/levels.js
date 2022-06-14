@@ -76,7 +76,7 @@ function setPlaneProps(state) {
     if(!state.game.level) {
         throw new Error("level not set");
     }
-    if(state.game.level <= 5) {
+    if(state.game.level <= 4) {
         // C152
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
@@ -135,7 +135,58 @@ function setPlaneProps(state) {
         );
 
     } else if(state.game.level <= 10) {
-        throw NOT_IMPLEMENTED;
+        // F18
+        state.plane.asset = PLANE_C152;
+        state.plane.dimensions = [],
+        state.plane.rwNegAccelerationMS = knotsToMS(-10);
+        state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500)
+        state.plane.adjustPlanePosition = innerAdjustPlanePosition;
+
+        state.plane.horizontalMS = knotsToMS(58);
+        state.plane.verticalMS = feetPerMinToMS(-550);
+        state.plane.lastLevelOutTS = performance.now();
+        state.plane.lastLevelOutFrame = state.game.frame;
+        state.plane.leveledOutInitialHorizontalMS = knotsToMS(100);
+        state.plane.leveledOutHorizontalAccelerationMS2 = knotsToMS(10);
+        state.plane.leveledOutTerminalHorizontalMS = knotsToMS(140);
+        state.plane.leveledOutTerminalVerticalMS = feetPerMinToMS(-2200);
+        state.plane.leveledOutVerticalAccelerationMS2Curve = (elapsedMS, windMS) => {
+            const f = elapsedMS => -0.3 * Math.pow(elapsedMS / 1000, 2) - 4;
+            if(!windMS) {
+                return f(elapsedMS);
+            }
+            let windAdj;
+            if(windMS < 0) {
+                // Headwind, less -acceleration
+                // Adj between 0.1 and 1
+                windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
+            }
+            else {
+                // Tailwind, more -acceleration
+                // Adj between 1 and 7
+                windAdj = minMaxValue(0.03 * Math.pow(windMS, 2) + 1, 1, 7);
+            }
+            return f(elapsedMS) * windAdj;
+        }
+        state.plane.flareTerminalHorizontalMS = knotsToMS(85);
+        state.plane.flareHorizontalAccelerationMS2 = knotsToMS(-8);
+        state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
+            return -0.03 * Math.pow(elapsedMS / 1000, 2) - 1;
+        }
+        state.plane.touchDownFlareMinMS = 35;
+
+        const noFlareAsset = new Image();
+        noFlareAsset.src = "img/" + PLANE_F18 + "-0.svg";
+        const flareAsset = new Image();
+        flareAsset.src = "img/" + PLANE_F18 + "-1.svg";
+        state.plane.assets.push(
+            noFlareAsset,
+            flareAsset,
+        );
+        state.plane.dimensions.push(
+            [10.0, 3.5], // no flare (nose level)
+            [9.7, 3.8],  // flare    (nose us)
+        );
     }
     else {
         throw NOT_IMPLEMENTED;
@@ -208,6 +259,18 @@ function setMapProps(state) {
         state.map.cloudLayer = {
             topY: 160 * mupm,
             bottomY: 50 * mupm,
+        };
+    }
+    else if (level === 5) {
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1050 * mupm, 0];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.cloudLayer = {
+            topY: 120 * mupm,
+            bottomY: 85 * mupm,
         };
     }
     else {
