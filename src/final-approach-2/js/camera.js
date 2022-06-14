@@ -510,17 +510,18 @@ function _drawWindIndicator(state) {
     if(Math.abs(state.map.windXVel) < 0.1) {
         return;
     }
-
     const windArrowY1 = state.camera.canvasH / 4;
     const windLabelY1 = windArrowY1 - 5;
     const arrowMaxLenth = state.camera.canvasHalfW * 0.85;
     const arrowHeight = 14;
-
-    state.ctx.beginPath()
+    const arrowHeadPointY = windArrowY1 + arrowHeight / 2;
+    const arrowHeadTopY = windArrowY1 - 7
+    const arrowHeadBottomY = windArrowY1 + arrowHeight + 7
+    state.ctx.beginPath();
     state.ctx.textBaseline = "bottom";
     state.ctx.textAlign = "center";
     state.ctx.fillStyle = COLOR_PURPLE;
-    state.ctx.font = "normal 28px Arial";
+    state.ctx.font = "bold 28px Courier New";
     state.ctx.fillText("WIND", state.camera.canvasHalfW, windLabelY1);
     if(state.map.windXVel > 0) {
         // Head wind, forward arrow.
@@ -532,8 +533,23 @@ function _drawWindIndicator(state) {
             arrowLength, arrowHeight,
         );
         state.ctx.fill();
-        // arrow head
-
+        // Arrow head
+        const arrowHeadPointX = state.camera.canvasHalfW + arrowLength + 12;
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.moveTo(
+            state.camera.canvasHalfW + arrowLength,
+            arrowHeadTopY,
+        );
+        state.ctx.lineTo(
+            state.camera.canvasHalfW + arrowLength,
+            arrowHeadBottomY,
+        );
+        state.ctx.lineTo(
+            arrowHeadPointX,
+            arrowHeadPointY,
+        )
+        state.ctx.fill();
     }
     else {
         // Tail wind, backwards arrow.
@@ -546,8 +562,24 @@ function _drawWindIndicator(state) {
             arrowLength, arrowHeight,
         );
         state.ctx.fill();
+        // Arrow head
+        const arrowHeadPointX = state.camera.canvasHalfW - (arrowLength + 12);
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.moveTo(
+            state.camera.canvasHalfW - arrowLength,
+            arrowHeadTopY,
+        );
+        state.ctx.lineTo(
+            state.camera.canvasHalfW - arrowLength,
+            arrowHeadBottomY,
+        );
+        state.ctx.lineTo(
+            arrowHeadPointX,
+            arrowHeadPointY,
+        )
+        state.ctx.fill();
     }
-
 }
 
 function _drawCloudEffects(
