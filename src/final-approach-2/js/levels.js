@@ -58,11 +58,11 @@ function innerAdjustPlanePosition(state) {
         )
     }
 
-
     state.plane.horizontalMS = newHorizontalMS;
     state.plane.verticalMS = newVerticalMS;
     state.plane.posMapCoord[0] += (
-        newHorizontalMS * state.map.mapUnitsPerMeter / fps
+        (newHorizontalMS * state.map.mapUnitsPerMeter / fps)
+        + (state.map.windXVel === null ? 0 : state.map.windXVel / fps * 3)
     );
     state.plane.posMapCoord[1] += (
         newVerticalMS * state.map.mapUnitsPerMeter / fps
@@ -106,8 +106,8 @@ function setPlaneProps(state) {
             }
             else {
                 // Tailwind, more -acceleration
-                // Adj between 1 and 3
-                windAdj = minMaxValue(0.008 * Math.pow(windMS, 2) + 1, 1, 3);
+                // Adj between 1 and 7
+                windAdj = minMaxValue(0.03 * Math.pow(windMS, 2) + 1, 1, 7);
             }
             return f(elapsedMS) * windAdj;
         }
