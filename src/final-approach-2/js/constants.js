@@ -33,8 +33,9 @@ const COMMAND_SHOW_HELP = 4;
 
 const COLOR_PURPLE = "#620080";
 const COLOR_BLACK = "#000";
-const COLOR_SKY_FOREST = "#e3e3ff";
+const COLOR_SKY = "#e3e3ff";
 const COLOR_GROUND_FOREST = "#bcd4ab";
+const COLOR_GROUD_DESERT = "#dbd6af";
 
 const COLOR_CLOUD_LAYER = a => `rgb(219, 219, 219, ${a.toFixed(2)})`;
 const CLOUD_GRADIENT_SIZE_M = 30;
@@ -64,3 +65,4 @@ const LEVEL_NAME_TOTAL_DURATION = (
     + LEVEL_NAME_DISPLAY_FADEOUT_MS
 );
 
+LEVEL_7_MAX_SAFE_X_M = 130;

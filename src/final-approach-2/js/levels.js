@@ -243,10 +243,10 @@ function setMapProps(state) {
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 4.5;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [1220 * mupm, 0];
+        state.map.rwP1MapCoord = [1130 * mupm, 0];
         state.map.glideSlopes.push({
             p0: [0, 250 * mupm],
-            p1: [1020 * mupm, 0],
+            p1: [1013 * mupm, 0],
         });
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.windXVel = 0; // +=tailwind, -=headwind
@@ -303,7 +303,7 @@ function setMapProps(state) {
         state.plane.startingFuel = 4;
         state.plane.fuelRemaining = 3;
         state.map.terrain = TERRAIN_DESERT;
-        state.map.rwType = RUNWAY_TYPE_CONCRETE;
+        state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1500 * mupm, 0];
         state.map.rwP1MapCoord = [1825 * mupm, 0];
@@ -319,10 +319,8 @@ function setMapProps(state) {
     }
     else if (level === 7) {
         state.game.levelName = "Dangerous Airspace";
-        state.plane.startingFuel = 14;
-        state.plane.fuelRemaining = 14;
         state.map.terrain = TERRAIN_DESERT;
-        state.map.rwType = RUNWAY_TYPE_CONCRETE;
+        state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1550 * mupm, 0];
         state.map.rwP1MapCoord = [(1550 + 320) * mupm, 0];
@@ -333,10 +331,10 @@ function setMapProps(state) {
             },
             {
                 p0: [1000 * mupm, 900 * mupm],
-                p1: [1200 * mupm, 130 * mupm],
+                p1: [1200 * mupm, 130 * mupm], //  LEVEL_7_MAX_SAFE_X_M
             },
             {
-                p0: [1200 * mupm, 130 * mupm],
+                p0: [1200 * mupm, 130 * mupm], //  LEVEL_7_MAX_SAFE_X_M
                 p1: [1600 * mupm, 0 * mupm],
             },
         );

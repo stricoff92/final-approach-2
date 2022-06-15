@@ -299,6 +299,7 @@ function drawGameScene(state) {
     ) / state.map.mapUnitsPerMeter;
     if(!plane.crashFrame && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
         // Altitude Text
+        const showSafeAltitude = Boolean(state.game.level === 7 && planeBottomAltitudeM > LEVEL_7_MAX_SAFE_X_M);
         const altText1P = [
             state.camera.canvasHalfW,
             state.camera.canvasHalfH + state.plane.dimensions[0][1] * mupm
@@ -308,15 +309,21 @@ function drawGameScene(state) {
         state.ctx.font = "20px Arial";
         state.ctx.textBaseline = "middle";
         state.ctx.textAlign = "left";
-        state.ctx.fillText("ground", ...altText1P);
+        state.ctx.fillText(showSafeAltitude?"Safe Altitude":"ground", ...altText1P);
         const altText2P = [
             altText1P[0],
             altText1P[1] + 25,
         ];
         state.ctx.beginPath();
         state.ctx.font = "bold 25px Arial";
-        state.ctx.fillText(`${planeBottomAltitudeM.toFixed(0)} M`, ...altText2P);
-
+        if(showSafeAltitude) {
+            state.ctx.fillText(
+                `${Math.round(planeBottomAltitudeM - LEVEL_7_MAX_SAFE_X_M)} M`,
+                ...altText2P,
+            );
+        } else {
+            state.ctx.fillText(`${planeBottomAltitudeM.toFixed(0)} M`, ...altText2P);
+        }
         // Altitude Arrow
         const altLineP1 = [
             altText1P[0] - 5,
@@ -462,7 +469,7 @@ function _drawHorizonAndCloudsLayer(state) {
 
     if(cloudsBelow) {
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_SKY_FOREST;
+        state.ctx.fillStyle = COLOR_SKY;
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
 
@@ -488,7 +495,11 @@ function _drawHorizonAndCloudsLayer(state) {
     }
     else if (cloudsAbove) {
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_GROUND_FOREST;
+        if(state.map.terrain === TERRAIN_FOREST) {
+            state.ctx.fillStyle = COLOR_GROUND_FOREST;
+        } else if(state.map.terrain === TERRAIN_DESERT) {
+            state.ctx.fillStyle = COLOR_GROUD_DESERT;
+        }
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
 
