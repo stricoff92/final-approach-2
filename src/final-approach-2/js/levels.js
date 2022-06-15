@@ -278,10 +278,10 @@ function setMapProps(state) {
         state.map.terrain = TERRAIN_FOREST;
         state.map.rwType = RUNWAY_TYPE_CONCRETE;
         state.map.rwVisualWidthM = 9;
-        state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [2000 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1100 * mupm, 0];
+        state.map.rwP0MapCoord = [1500 * mupm, 0];
+        state.map.rwP1MapCoord = [2500 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 400 * mupm];
+        state.map.gsP1MapCoord = [1575 * mupm, 0];
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
         state.map.cloudLayer = {
             topY: 150 * mupm,
