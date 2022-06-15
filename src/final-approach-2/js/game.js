@@ -118,8 +118,9 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             rwP1MapCoord: null,
             rwType: null,
             rwVisualWidthM: null,
-            gsP0MapCoord: null,
-            gsP1MapCoord: null,
+            // gsP0MapCoord: null,
+            // gsP1MapCoord: null,
+            glideSlopes: [],
             tireStrikes: [],
             sunImg: null,
         },
@@ -559,13 +560,16 @@ function processGroundInteractions(state) {
             state.plane.touchdownStats.verticalMS = touchdownMS;
             state.plane.touchdownStats.isFlaired = plane.flare === IS_FLARING;
             state.plane.touchdownStats.runwayUsedStartX = plane.posMapCoord[0];
+            const lastGSIX = state.map.glideSlopes.length - 1;
             state.plane.touchdownStats.distanceToGlideSlopeM = Math.abs(
-                (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                // (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                (plane.posMapCoord[0] - state.map.glideSlopes[lastGSIX].p1[0])
                 / state.map.mapUnitsPerMeter
             )
             state.plane.touchdownStats.runwayWastedM = Math.max(
                 0,
-                (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                // (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                (plane.posMapCoord[0] - state.map.glideSlopes[lastGSIX].p1[0])
                 / state.map.mapUnitsPerMeter
             );
 

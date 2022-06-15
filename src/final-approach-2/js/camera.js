@@ -219,18 +219,22 @@ function drawGameScene(state) {
 
     // Draw Glide Slope
     if(Math.random() < 0.9) {
-        const gsCanvasP0 = mapCoordToCanvasCoord(
-            state.map.gsP0MapCoord, plane.posMapCoord, state.camera
-        );
-        const gsCanvasP1 = mapCoordToCanvasCoord(
-            state.map.gsP1MapCoord, plane.posMapCoord, state.camera
-        );
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = `rgb(242, 0, 255, ${ getRandomFloat(0.2, 0.8) })`;
-        state.ctx.lineWidth = getRandomFloat(0.3, 2.4);
-        state.ctx.moveTo(...gsCanvasP0);
-        state.ctx.lineTo(...gsCanvasP1);
-        state.ctx.stroke();
+        const gsLineWidth = getRandomFloat(0.3, 2.4);
+        const gsColor = `rgb(242, 0, 255, ${ getRandomFloat(0.2, 0.8) })`;
+        state.map.glideSlopes.forEach(gs => {
+            const gsCanvasP0 = mapCoordToCanvasCoord(
+                gs.p0, plane.posMapCoord, state.camera
+            );
+            const gsCanvasP1 = mapCoordToCanvasCoord(
+                gs.p1, plane.posMapCoord, state.camera
+            );
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = gsColor;
+            state.ctx.lineWidth = gsLineWidth;
+            state.ctx.moveTo(...gsCanvasP0);
+            state.ctx.lineTo(...gsCanvasP1);
+            state.ctx.stroke();
+        });
     }
 
     let planeCanvasX1, planeCanvasY1;

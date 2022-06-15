@@ -205,9 +205,11 @@ function setMapProps(state) {
         state.map.rwVisualWidthM = 8;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1800 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1050 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.glideSlopes.push({
+            p0: [0, 250 * mupm],
+            p1: [1050 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.cloudLayer = {
             topY: 120 * mupm,
             bottomY: 85 * mupm,
@@ -220,9 +222,11 @@ function setMapProps(state) {
         state.map.rwVisualWidthM = 7;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1500 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1050 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.glideSlopes.push({
+            p0: [0, 250 * mupm],
+            p1: [1050 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.windXVel = 0; // +=tailwind, -=headwind
         state.map.windMaxDeltaPerSecond = 4;
         state.map.windXMin = -6;
@@ -240,9 +244,11 @@ function setMapProps(state) {
         state.map.rwVisualWidthM = 4.5;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1220 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1020 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.glideSlopes.push({
+            p0: [0, 250 * mupm],
+            p1: [1020 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.windXVel = 0; // +=tailwind, -=headwind
         state.map.windMaxDeltaPerSecond = 6;
         state.map.windXMin = -7;
@@ -260,9 +266,11 @@ function setMapProps(state) {
         state.map.rwVisualWidthM = 7;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1500 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1050 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.glideSlopes.push({
+            p0: [0, 250 * mupm],
+            p1: [1050 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.windXVel = 0; // +=tailwind, -=headwind
         state.map.windMaxDeltaPerSecond = 8;
         state.map.windXMin = 1;
@@ -280,9 +288,38 @@ function setMapProps(state) {
         state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1500 * mupm, 0];
         state.map.rwP1MapCoord = [2500 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 400 * mupm];
-        state.map.gsP1MapCoord = [1575 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.glideSlopes.push({
+            p0: [0, 400 * mupm],
+            p1: [1575 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        state.map.cloudLayer = {
+            topY: 150 * mupm,
+            bottomY: 70 * mupm,
+        };
+    }
+    else if (level === 6) {
+        state.game.levelName = "Steep Approach";
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwType = RUNWAY_TYPE_CONCRETE;
+        state.map.rwVisualWidthM = 9;
+        state.map.rwP0MapCoord = [1150 * mupm, 0];
+        state.map.rwP1MapCoord = [2000 * mupm, 0];
+        state.map.glideSlopes.push(
+            {
+                p0: [0, 1000 * mupm],
+                p1: [110 * mupm, 975 * mupm],
+            },
+            {
+                p0: [110 * mupm, 975 * mupm],
+                p1: [900 * mupm, 100 * mupm],
+            },
+            {
+                p0: [900 * mupm, 100 * mupm],
+                p1: [1200 * mupm, 0 * mupm],
+            },
+        );
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.cloudLayer = {
             topY: 150 * mupm,
             bottomY: 70 * mupm,
