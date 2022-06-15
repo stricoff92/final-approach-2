@@ -86,6 +86,9 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             flareVerticalAccelerationMS2Curve: null,
             touchDownFlareMinMS: null,
             minTouchdownVerticalMS: null,
+            startingFuel: null,
+            fuelRemaining: null,
+            fuelUsedLastTS: null,
             touchdownStats: {
                 runwayUsedStartX: null,
                 runwayUsedEndX: null,
@@ -319,8 +322,17 @@ function runDataLoop() {
                 return;
             }
             else if(cmd.cmd === COMMAND_LEVEL_OUT && state.game.acceptControlCommands) {
-                state.plane.lastLevelOutTS = performance.now();
-                state.plane.lastLevelOutFrame = state.game.frame;
+                if(state.plane.startingFuel !== null) {
+                    if(state.plane.fuelRemaining > 0) {
+                        state.plane.lastLevelOutTS = performance.now();
+                        state.plane.lastLevelOutFrame = state.game.frame;
+                        state.plane.fuelRemaining--;
+                        state.plane.fuelUsedLastTS = nowTS;
+                    }
+                } else {
+                    state.plane.lastLevelOutTS = performance.now();
+                    state.plane.lastLevelOutFrame = state.game.frame;
+                }
             }
             else if(cmd.cmd === COMMAND_FLARE && state.game.acceptControlCommands) {
                 state.plane.flare = IS_FLARING;

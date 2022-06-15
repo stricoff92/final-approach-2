@@ -286,13 +286,7 @@ function drawGameScene(state) {
         scTopRightMapCoord[0],
     );
 
-    if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
-        if(!plane.crashFrame && !plane.touchedDown) {
-            _drawWindIndicator(state);
-        }
-    } else {
-        _drawLevelName(state, nowTS);
-    }
+
 
     // Draw altitude indicator if over min altutude
     const runwayAltitudeM = state.map.rwP0MapCoord[1] * state.map.mapUnitsPerMeter;
@@ -349,6 +343,7 @@ function drawGameScene(state) {
         state.ctx.stroke();
     }
 
+    // Draw Previous Points
     if(!plane.touchedDown && !plane.crashFrame) {
         for(let i = 0; i < plane.previousPoints.length; i++) {
             let mapCoord = plane.previousPoints[i];
@@ -366,7 +361,92 @@ function drawGameScene(state) {
             state.ctx.fill();
         }
     }
+
+    if(
+        plane.fuelRemaining !== null
+        && !plane.touchedDown
+        && !plane.crashFrame
+    ) {
+        _drawFuelIndicator(state, nowTS);
+    }
+
+    if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
+        if(!plane.crashFrame && !plane.touchedDown) {
+            _drawWindIndicator(state);
+        }
+    } else {
+        _drawLevelName(state, nowTS);
+    }
 }
+
+function _drawFuelIndicator(state, nowTS) {
+    const plane = state.plane;
+    const mupm = state.map.mapUnitsPerMeter;
+    const indicatorCenterX = state.camera.canvasHalfW + (plane.dimensions[0][0] / 2 * mupm);
+    const indicatorY2 = state.camera.canvasHalfH - (plane.dimensions[0][1] / 2 * mupm) - 5;
+    const anyLeft = plane.fuelRemaining > 0;
+
+    state.ctx.beginPath();
+    state.ctx.fillStyle = "#f00";
+    state.ctx.font = "bold 20px Courier New";
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "right";
+    state.ctx.fillText(anyLeft?"FUEL":"⚠️ NO FUEL", indicatorCenterX, indicatorY2);
+
+    if(anyLeft) {
+        // Outer bar
+        const barX1 = indicatorCenterX + 5;
+        const percent = plane.fuelRemaining / plane.startingFuel;
+        const barLen = Math.min(plane.startingFuel<6?80:130, state.camera.canvasHalfH / 1.6);
+        const barY1 = indicatorY2 - barLen;
+        const barW = 16;
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#f00";
+        state.ctx.rect(barX1, barY1 + barLen * (1 - percent), barW, barLen * percent);
+        state.ctx.fill();
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#fff";
+        state.ctx.lineWidth = 2;
+        state.ctx.rect(barX1, barY1, barW, barLen);
+        state.ctx.stroke();
+
+        // Tick marks
+        const yInt = Math.round(barLen / plane.startingFuel);
+        for(let i=1; i<plane.startingFuel; i++) {
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = "#fff";
+            state.ctx.lineWidth = 2;
+            state.ctx.moveTo(
+                barX1,
+                barY1 + yInt * i
+            );
+            state.ctx.lineTo(
+                barX1 + barW,
+                barY1 + yInt * i
+            );
+            state.ctx.stroke();
+        }
+
+        const animationLenMS = 700;
+        if(state.plane.fuelUsedLastTS && state.plane.fuelUsedLastTS + animationLenMS >= nowTS) {
+            // fuel used animation
+            const percent = (nowTS - state.plane.fuelUsedLastTS) / animationLenMS
+            const alpha = 1 - percent;
+            const radiusPx = 80 * percent;
+            state.ctx.beginPath();
+            state.ctx.fillStyle = `rgb(255, 0, 0, ${ alpha })`;
+            state.ctx.arc(
+                barX1 + barW / 2,
+                barY1 + barLen * (1 - percent),
+                radiusPx,
+                0, TWO_PI,
+            );
+            state.ctx.fill();
+        }
+    }
+
+}
+
 
 function _drawHorizonAndCloudsLayer(state) {
     const mupm = state.map.mapUnitsPerMeter
@@ -521,7 +601,7 @@ function _drawLevelName(state, nowTS) {
     state.ctx.fillText(
         "\"" + state.game.levelName + "\"",
         state.camera.canvasHalfW,
-        state.camera.canvasH / 4
+        state.camera.canvasH / 5
     );
 }
 
