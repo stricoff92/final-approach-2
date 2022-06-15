@@ -16,9 +16,9 @@ const PLANE_F18 = "f18";
 const IS_NOT_FLARING = 0;
 const IS_FLARING = 1;
 
-const TERRAIN_FOREST = 0; // Easy
-const TERRAIN_DESERT = 1; // Medium
-const TERRAIN_OCEAN = 2;  // Hard
+const TERRAIN_FOREST = 0; // Green
+const TERRAIN_DESERT = 1; // Orange
+const TERRAIN_OCEAN = 2;  // Blue
 
 const BUTTON_TYPE_GRID = 0;
 const BUTTON_TYPE_MAIN = 1;
@@ -34,8 +34,7 @@ const COMMAND_SHOW_HELP = 4;
 const COLOR_PURPLE = "#620080";
 const COLOR_BLACK = "#000";
 const COLOR_SKY_FOREST = "#e3e3ff";
-const COLOR_GROUND_FOREST = "#9dff5c";
-const COLOR_RW_FOREST = "#808080";
+const COLOR_GROUND_FOREST = "#bcd4ab";
 
 const COLOR_CLOUD_LAYER = a => `rgb(219, 219, 219, ${a.toFixed(2)})`;
 const CLOUD_GRADIENT_SIZE_M = 30;
@@ -52,3 +51,16 @@ const CRASH_EFFECT_1_MAX_FRAME = 60;
 const CRASH_EFFECT_2_MAX_FRAME = 160;
 
 const WIND_MAX_MAGNITUDE_MS = 15;
+
+const RUNWAY_TYPE_CONCRETE = "concrete";
+const RUNWAY_TYPE_CONCRETE_COLOR = "#808080";
+const RUNWAY_TYPE_DIRT = "dirt";
+const RUNWAY_TYPE_DIRT_COLOR = "#bdbcac";
+
+const LEVEL_NAME_DISPLAY_DURATION_MS = 2000;
+const LEVEL_NAME_DISPLAY_FADEOUT_MS = 1000;
+const LEVEL_NAME_TOTAL_DURATION = (
+    LEVEL_NAME_DISPLAY_DURATION_MS
+    + LEVEL_NAME_DISPLAY_FADEOUT_MS
+);
+

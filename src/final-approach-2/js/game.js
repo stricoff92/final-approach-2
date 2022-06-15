@@ -28,6 +28,8 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             availableLevels,
             dataFPS: null,
             level: null,
+            levelName: null,
+            gameStartTS: null,
             lastFrameTS: performance.now(),
             acceptControlCommands: false,
             lastClick: {
@@ -114,6 +116,8 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             cloudLayer: null,
             rwP0MapCoord: null,
             rwP1MapCoord: null,
+            rwType: null,
+            rwVisualWidthM: null,
             gsP0MapCoord: null,
             gsP1MapCoord: null,
             tireStrikes: [],
@@ -421,6 +425,7 @@ function runDataLoop() {
             state.game.frame = 1;
             state.game.phase = PHASE_2_LIVE,
             state.game.acceptControlCommands = true;
+            state.game.gameStartTS = performance.now();
 
             state.buttons = [{
                 type: BUTTON_TYPE_MAIN,

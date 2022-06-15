@@ -282,8 +282,12 @@ function drawGameScene(state) {
         scTopRightMapCoord[0],
     );
 
-    if(!plane.crashFrame && !plane.touchedDown) {
-        _drawWindIndicator(state);
+    if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
+        if(!plane.crashFrame && !plane.touchedDown) {
+            _drawWindIndicator(state);
+        }
+    } else {
+        _drawLevelName(state, nowTS);
     }
 
     // Draw altitude indicator if over min altutude
@@ -498,8 +502,23 @@ function _drawExplosionEffect(state) {
         );
         state.ctx.fill();
     });
+}
 
-
+function _drawLevelName(state, nowTS) {
+    const elapsedTime = nowTS - state.game.gameStartTS;
+    const alpha = (elapsedTime < LEVEL_NAME_DISPLAY_DURATION_MS
+        ? 1
+        : 1 - ((elapsedTime - LEVEL_NAME_DISPLAY_DURATION_MS) / LEVEL_NAME_DISPLAY_FADEOUT_MS));
+    state.ctx.beginPath()
+    state.ctx.fillStyle = `rgb(0, 0, 0, ${ alpha } )`;
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "center";
+    state.ctx.font = "italic bold 32px Garamond";
+    state.ctx.fillText(
+        "\"" + state.game.levelName + "\"",
+        state.camera.canvasHalfW,
+        state.camera.canvasH / 4
+    )
 }
 
 function _drawWindIndicator(state) {
@@ -635,20 +654,29 @@ function _drawCloudEffects(
 }
 
 function _drawRunway(state, nowTS, cameraMapCoordXMax) {
-    const runwayHalfVisualHMeters = 4.3 * state.map.mapUnitsPerMeter;
+    const runwayHalfVisualH = state.map.rwVisualWidthM / 2 * state.map.mapUnitsPerMeter;
     const rwCanvasP0 = mapCoordToCanvasCoord(
         state.map.rwP0MapCoord, state.plane.posMapCoord, state.camera
     );
     const rwCanvasP1 = mapCoordToCanvasCoord(
         state.map.rwP1MapCoord, state.plane.posMapCoord, state.camera,
     );
-    state.ctx.beginPath()
-    state.ctx.fillStyle = COLOR_RW_FOREST;
+    state.ctx.beginPath();
+    let addPaintLines = false;
+    let paintLineColor;
+    if(state.map.rwType === RUNWAY_TYPE_CONCRETE) {
+        addPaintLines = true;
+        state.ctx.fillStyle = RUNWAY_TYPE_CONCRETE_COLOR;
+        paintLineColor = "#fff"
+    } else if (state.map.rwType === RUNWAY_TYPE_DIRT) {
+        state.ctx.fillStyle = RUNWAY_TYPE_DIRT_COLOR;
+        paintLineColor = "#949494"
+    }
     state.ctx.rect(
         rwCanvasP0[0],
-        rwCanvasP0[1] - runwayHalfVisualHMeters,
+        rwCanvasP0[1] - runwayHalfVisualH,
         rwCanvasP1[0] - rwCanvasP0[0],
-        runwayHalfVisualHMeters * 2,
+        runwayHalfVisualH * 2,
     );
     state.ctx.fill();
 
@@ -684,8 +712,8 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
         );
         if(paintLineP1[0] >= 0) {
             state.ctx.beginPath();
-            state.ctx.strokeStyle = "#fff";
-            state.ctx.lineWidth = 8;
+            state.ctx.strokeStyle = paintLineColor;
+            state.ctx.lineWidth = state.map.rwVisualWidthM * 1.5;
             state.ctx.moveTo(...paintLineP0);
             state.ctx.lineTo(...paintLineP1);
             state.ctx.stroke();

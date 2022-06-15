@@ -199,7 +199,10 @@ function setMapProps(state) {
     const mupm = state.map.mapUnitsPerMeter;
     const level = state.game.level;
     if(level === 1) {
+        state.game.levelName = "Flight School";
         state.map.terrain = TERRAIN_FOREST;
+        state.map.rwType = RUNWAY_TYPE_CONCRETE;
+        state.map.rwVisualWidthM = 8;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1800 * mupm, 0];
         state.map.gsP0MapCoord = [0, 250 * mupm];
@@ -211,26 +214,12 @@ function setMapProps(state) {
         };
     }
     else if (level === 2) {
+        state.game.levelName = "Windy Day";
         state.map.terrain = TERRAIN_FOREST;
+        state.map.rwType = RUNWAY_TYPE_CONCRETE;
+        state.map.rwVisualWidthM = 7;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [1800 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1050 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
-        state.map.windXVel = 0; // +=tailwind, -=headwind
-        state.map.windMaxDeltaPerSecond = 2;
-        state.map.windXMin = -5;
-        state.map.windXMax = 5;
-        state.map.windXTarg = 0;
-        state.map.cloudLayer = {
-            topY: 140 * mupm,
-            bottomY: 70 * mupm,
-        };
-    }
-    else if (level === 3) {
-        state.map.terrain = TERRAIN_FOREST;
-        state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.rwP1MapCoord = [1500 * mupm, 0];
         state.map.gsP0MapCoord = [0, 250 * mupm];
         state.map.gsP1MapCoord = [1050 * mupm, 0];
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
@@ -244,33 +233,59 @@ function setMapProps(state) {
             bottomY: 60 * mupm,
         };
     }
-    else if (level === 4) {
+    else if (level === 3) {
+        state.game.levelName = "Short Runway";
         state.map.terrain = TERRAIN_FOREST;
+        state.map.rwType = RUNWAY_TYPE_DIRT;
+        state.map.rwVisualWidthM = 4.5;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.rwP1MapCoord = [1220 * mupm, 0];
+        state.map.gsP0MapCoord = [0, 250 * mupm];
+        state.map.gsP1MapCoord = [1020 * mupm, 0];
+        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.windXVel = 0; // +=tailwind, -=headwind
+        state.map.windMaxDeltaPerSecond = 6;
+        state.map.windXMin = -7;
+        state.map.windXMax = 7;
+        state.map.windXTarg = 0;
+        state.map.cloudLayer = {
+            topY: 140 * mupm,
+            bottomY: 70 * mupm,
+        };
+    }
+    else if (level === 4) {
+        state.game.levelName = "Tail Wind";
+        state.map.terrain = TERRAIN_FOREST;
+        state.map.rwType = RUNWAY_TYPE_CONCRETE;
+        state.map.rwVisualWidthM = 7;
+        state.map.rwP0MapCoord = [1000 * mupm, 0];
+        state.map.rwP1MapCoord = [1500 * mupm, 0];
         state.map.gsP0MapCoord = [0, 250 * mupm];
         state.map.gsP1MapCoord = [1050 * mupm, 0];
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
         state.map.windXVel = 0; // +=tailwind, -=headwind
-        state.map.windMaxDeltaPerSecond = 6;
+        state.map.windMaxDeltaPerSecond = 8;
         state.map.windXMin = 1;
         state.map.windXMax = 10;
-        state.map.windXTarg = 0;
+        state.map.windXTarg = 2;
         state.map.cloudLayer = {
             topY: 160 * mupm,
             bottomY: 50 * mupm,
         };
     }
     else if (level === 5) {
+        state.game.levelName = "Jet Qualification";
         state.map.terrain = TERRAIN_FOREST;
+        state.map.rwType = RUNWAY_TYPE_CONCRETE;
+        state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [1800 * mupm, 0];
+        state.map.rwP1MapCoord = [2000 * mupm, 0];
         state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1050 * mupm, 0];
+        state.map.gsP1MapCoord = [1100 * mupm, 0];
         state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
         state.map.cloudLayer = {
-            topY: 120 * mupm,
-            bottomY: 85 * mupm,
+            topY: 150 * mupm,
+            bottomY: 70 * mupm,
         };
     }
     else {
