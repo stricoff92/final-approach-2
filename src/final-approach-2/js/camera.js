@@ -456,7 +456,7 @@ function _drawExplosionEffect(state) {
         );
         const expRadius = getRandomFloat(4, 6) * mupm;
 
-        state.ctx.beginPath()
+        state.ctx.beginPath();
         state.ctx.fillStyle = `rgb(99, 92, 85, ${ phase1Alpha.toFixed(2) })`;
         state.ctx.ellipse(
             expCanvasCoord[0], expCanvasCoord[1],
@@ -478,7 +478,7 @@ function _drawExplosionEffect(state) {
             state.plane.posMapCoord,
             state.camera,
         );
-        state.ctx.beginPath()
+        state.ctx.beginPath();
         state.ctx.fillStyle = `rgb(99, 92, 85, ${ alpha.toFixed(2) })`;
         state.ctx.arc(
             hazeCanvasCoord[0],
@@ -486,7 +486,7 @@ function _drawExplosionEffect(state) {
             radius,
             0, TWO_PI,
         );
-        state.ctx.fill()
+        state.ctx.fill();
     }
 
     window._debrisObjects.forEach(debris => {
@@ -518,7 +518,7 @@ function _drawLevelName(state, nowTS) {
         "\"" + state.game.levelName + "\"",
         state.camera.canvasHalfW,
         state.camera.canvasH / 4
-    )
+    );
 }
 
 function _drawWindIndicator(state) {
@@ -539,13 +539,13 @@ function _drawWindIndicator(state) {
     const arrowMaxLenth = state.camera.canvasHalfW * 0.85;
     const arrowHeight = 14;
     const arrowHeadPointY = windArrowY1 + arrowHeight / 2;
-    const arrowHeadTopY = windArrowY1 - 7
+    const arrowHeadTopY = windArrowY1 - 7;
     const arrowHeadBottomY = windArrowY1 + arrowHeight + 7;
     const headBuff = 3;
     if(state.map.windXVel > 0) {
         // Head wind, forward arrow.
         const arrowLength = arrowMaxLenth * (state.map.windXVel / WIND_MAX_MAGNITUDE_MS);
-        state.ctx.beginPath()
+        state.ctx.beginPath();
         state.ctx.fillStyle = COLOR_PURPLE;
         state.ctx.rect(
             state.camera.canvasHalfW, windArrowY1,
@@ -567,7 +567,7 @@ function _drawWindIndicator(state) {
         state.ctx.lineTo(
             arrowHeadPointX,
             arrowHeadPointY,
-        )
+        );
         state.ctx.fill();
     }
     else {
