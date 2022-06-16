@@ -138,7 +138,7 @@ function setPlaneProps(state) {
         // F18
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
-        state.plane.rwNegAccelerationMS = knotsToMS(-10);
+        state.plane.rwNegAccelerationMS = knotsToMS(-18);
         state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500)
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
@@ -287,7 +287,7 @@ function setMapProps(state) {
         state.map.rwType = RUNWAY_TYPE_CONCRETE;
         state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1500 * mupm, 0];
-        state.map.rwP1MapCoord = [2500 * mupm, 0];
+        state.map.rwP1MapCoord = [2400 * mupm, 0];
         state.map.glideSlopes.push({
             p0: [0, 400 * mupm],
             p1: [1575 * mupm, 0],
@@ -306,7 +306,7 @@ function setMapProps(state) {
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1500 * mupm, 0];
-        state.map.rwP1MapCoord = [1825 * mupm, 0];
+        state.map.rwP1MapCoord = [1900 * mupm, 0];
         state.map.glideSlopes.push({
             p0: [0, 400 * mupm],
             p1: [1575 * mupm, 0],
