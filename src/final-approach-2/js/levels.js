@@ -138,11 +138,11 @@ function setPlaneProps(state) {
         // F18
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
-        state.plane.rwNegAccelerationMS = knotsToMS(-18);
+        state.plane.rwNegAccelerationMS = knotsToMS(-16);
         state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500)
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
-        state.plane.horizontalMS = knotsToMS(58);
+        state.plane.horizontalMS = knotsToMS(80);
         state.plane.verticalMS = feetPerMinToMS(-550);
         state.plane.lastLevelOutTS = performance.now();
         state.plane.lastLevelOutFrame = state.game.frame;
@@ -322,8 +322,8 @@ function setMapProps(state) {
         state.map.terrain = TERRAIN_DESERT;
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;
-        state.map.rwP0MapCoord = [1550 * mupm, 0];
-        state.map.rwP1MapCoord = [(1550 + 320) * mupm, 0];
+        state.map.rwP0MapCoord = [1750 * mupm, 0];
+        state.map.rwP1MapCoord = [(1750 + 320) * mupm, 0];
         state.map.glideSlopes.push(
             {
                 p0: [0, 1000 * mupm],
@@ -335,7 +335,7 @@ function setMapProps(state) {
             },
             {
                 p0: [1200 * mupm, 130 * mupm], //  LEVEL_7_MAX_SAFE_X_M
-                p1: [1600 * mupm, 0 * mupm],
+                p1: [1800 * mupm, 0 * mupm],
             },
         );
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);

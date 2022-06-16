@@ -1,5 +1,6 @@
 
 const NOT_IMPLEMENTED = "Not Implemented";
+const CANVAS_ID = "game-canvas";
 
 const TWO_PI = Math.PI * 2;
 

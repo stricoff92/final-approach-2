@@ -10,7 +10,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
     window._cloudEffects = [];
     window._debrisObjects = [];
 
-    const canvas = document.getElementById("game-canvas");
+    const canvas = document.getElementById(CANVAS_ID);
     const ctx = canvas.getContext("2d")
     maxCompletedLevel = maxCompletedLevel || 0;
     const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];

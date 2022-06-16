@@ -1,4 +1,5 @@
 
+// FIXME: move some logic into functions.
 
 function getCanvasCornerMapCoords(state) {
     const cornerTopLeftMapCoord = [
@@ -349,6 +350,8 @@ function drawGameScene(state) {
         state.ctx.lineTo(altLineP2[0] + altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
         state.ctx.stroke();
     }
+
+    drawHorizontalDistanceArrow(state);
 
     // Draw Previous Points
     if(!plane.touchedDown && !plane.crashFrame) {
@@ -1031,6 +1034,68 @@ function drawScoreScreen(state) {
             console.warn("no high score data to show")
         }
     }
+}
+
+function drawHorizontalDistanceArrow(state) {
+    const plane = state.plane;
+    if(
+        plane.crashFrame
+        || plane.posMapCoord[0] > state.map.rwP0MapCoord[0]
+        || state.game.level !== 7
+    ) {
+        return;
+    }
+
+    // Horizontal Distance Text
+    const mupm = state.map.mapUnitsPerMeter;
+    const distanceToRWM = (state.map.rwP0MapCoord[0] - plane.posMapCoord[0]) / state.map.mapUnitsPerMeter;
+    const distanceToDiveM = Math.round((state.map.glideSlopes[0].p1[0] - plane.posMapCoord[0]) / mupm);
+    if(distanceToDiveM < 0) {
+        return
+    }
+    const rwDText1P = [
+        state.camera.canvasHalfW,
+        Math.round(state.camera.canvasH * 0.35),
+    ];
+    state.ctx.beginPath();
+    state.ctx.fillStyle = state.game.frame % 120 < 60 ? "#000" : "#f00";
+    state.ctx.font = "bold 23px Arial";
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "left";
+    state.ctx.fillText("DIVE", ...rwDText1P);
+    const rwDText2P = [
+        rwDText1P[0],
+        rwDText1P[1] + 25,
+    ];
+    state.ctx.beginPath();
+    state.ctx.fillStyle = "#000";
+    state.ctx.font = "bold 25px Arial";
+    state.ctx.fillText(`${distanceToDiveM.toFixed(0)} M`, ...rwDText2P);
+
+    // Runway Distance Arrow
+    const rwDLineP1 = [
+        rwDText2P[0],
+        rwDText2P[1] + 17,
+    ];
+    const rwDLineP2 = [
+        state.camera.canvasW * 0.9,
+        rwDText2P[1] + 17,
+    ];
+    state.ctx.beginPath();
+    state.ctx.strokeStyle = "#000"
+    state.ctx.lineWidth = 1;
+    state.ctx.moveTo(...rwDLineP1);
+    state.ctx.lineTo(...rwDLineP2);
+    state.ctx.stroke();
+    const altArrowHeadLen = 15
+    state.ctx.beginPath();
+    state.ctx.moveTo(...rwDLineP2);
+    state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] - altArrowHeadLen / 2);
+    state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.moveTo(...rwDLineP2);
+    state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] + altArrowHeadLen / 2);
+    state.ctx.stroke();
 }
 
 function drawDebugData(state) {

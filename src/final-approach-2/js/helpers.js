@@ -13,7 +13,7 @@ function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
 }
 
 function updateCameraCanvasMetaData(state) {
-    const canvas = document.getElementById("game-canvas");
+    const canvas = document.getElementById(CANVAS_ID);
     state.camera.canvasW = canvas.width;
     state.camera.canvasH = canvas.height;
     state.camera.canvasHalfW = Math.round(state.camera.canvasW / 2);

@@ -1,6 +1,6 @@
 
 function resizeCanvas(updateState) {
-    const canvas = document.getElementById("game-canvas");
+    const canvas = document.getElementById(CANVAS_ID);
     canvas.width = canvas.scrollWidth;
     canvas.height = canvas.scrollHeight;
     console.log({
@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, false);
 
-    const canvas = document.getElementById("game-canvas");
+    const canvas = document.getElementById(CANVAS_ID);
     if(urlContainsDebug()) {
         canvas.style.border = "1px solid #f00";
     }
