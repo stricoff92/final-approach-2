@@ -261,8 +261,24 @@ function drawGameScene(state) {
 
         const shakeLifespanMS = 450;
         const tireStrikeLen = state.map.tireStrikes.length;
+        const aaFireLlen = state.map.aaFire.length;
         const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
-        const showVisualSkake = Boolean(lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanMS >= nowTS);
+        const lastAAFire = aaFireLlen > 0 ? state.map.aaFire[aaFireLlen - 1] : null;
+        const isAAFire = Boolean(lastAAFire !== null && lastAAFire.createdTS + shakeLifespanMS >= nowTS);
+        const isTireStrike = Boolean(!isAAFire && lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanMS >= nowTS);
+        const showVisualSkake = isTireStrike || isAAFire;
+        let xAmnt = 0, yAmnt = 0;
+        if(showVisualSkake) {
+            if(isTireStrike) {
+                xAmnt = (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0);
+                yAmnt = (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0);
+            } else if(isAAFire) {
+                xAmnt = getRandomFloat(-0.85, 0.85) * mupm;
+                yAmnt = getRandomFloat(-0.85, 0.85) * mupm;
+            } else {
+                throw NOT_IMPLEMENTED;
+            }
+        }
 
         // Draw plane
         planeCanvasX1 = state.camera.canvasHalfW - (planeCanvasDims[0] / 2);
@@ -270,8 +286,8 @@ function drawGameScene(state) {
         state.ctx.beginPath();
         state.ctx.drawImage(
             plane.assets[plane.flare],
-            planeCanvasX1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
-            planeCanvasY1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
+            planeCanvasX1 + xAmnt,
+            planeCanvasY1 + yAmnt,
             planeCanvasDims[0],
             planeCanvasDims[1],
         );
