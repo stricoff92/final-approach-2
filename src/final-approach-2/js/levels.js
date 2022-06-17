@@ -350,7 +350,7 @@ function setMapProps(state) {
             const mupm = state.map.mapUnitsPerMeter;
             const [px, py] = state.plane.posMapCoord;
             // Flew past runway
-            if(px > rwEnd) {
+            if(px > rwEnd && py > LEVEL_7_MAX_SAFE_X_M * mupm) {
                 return DANGER_STATUS_INSTANT;
             }
             // In dive zone
