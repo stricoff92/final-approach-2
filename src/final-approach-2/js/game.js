@@ -401,11 +401,10 @@ function runDataLoop() {
         }
 
         if(
-            state.plane.alive
-            && dangerStatus
+            dangerStatus
             && dangerStatus === DANGER_STATUS_ON_LEVEL
-            && state.game.frame % 25 === 0
-            && Math.random() > 0.25
+            && state.game.frame % 16 === 0
+            && Math.random() > 0.33
         ) {
             const getNearby = () => {
                 if(Math.random() > 0.5) {
