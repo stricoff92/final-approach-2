@@ -1,6 +1,5 @@
 
 function innerAdjustPlanePosition(state) {
-    state.game.acceptControlCommands = state.plane.flare === IS_NOT_FLARING;
 
     if(state.isPaused) {
         return state;
@@ -323,6 +322,7 @@ function setMapProps(state) {
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1750 * mupm, 0];
+        const rwEnd = (1750 + 320) * mupm
         state.map.rwP1MapCoord = [(1750 + 320) * mupm, 0];
         state.map.glideSlopes.push(
             {
@@ -339,10 +339,36 @@ function setMapProps(state) {
             },
         );
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        const cloudBottomY = 800 * mupm;
         state.map.cloudLayer = {
             topY: 900 * mupm,
-            bottomY: 800 * mupm,
+            bottomY: cloudBottomY,
         };
+        state.map.aaFireP0 = [1000 * mupm, 0];
+        state.map.getDangerStatus = state => {
+            const mupm = state.map.mapUnitsPerMeter;
+            const [px, py] = state.plane.posMapCoord;
+            // Flew past runway
+            if(px > rwEnd) {
+                return DANGER_STATUS_INSTANT;
+            }
+            // In dive zone
+            else if(
+                py > (LEVEL_7_MAX_SAFE_X_M * mupm)
+                && py < cloudBottomY
+                && px < rwEnd
+                && px > 1000 * mupm
+            ) {
+                return DANGER_STATUS_ON_LEVEL;
+            }
+            // East of dive zone
+            else if( py < cloudBottomY && px < 1000 * mupm) {
+                return DANGER_STATUS_INSTANT;
+            }
+            else {
+                return DANGER_STATUS_NONE;
+            }
+        }
     }
     else {
         throw NOT_IMPLEMENTED;

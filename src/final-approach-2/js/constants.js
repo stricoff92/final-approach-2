@@ -67,3 +67,16 @@ const LEVEL_NAME_TOTAL_DURATION = (
 );
 
 const LEVEL_7_MAX_SAFE_X_M = 130;
+
+const DANGER_STATUS_NONE = null;
+const DANGER_STATUS_ON_LEVEL = "onlevel";
+const DANGER_STATUS_INSTANT = "instant";
+
+const AA_FIRE_TOTAL_DURATION = 200;
+const AA_FIRE_EXPLOSION_SIZE_M = 5;
+const AA_FIRE_EXPLOSION_FADED_SIZE_M = 8;
+const AA_EXPLOSION_COLOR = a => `rgb(66, 47, 1, ${ a.toFixed(2) })`;
+
+const AFLAME_NODES_COUNT = 25;
+const MAX_AFLAME_RADIUS_M = 4;
+const MIN_AFLAME_RADIUS_M = 1.5;

@@ -277,7 +277,7 @@ function drawGameScene(state) {
         );
     }
     else {
-        _drawExplosionEffect(state);
+        _drawCrashingEffect(state);
     }
 
     _drawCloudEffects(
@@ -287,6 +287,37 @@ function drawGameScene(state) {
         scTopRightMapCoord[0],
     );
 
+    if(!state.plane.crashFrame) {
+        state.plane.previousAflamePoints.forEach((pfp, ix) => {
+            const raPercent = 1 - ((ix + 1) / AFLAME_NODES_COUNT);
+            const r = MIN_AFLAME_RADIUS_M * mupm + ((MAX_AFLAME_RADIUS_M - MIN_AFLAME_RADIUS_M) * raPercent * mupm);
+            const a = 0.3 * raPercent;
+            const flameP = mapCoordToCanvasCoord(
+                pfp,
+                state.plane.posMapCoord,
+                state.camera,
+            );
+            // Smoke effect
+            state.ctx.beginPath();
+            state.ctx.fillStyle = `rgb(0, 0, 0, ${ getRandomFloat(0.01, 0.1) })`;
+            state.ctx.arc(
+                flameP[0] + getRandomFloat(0.75, 2) * mupm,
+                flameP[1] + getRandomFloat(0.75, 2) * mupm,
+                r * getRandomFloat(0.3, 0.65), 0, TWO_PI,
+            );
+            // Flame effect
+            state.ctx.fill();
+            state.ctx.beginPath();
+            state.ctx.fillStyle = `rgb(255, ${150*(1-raPercent)}, ${150*(1-raPercent)}, ${ a * getRandomFloat(0.9, 1.1) })`;
+            state.ctx.arc(
+                flameP[0], flameP[1],
+                r * getRandomFloat(0.85, 1.15), 0, TWO_PI,
+            );
+            state.ctx.fill();
+        });
+    }
+
+    _drawAAFireEffects(state);
 
 
     // Draw altitude indicator if over min altutude
@@ -298,7 +329,7 @@ function drawGameScene(state) {
             * state.map.mapUnitsPerMeter
         )
     ) / state.map.mapUnitsPerMeter;
-    if(!plane.crashFrame && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
+    if(plane.alive && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
         // Altitude Text
         const showSafeAltitude = Boolean(state.game.level === 7 && planeBottomAltitudeM > LEVEL_7_MAX_SAFE_X_M);
         const altText1P = [
@@ -375,13 +406,13 @@ function drawGameScene(state) {
     if(
         plane.fuelRemaining !== null
         && !plane.touchedDown
-        && !plane.crashFrame
+        && plane.alive
     ) {
         _drawFuelIndicator(state, nowTS);
     }
 
     if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
-        if(!plane.crashFrame && !plane.touchedDown) {
+        if(plane.alive && !plane.touchedDown) {
             _drawWindIndicator(state);
         }
     } else {
@@ -522,7 +553,7 @@ function _drawHorizonAndCloudsLayer(state) {
     }
 }
 
-function _drawExplosionEffect(state) {
+function _drawCrashingEffect(state) {
     const mupm = state.map.mapUnitsPerMeter;
 
     const markCanvasCoord = mapCoordToCanvasCoord(
@@ -697,6 +728,79 @@ function _drawWindIndicator(state) {
         )
         state.ctx.fill();
     }
+}
+
+function _drawAAFireEffects(state) {
+    const nowTS = performance.now();
+    const mupm = state.map.mapUnitsPerMeter;
+    state.map.aaFire.forEach(aaf => {
+        const ageFrame = state.game.frame - aaf.createdFrame;
+        if(ageFrame < 6) {
+            let r, a, w;
+            if (ageFrame === 0) {
+                r = 1.5 * mupm;
+                a = 0.9;
+                w = 2
+            } else if (ageFrame === 1) {
+                r = 3 * mupm;
+                a = 0.7;
+                w = 1.7;
+            } else if (ageFrame === 2) {
+                r = 4.25 * mupm;
+                a = 0.7;
+                w = 1.5;
+            } else if (ageFrame === 3) {
+                r = 5.5 * mupm;
+                a = 0.5;
+                w = 1.2;
+            } else if (ageFrame === 4) {
+                r = 7 * mupm;
+                a = 0.4;
+                w = 1;
+            } else if (ageFrame === 5) {
+                r = 7.5 * mupm;
+                a = 0.3;
+                w = 1;
+            } else { throw NOT_IMPLEMENTED; }
+
+            if(ageFrame < 4) {
+                state.ctx.beginPath();
+                state.ctx.strokeStyle = `rgb(255, 0, 0, ${a * 1.3})`;
+                state.ctx.lineWidth = w;
+                const lineCanvasP0 = mapCoordToCanvasCoord(
+                    aaf.p0, state.plane.posMapCoord, state.camera
+                )
+                const lineCanvasP1 = mapCoordToCanvasCoord(
+                    aaf.p1, state.plane.posMapCoord, state.camera
+                )
+                state.ctx.moveTo(...lineCanvasP0);
+                state.ctx.lineTo(...lineCanvasP1)
+                state.ctx.stroke();
+            }
+
+            const expP = mapCoordToCanvasCoord(
+                aaf.p1, state.plane.posMapCoord, state.camera
+            );
+            state.ctx.beginPath();
+            state.ctx.fillStyle = AA_EXPLOSION_COLOR(a);
+            state.ctx.arc(
+                expP[0], expP[1],
+                r,
+                0, TWO_PI,
+            );
+            state.ctx.fill();
+            state.ctx.beginPath();
+            state.ctx.fillStyle = `rgb(255, 0, 0, ${a/1.2})`;
+            state.ctx.arc(
+                expP[0] + getRandomFloat(-2, 2) * mupm,
+                expP[1] + getRandomFloat(-2, 2) * mupm,
+                r / getRandomFloat(1, 3),
+                0, TWO_PI,
+            );
+            state.ctx.fill();
+
+        }
+    });
 }
 
 function _drawCloudEffects(
@@ -1039,7 +1143,7 @@ function drawScoreScreen(state) {
 function drawHorizontalDistanceArrow(state) {
     const plane = state.plane;
     if(
-        plane.crashFrame
+        !plane.alive
         || plane.posMapCoord[0] > state.map.rwP0MapCoord[0]
         || state.game.level !== 7
     ) {
