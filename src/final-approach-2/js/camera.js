@@ -763,9 +763,9 @@ function _drawAAFireEffects(state) {
                 w = 1;
             } else { throw NOT_IMPLEMENTED; }
 
-            if(ageFrame < 4) {
+            if(ageFrame < 2) {
                 state.ctx.beginPath();
-                state.ctx.strokeStyle = `rgb(255, 0, 0, ${a * 1.3})`;
+                state.ctx.strokeStyle = "#000";
                 state.ctx.lineWidth = w;
                 const lineCanvasP0 = mapCoordToCanvasCoord(
                     aaf.p0, state.plane.posMapCoord, state.camera

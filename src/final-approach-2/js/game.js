@@ -349,6 +349,7 @@ function runDataLoop() {
         const cmdCt = commands.length;
         for(let i=0; i<cmdCt; i++) {
             let cmd = commands[i];
+            let maneuverPerformed = false;
             if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
                     updateCameraCanvasMetaData(
@@ -359,7 +360,6 @@ function runDataLoop() {
                 return;
             }
             else if(cmd.cmd === COMMAND_LEVEL_OUT && state.game.acceptControlCommands) {
-                let maneuverPerformed = false;
                 if(state.plane.startingFuel !== null) {
                     if(state.plane.fuelRemaining > 0) {
                         state.plane.lastLevelOutTS = performance.now();
@@ -373,29 +373,30 @@ function runDataLoop() {
                     state.plane.lastLevelOutFrame = state.game.frame;
                     maneuverPerformed = true;
                 }
-                if(
-                    maneuverPerformed
-                    && dangerStatus
-                    && dangerStatus === DANGER_STATUS_ON_LEVEL
-                ) {
-                    state.game.acceptControlCommands = false;
-                    state.plane.alive = false;
-                    state.plane.aflame = true;
-                    state.map.aaFire.push({
-                        createdTS: nowTS,
-                        createdFrame: state.game.frame,
-                        p0: state.map.aaFireP0,
-                        p1: [
-                            state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
-                            state.plane.posMapCoord[1] + (getRandomFloat(-1, 1) * mupm),
-                        ],
-                    });
-                }
             }
             else if(cmd.cmd === COMMAND_FLARE && state.game.acceptControlCommands) {
                 state.plane.flare = IS_FLARING;
                 state.plane.lastFlareTS = performance.now();
                 state.plane.lastFlareFrame = state.game.frame;
+                maneuverPerformed = true;
+            }
+            if(
+                maneuverPerformed
+                && dangerStatus
+                && dangerStatus === DANGER_STATUS_ON_LEVEL
+            ) {
+                state.game.acceptControlCommands = false;
+                state.plane.alive = false;
+                state.plane.aflame = true;
+                state.map.aaFire.push({
+                    createdTS: nowTS,
+                    createdFrame: state.game.frame,
+                    p0: state.map.aaFireP0,
+                    p1: [
+                        state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
+                        state.plane.posMapCoord[1] + (getRandomFloat(-1, 1) * mupm),
+                    ],
+                });
             }
         }
 
