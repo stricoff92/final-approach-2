@@ -336,6 +336,7 @@ function runDataLoop() {
             state.map.aaFire.push({
                 createdTS: nowTS,
                 createdFrame: state.game.frame,
+                fatal: true,
                 p0: state.map.aaFireP0,
                 p1: [
                     state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
@@ -391,6 +392,7 @@ function runDataLoop() {
                 state.map.aaFire.push({
                     createdTS: nowTS,
                     createdFrame: state.game.frame,
+                    fatal: true,
                     p0: state.map.aaFireP0,
                     p1: [
                         state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
@@ -416,6 +418,7 @@ function runDataLoop() {
             state.map.aaFire.push({
                 createdTS: nowTS,
                 createdFrame: state.game.frame,
+                fatal: false,
                 p0: state.map.aaFireP0,
                 p1: [
                     state.plane.posMapCoord[0] + getNearby(),

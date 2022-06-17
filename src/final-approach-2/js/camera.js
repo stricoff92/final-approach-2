@@ -259,13 +259,14 @@ function drawGameScene(state) {
         );
         state.ctx.fill();
 
-        const shakeLifespanMS = 450;
+        let shakeLifespanTSMS = 450;
+        let shakeLifespanAAFMS = 750;
         const tireStrikeLen = state.map.tireStrikes.length;
         const aaFireLlen = state.map.aaFire.length;
         const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
         const lastAAFire = aaFireLlen > 0 ? state.map.aaFire[aaFireLlen - 1] : null;
-        const isAAFire = Boolean(lastAAFire !== null && lastAAFire.createdTS + shakeLifespanMS >= nowTS);
-        const isTireStrike = Boolean(!isAAFire && lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanMS >= nowTS);
+        const isAAFire = Boolean(lastAAFire !== null && lastAAFire.createdTS + shakeLifespanAAFMS >= nowTS);
+        const isTireStrike = Boolean(!isAAFire && lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanTSMS >= nowTS);
         const showVisualSkake = isTireStrike || isAAFire;
         let xAmnt = 0, yAmnt = 0;
         if(showVisualSkake) {
@@ -273,8 +274,9 @@ function drawGameScene(state) {
                 xAmnt = (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0);
                 yAmnt = (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0);
             } else if(isAAFire) {
-                xAmnt = getRandomFloat(-0.85, 0.85) * mupm;
-                yAmnt = getRandomFloat(-0.85, 0.85) * mupm;
+                const mult = isAAFire.fatal ? 1.6 : 1;
+                xAmnt = getRandomFloat(-0.85 * mult, 0.85 * mult) * mupm;
+                yAmnt = getRandomFloat(-0.85 * mult, 0.85 * mult) * mupm;
             } else {
                 throw NOT_IMPLEMENTED;
             }
@@ -347,7 +349,11 @@ function drawGameScene(state) {
     ) / state.map.mapUnitsPerMeter;
     if(plane.alive && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
         // Altitude Text
-        const showSafeAltitude = Boolean(state.game.level === 7 && planeBottomAltitudeM > LEVEL_7_MAX_SAFE_X_M);
+        const showSafeAltitude = Boolean(
+            state.game.level === 7
+            && planeBottomAltitudeM > LEVEL_7_MAX_SAFE_X_M
+            && state.plane.posMapCoord[0] > 1000 * mupm
+        );
         const altText1P = [
             state.camera.canvasHalfW,
             state.camera.canvasHalfH + state.plane.dimensions[0][1] * mupm
