@@ -798,7 +798,19 @@ function _drawAAFireEffects(state) {
                 0, TWO_PI,
             );
             state.ctx.fill();
-
+        }
+        else if (nowTS < aaf.createdTS + AA_FIRE_TOTAL_DURATION) {
+            const expP = mapCoordToCanvasCoord(
+                aaf.p1, state.plane.posMapCoord, state.camera
+            );
+            state.ctx.beginPath();
+            state.ctx.fillStyle = AA_EXPLOSION_COLOR(0.3);
+            state.ctx.arc(
+                expP[0], expP[1],
+                7.5 * mupm,
+                0, TWO_PI,
+            );
+            state.ctx.fill();
         }
     });
 }
