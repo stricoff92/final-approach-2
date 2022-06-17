@@ -363,10 +363,10 @@ function setMapProps(state) {
                 return DANGER_STATUS_ON_LEVEL;
             }
             // East of dive zone
-            else if( py < cloudBottomY && px < 1000 * mupm) {
+            else if( py < cloudBottomY && px < (900 * mupm)) {
                 return DANGER_STATUS_INSTANT;
             }
-            else if (py > cloudTopY && px > 1200 * mupm) {
+            else if (py > cloudTopY && px > (1200 * mupm)) {
                 return DANGER_STATUS_INSTANT;
             }
             else {

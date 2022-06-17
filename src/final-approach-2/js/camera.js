@@ -260,7 +260,7 @@ function drawGameScene(state) {
         state.ctx.fill();
 
         let shakeLifespanTSMS = 450;
-        let shakeLifespanAAFMS = 750;
+        let shakeLifespanAAFMS = 900;
         const tireStrikeLen = state.map.tireStrikes.length;
         const aaFireLlen = state.map.aaFire.length;
         const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
@@ -275,8 +275,8 @@ function drawGameScene(state) {
                 yAmnt = (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0);
             } else if(isAAFire) {
                 const mult = isAAFire.fatal ? 1.6 : 1;
-                xAmnt = getRandomFloat(-0.85 * mult, 0.85 * mult) * mupm;
-                yAmnt = getRandomFloat(-0.85 * mult, 0.85 * mult) * mupm;
+                xAmnt = getRandomFloat(-0.925 * mult, 0.925 * mult) * mupm;
+                yAmnt = getRandomFloat(-0.925 * mult, 0.925 * mult) * mupm;
             } else {
                 throw NOT_IMPLEMENTED;
             }
@@ -1186,18 +1186,18 @@ function drawHorizontalDistanceArrow(state) {
 
     // Horizontal Distance Text
     const mupm = state.map.mapUnitsPerMeter;
-    const distanceToRWM = (state.map.rwP0MapCoord[0] - plane.posMapCoord[0]) / state.map.mapUnitsPerMeter;
     const distanceToDiveM = Math.round((state.map.glideSlopes[0].p1[0] - plane.posMapCoord[0]) / mupm);
+    const diveSoon = distanceToDiveM < 400;
     if(distanceToDiveM < 0) {
-        return
+        return;
     }
     const rwDText1P = [
         state.camera.canvasHalfW,
         Math.round(state.camera.canvasH * 0.35),
     ];
     state.ctx.beginPath();
-    state.ctx.fillStyle = state.game.frame % 120 < 60 ? "#000" : "#f00";
-    state.ctx.font = "bold 23px Arial";
+    state.ctx.fillStyle = (diveSoon && state.game.frame % 120 < 60) ? "#f00" : "#000";
+    state.ctx.font = `${diveSoon ? "bold 32" : 20}px Arial`;
     state.ctx.textBaseline = "bottom";
     state.ctx.textAlign = "left";
     state.ctx.fillText("DIVE", ...rwDText1P);
@@ -1206,7 +1206,7 @@ function drawHorizontalDistanceArrow(state) {
         rwDText1P[1] + 25,
     ];
     state.ctx.beginPath();
-    state.ctx.fillStyle = "#000";
+    state.ctx.fillStyle = diveSoon ? "#f00" : "#000";
     state.ctx.font = "bold 25px Arial";
     state.ctx.fillText(`${distanceToDiveM.toFixed(0)} M`, ...rwDText2P);
 
@@ -1220,12 +1220,12 @@ function drawHorizontalDistanceArrow(state) {
         rwDText2P[1] + 17,
     ];
     state.ctx.beginPath();
-    state.ctx.strokeStyle = "#000"
+    state.ctx.strokeStyle = "#000";
     state.ctx.lineWidth = 1;
     state.ctx.moveTo(...rwDLineP1);
     state.ctx.lineTo(...rwDLineP2);
     state.ctx.stroke();
-    const altArrowHeadLen = 15
+    const altArrowHeadLen = 15;
     state.ctx.beginPath();
     state.ctx.moveTo(...rwDLineP2);
     state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] - altArrowHeadLen / 2);
@@ -1280,7 +1280,7 @@ function drawDebugData(state) {
         const msXOffset = 25;
         const msYOffset = 15;
         const msPXLen = state.camera.canvasW / 3;
-        const msMLen = Math.round(msPXLen / state.map.mapUnitsPerMeter, 1)
+        const msMLen = Math.round(msPXLen / state.map.mapUnitsPerMeter, 1);
         const msP0 = [msXOffset, state.camera.canvasH - msYOffset];
         const msP1 = [msXOffset + msPXLen, state.camera.canvasH - msYOffset];
         state.ctx.beginPath();
