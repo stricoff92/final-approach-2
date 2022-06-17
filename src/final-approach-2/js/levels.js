@@ -339,9 +339,10 @@ function setMapProps(state) {
             },
         );
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        const cloudTopY = 900 * mupm;
         const cloudBottomY = 800 * mupm;
         state.map.cloudLayer = {
-            topY: 900 * mupm,
+            topY: cloudTopY,
             bottomY: cloudBottomY,
         };
         state.map.aaFireP0 = [1000 * mupm, 0];
@@ -363,6 +364,9 @@ function setMapProps(state) {
             }
             // East of dive zone
             else if( py < cloudBottomY && px < 1000 * mupm) {
+                return DANGER_STATUS_INSTANT;
+            }
+            else if (py > cloudTopY && px > 1200 * mupm) {
                 return DANGER_STATUS_INSTANT;
             }
             else {
