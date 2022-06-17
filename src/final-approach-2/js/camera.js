@@ -769,12 +769,12 @@ function _drawAAFireEffects(state) {
                 state.ctx.lineWidth = w;
                 const lineCanvasP0 = mapCoordToCanvasCoord(
                     aaf.p0, state.plane.posMapCoord, state.camera
-                )
+                );
                 const lineCanvasP1 = mapCoordToCanvasCoord(
                     aaf.p1, state.plane.posMapCoord, state.camera
-                )
+                );
                 state.ctx.moveTo(...lineCanvasP0);
-                state.ctx.lineTo(...lineCanvasP1)
+                state.ctx.lineTo(...lineCanvasP1);
                 state.ctx.stroke();
             }
 
