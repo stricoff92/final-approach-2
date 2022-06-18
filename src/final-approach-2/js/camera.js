@@ -864,13 +864,13 @@ function _drawCloudEffects(
         }));
     }
 
-    const ixToRemove = [];
+    const ixToRemove = state.game.frame % 60 === 0 ? [] : null;
     for(let i in window._cloudEffects) {
         let ce = window._cloudEffects[i];
         let ceCanvasCoord = mapCoordToCanvasCoord(
             ce.mapCoord, state.plane.posMapCoord, state.camera,
         );
-        if(ceCanvasCoord + ce.radiusX < 0) {
+        if(ixToRemove && (ceCanvasCoord + ce.radiusX) < 0) {
             ixToRemove.push(i);
         }
         else {
@@ -885,7 +885,7 @@ function _drawCloudEffects(
             state.ctx.fill();
         }
     }
-    if(ixToRemove.length) {
+    if(ixToRemove && ixToRemove.length) {
         window._cloudEffects = window._cloudEffects.filter((_ce, ix) => {
             return ixToRemove.indexOf(ix) != -1
         })
