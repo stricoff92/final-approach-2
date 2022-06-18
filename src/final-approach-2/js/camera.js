@@ -1081,7 +1081,30 @@ function _drawCarrierRunway(state, nowTS) {
     );
     state.ctx.fill();
 
-
+    // Arresting Gear Target Area
+    if(Math.random() > 0.7) {
+        const agtaCCTopLeft = mapCoordToCanvasCoord(
+            [
+                state.map.carrierRWArrestingGearBounds.xStart,
+                rwMapTopLeft[1]
+            ],
+            plane.posMapCoord,
+            state.camera,
+        );
+        const agtaWidth = (
+            state.map.carrierRWArrestingGearBounds.xEnd
+            - state.map.carrierRWArrestingGearBounds.xStart
+        );
+        state.ctx.beginPath();
+        state.ctx.fillStyle = `rgb(0, 255, 0, ${ getRandomFloat(0.1, 0.4) })`;
+        const flickerExt = getRandomFloat(0, 2 * mupm)
+        state.ctx.rect(
+            agtaCCTopLeft[0], agtaCCTopLeft[1] - flickerExt,
+            agtaWidth,
+            rwHeight + flickerExt * 2,
+        );
+        state.ctx.fill();
+    }
 }
 
 function drawScoreScreen(state) {
