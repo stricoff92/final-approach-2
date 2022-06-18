@@ -124,6 +124,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             rwP1MapCoord: null,
             rwType: null,
             rwVisualWidthM: null,
+            carrierRWArrestingGearBounds: null,
             getDangerStatus: state => {},
             glideSlopes: [],
             tireStrikes: [],
@@ -558,6 +559,9 @@ function runDataLoop() {
 
 
 function processGroundInteractions(state) {
+    if(window._fa2_isPaused) {
+        return;
+    }
     const plane = state.plane;
     if(plane.crashFrame) {
         throw NOT_IMPLEMENTED;

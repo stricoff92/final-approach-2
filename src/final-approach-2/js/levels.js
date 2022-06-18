@@ -1,7 +1,7 @@
 
 function innerAdjustPlanePosition(state) {
 
-    if(state.isPaused) {
+    if(window._fa2_isPaused) {
         return state;
     }
 
@@ -379,14 +379,19 @@ function setMapProps(state) {
         state.game.levelName = "Carrier Landing I";
         state.map.terrain = TERRAIN_OCEAN;
         state.map.rwType = RUNWAY_TYPE_CARRIER;
-        state.map.rwVisualWidthM = 7;
+        state.map.rwVisualWidthM = 5;
         state.map.rwP0MapCoord = [1500 * mupm, 10 * mupm];
-        state.map.rwP1MapCoord = [1620 * mupm, 10 * mupm];
+        state.map.rwP1MapCoord = [1565 * mupm, 10 * mupm];
+        state.map.carrierRWArrestingGearBounds = {
+            xStart: 1503 * mupm,
+            xEnd: 1520 * mupm,
+        };
         state.map.glideSlopes.push({
             p0: [0, 400 * mupm],
-            p1: [1512 * mupm, 0],
+            p1: [1512 * mupm, 10 * mupm],
         });
-        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        // state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        state.plane.posMapCoord = [1512 * mupm, 15 * mupm];
         state.map.cloudLayer = {
             topY: 350 * mupm,
             bottomY: 190 * mupm,

@@ -853,6 +853,9 @@ function _drawCloudEffects(
     _canvasMinMapCoordX,
     canvasMaxMapCoordX,
 ) {
+    if(window._fa2_isPaused) {
+        return;
+    }
 
     const cl = state.map.cloudLayer;
     const planeYPos = state.plane.posMapCoord[1];
@@ -1014,6 +1017,70 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
 }
 
 function _drawCarrierRunway(state, nowTS) {
+    const mupm = state.map.mapUnitsPerMeter;
+    const plane = state.plane;
+    // Runway Map Coords
+    const rwMapTopLeft = [
+        state.map.rwP0MapCoord[0],
+        state.map.rwP0MapCoord[1] + (state.map.rwVisualWidthM * mupm / 2),
+    ];
+    const rwLength = state.map.rwP1MapCoord[0] - state.map.rwP0MapCoord[0];
+    const rwHeight = state.map.rwVisualWidthM * mupm;
+
+    // Boat Map coords
+    const boatMapTopLeft = [
+        rwMapTopLeft[0],
+        rwMapTopLeft[1] + 3 * mupm
+    ];
+    const boatMapTopRight = [
+        state.map.rwP1MapCoord[0] + rwLength,
+        boatMapTopLeft[1],
+    ];
+    const boatMapMiddleRight = [
+        boatMapTopRight[0],
+        state.map.rwP0MapCoord[1],
+    ];
+    const boatMapBottomRight = [
+        boatMapTopRight[0] - (3 * mupm),
+        0,
+    ];
+    const boatMapBottomLeft = [
+        boatMapTopLeft[0],
+        0,
+    ];
+
+    // Boat Deck
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_DECK;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        boatMapTopLeft, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapTopRight, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapMiddleRight, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapBottomRight, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapBottomLeft, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+
+    // Runway
+    const rwTopLefCC = mapCoordToCanvasCoord(
+        rwMapTopLeft, plane.posMapCoord, state.camera,
+    );
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_RUNWAY;
+    state.ctx.rect(
+        rwTopLefCC[0], rwTopLefCC[1],
+        rwLength, rwHeight,
+    );
+    state.ctx.fill();
+
 
 }
 
