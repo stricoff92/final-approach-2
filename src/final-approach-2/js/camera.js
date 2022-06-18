@@ -26,6 +26,8 @@ function getCanvasCornerMapCoords(state) {
     ];
 }
 
+
+
 function runDisplayLoop() {
 
     const state = window.readGameState();
@@ -200,6 +202,7 @@ function drawGameScene(state) {
     ] = getCanvasCornerMapCoords(state);
 
     _drawHorizonAndCloudsLayer(state);
+    _drawTextureGrid(state);
 
     // Draw runway
     const cameraMapCoordXMin = scTopLeftMapCoord[0];
@@ -441,6 +444,24 @@ function drawGameScene(state) {
     } else {
         _drawLevelName(state, nowTS);
     }
+}
+
+function _drawTextureGrid(state) {
+    const planeAltMapUnits = state.plane.posMapCoord[1];
+    const cloudLayer = state.map.cloudLayer
+    const gridMaxAltMapUnits = cloudLayer.bottomY * 0.66;
+    if(planeAltMapUnits > gridMaxAltMapUnits) {
+        return;
+    }
+    const maxGridDistancePX = 20;
+    const minGridDistancePX = 4;
+    // 0% @ ground, 100% @ gridMaxAltMapUnits
+    const percent = planeAltMapUnits / gridMaxAltMapUnits;
+    const gridSize = Math.round(
+        minGridDistancePX + ((maxGridDistancePX - minGridDistancePX) * percent)
+    );
+    console.log({gridSize})
+
 }
 
 function _drawFuelIndicator(state, nowTS) {
