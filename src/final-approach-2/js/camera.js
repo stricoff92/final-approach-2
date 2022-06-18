@@ -204,18 +204,24 @@ function drawGameScene(state) {
     // Draw runway
     const cameraMapCoordXMin = scTopLeftMapCoord[0];
     const cameraMapCoordXMax = scTopRightMapCoord[0];
+    const rwLength = state.map.rwP1MapCoord[0] - state.map.rwP0MapCoord[0];
+    const rwViewBuffer = rwLength * 3;
     const runwayVisible = Boolean((
-        state.map.rwP0MapCoord[0] >= cameraMapCoordXMin
-        && state.map.rwP0MapCoord[0] <= cameraMapCoordXMax
+        state.map.rwP0MapCoord[0] >= (cameraMapCoordXMin - rwViewBuffer)
+        && state.map.rwP0MapCoord[0] <= (cameraMapCoordXMax + rwViewBuffer)
     ) || (
-        state.map.rwP1MapCoord[0] >= cameraMapCoordXMin
-        && state.map.rwP1MapCoord[0] <= cameraMapCoordXMax
+        state.map.rwP1MapCoord[0] >= (cameraMapCoordXMin - rwViewBuffer)
+        && state.map.rwP1MapCoord[0] <= (cameraMapCoordXMax + rwViewBuffer)
     ) || (
-        state.map.rwP0MapCoord[0] <= cameraMapCoordXMin
-        && state.map.rwP1MapCoord[0] >= cameraMapCoordXMax
+        state.map.rwP0MapCoord[0] <= (cameraMapCoordXMin + rwViewBuffer)
+        && state.map.rwP1MapCoord[0] >= (cameraMapCoordXMax - rwViewBuffer)
     ));
     if(runwayVisible) {
-        _drawRunway(state, nowTS, cameraMapCoordXMax);
+        if(state.map.rwType === RUNWAY_TYPE_CARRIER) {
+            _drawCarrierRunway(state, nowTS);
+        } else {
+            _drawRunway(state, nowTS, cameraMapCoordXMax);
+        }
     }
 
     // Draw Glide Slope
@@ -556,7 +562,9 @@ function _drawHorizonAndCloudsLayer(state) {
             state.ctx.fillStyle = COLOR_GROUND_FOREST;
         } else if(state.map.terrain === TERRAIN_DESERT) {
             state.ctx.fillStyle = COLOR_GROUD_DESERT;
-        }
+        } else if (state.map.terrain === TERRAIN_OCEAN) {
+            state.ctx.fillStyle = COLOR_SURFACE_OCEAN;
+        } else { throw NOT_IMPLEMENTED; }
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
 
@@ -1003,6 +1011,10 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
         );
         state.ctx.fill();
     });
+}
+
+function _drawCarrierRunway(state, nowTS) {
+
 }
 
 function drawScoreScreen(state) {

@@ -37,6 +37,7 @@ const COLOR_BLACK = "#000";
 const COLOR_SKY = "#e3e3ff";
 const COLOR_GROUND_FOREST = "#bcd4ab";
 const COLOR_GROUD_DESERT = "#dbd6af";
+const COLOR_SURFACE_OCEAN = "#362ae8";
 
 const COLOR_CLOUD_LAYER = a => `rgb(219, 219, 219, ${a.toFixed(2)})`;
 const CLOUD_GRADIENT_SIZE_M = 30;
@@ -58,6 +59,7 @@ const RUNWAY_TYPE_CONCRETE = "concrete";
 const RUNWAY_TYPE_CONCRETE_COLOR = "#808080";
 const RUNWAY_TYPE_DIRT = "dirt";
 const RUNWAY_TYPE_DIRT_COLOR = "#bdbcac";
+const RUNWAY_TYPE_CARRIER = "carrier";
 
 const LEVEL_NAME_DISPLAY_DURATION_MS = 2000;
 const LEVEL_NAME_DISPLAY_FADEOUT_MS = 1000;

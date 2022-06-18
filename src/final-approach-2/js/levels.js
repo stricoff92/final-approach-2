@@ -375,6 +375,23 @@ function setMapProps(state) {
             }
         }
     }
+    else if (level === 8) {
+        state.game.levelName = "Carrier Landing I";
+        state.map.terrain = TERRAIN_OCEAN;
+        state.map.rwType = RUNWAY_TYPE_CARRIER;
+        state.map.rwVisualWidthM = 7;
+        state.map.rwP0MapCoord = [1500 * mupm, 10 * mupm];
+        state.map.rwP1MapCoord = [1620 * mupm, 10 * mupm];
+        state.map.glideSlopes.push({
+            p0: [0, 400 * mupm],
+            p1: [1512 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        state.map.cloudLayer = {
+            topY: 350 * mupm,
+            bottomY: 190 * mupm,
+        };
+    }
     else {
         throw NOT_IMPLEMENTED;
     }
