@@ -246,8 +246,15 @@ function drawGameScene(state) {
 
     let planeCanvasX1, planeCanvasY1;
     if(!plane.crashFrame) {
+
         // Draw Plane Shadow
         const planeCanvasDims = planeMapDims.map(d => d * state.map.mapUnitsPerMeter);
+        if(
+            state.map.rwType === RUNWAY_TYPE_CARRIER
+        ) {
+
+        }
+
         const shadowCenterMapCoord = [
             plane.posMapCoord[0] + state.plane.posMapCoord[1] * 0.4,
             plane.posMapCoord[1] * -0.2,
@@ -1033,7 +1040,7 @@ function _drawCarrierRunway(state, nowTS) {
         rwMapTopLeft[1] + 3 * mupm
     ];
     const boatMapTopRight = [
-        state.map.rwP1MapCoord[0] + rwLength,
+        state.map.carrierMaxMapX,
         boatMapTopLeft[1],
     ];
     const boatMapMiddleRight = [
@@ -1041,7 +1048,7 @@ function _drawCarrierRunway(state, nowTS) {
         state.map.rwP0MapCoord[1],
     ];
     const boatMapBottomRight = [
-        boatMapTopRight[0] - (3 * mupm),
+        boatMapTopRight[0] - (4 * mupm),
         0,
     ];
     const boatMapBottomLeft = [

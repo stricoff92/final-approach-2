@@ -125,6 +125,8 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             rwType: null,
             rwVisualWidthM: null,
             carrierRWArrestingGearBounds: null,
+            carrierMinMapX: null,
+            carrierMaxMapX: null,
             getDangerStatus: state => {},
             glideSlopes: [],
             tireStrikes: [],
