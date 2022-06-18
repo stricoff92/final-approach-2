@@ -917,6 +917,53 @@ function _drawCloudEffects(
     }
 }
 
+function drawTireStrikes(state, nowTS) {
+    // Draw tire strikes
+    state.map.tireStrikes.forEach(ts => {
+        const tsCanvasPoint = mapCoordToCanvasCoord(
+            ts.originMapPoint, state.plane.posMapCoord, state.camera,
+        );
+        // Draw mark on runway
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "rgb(0, 0, 0, 0.6)";
+        state.ctx.lineWidth = 6;
+        state.ctx.moveTo(
+            tsCanvasPoint[0] - (0.75 * state.map.mapUnitsPerMeter),
+            tsCanvasPoint[1],
+        );
+        state.ctx.lineTo(
+            tsCanvasPoint[0] + (0.75 * state.map.mapUnitsPerMeter),
+            tsCanvasPoint[1],
+        );
+        state.ctx.stroke();
+
+        // Draw "rising haze" effect if strike was recent
+        const tireStrikeRHLifespanMS = 1600;
+        const ageMS = nowTS - ts.createdTS;
+        if(ageMS > tireStrikeRHLifespanMS) {
+            return;
+        }
+        const radiusCurve = ageSeconds => Math.pow(ageSeconds, 2) * 0.5 + 0.5;
+        const percentAge = ageMS / tireStrikeRHLifespanMS;
+        const alpha = 1 - percentAge;
+        const radius = Math.max(0.2, radiusCurve(ageMS / 1000)) * state.map.mapUnitsPerMeter;
+        const xOffset = -1 * state.map.mapUnitsPerMeter * percentAge;
+        const yOffset = 2 * state.map.mapUnitsPerMeter * percentAge;
+
+        state.ctx.beginPath();
+        state.ctx.fillStyle = `rgb(50, 50, 50, ${ alpha })`;
+        state.ctx.arc(
+            tsCanvasPoint[0] + xOffset,
+            tsCanvasPoint[1] - yOffset,
+            radius,
+            0,
+            TWO_PI,
+        );
+        state.ctx.fill();
+    });
+}
+
+
 function _drawRunway(state, nowTS, cameraMapCoordXMax) {
     const runwayHalfVisualH = state.map.rwVisualWidthM / 2 * state.map.mapUnitsPerMeter;
     const rwCanvasP0 = mapCoordToCanvasCoord(
@@ -985,49 +1032,7 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
         rwMeterPtr += (paintLineLengthMeters + paintLineIntervalMeters);
     }
 
-    // Draw tire strikes
-    state.map.tireStrikes.forEach(ts => {
-        const tsCanvasPoint = mapCoordToCanvasCoord(
-            ts.originMapPoint, state.plane.posMapCoord, state.camera,
-        );
-        // Draw mark on runway
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = "rgb(0, 0, 0, 0.6)";
-        state.ctx.lineWidth = 6;
-        state.ctx.moveTo(
-            tsCanvasPoint[0] - (0.75 * state.map.mapUnitsPerMeter),
-            tsCanvasPoint[1],
-        );
-        state.ctx.lineTo(
-            tsCanvasPoint[0] + (0.75 * state.map.mapUnitsPerMeter),
-            tsCanvasPoint[1],
-        );
-        state.ctx.stroke();
-
-        // Draw "rising haze" effect if strike was recent
-        const tireStrikeRHLifespanMS = 1600;
-        const ageMS = nowTS - ts.createdTS;
-        if(ageMS > tireStrikeRHLifespanMS) {
-            return;
-        }
-        const radiusCurve = ageSeconds => Math.pow(ageSeconds, 2) * 0.5 + 0.5;
-        const percentAge = ageMS / tireStrikeRHLifespanMS;
-        const alpha = 1 - percentAge;
-        const radius = Math.max(0.2, radiusCurve(ageMS / 1000)) * state.map.mapUnitsPerMeter;
-        const xOffset = -1 * state.map.mapUnitsPerMeter * percentAge;
-        const yOffset = 2 * state.map.mapUnitsPerMeter * percentAge;
-
-        state.ctx.beginPath();
-        state.ctx.fillStyle = `rgb(50, 50, 50, ${ alpha })`;
-        state.ctx.arc(
-            tsCanvasPoint[0] + xOffset,
-            tsCanvasPoint[1] - yOffset,
-            radius,
-            0,
-            TWO_PI,
-        );
-        state.ctx.fill();
-    });
+    drawTireStrikes(state, nowTS);
 }
 
 function _drawCarrierRunway(state, nowTS) {
@@ -1098,6 +1103,10 @@ function _drawCarrierRunway(state, nowTS) {
     state.ctx.lineWidth = 3;
     state.ctx.stroke();
 
+
+    // Tire Strikes
+    drawTireStrikes(state, nowTS);
+
     // Arresting Gear Target Area
     if(Math.random() > 0.7) {
         const agtaCCTopLeft = mapCoordToCanvasCoord(
@@ -1122,6 +1131,8 @@ function _drawCarrierRunway(state, nowTS) {
         );
         state.ctx.fill();
     }
+
+
 }
 
 function drawScoreScreen(state) {

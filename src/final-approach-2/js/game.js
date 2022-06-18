@@ -86,6 +86,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             flareVerticalAccelerationMS2Curve: null,
             touchDownFlareMinMS: null,
             minTouchdownVerticalMS: null,
+            carrierRWArrestorCableCaught: null,
             startingFuel: null,
             fuelRemaining: null,
             fuelUsedLastTS: null,
@@ -127,6 +128,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             carrierRWArrestingGearBounds: null,
             carrierMinMapX: null,
             carrierMaxMapX: null,
+            carrierRWArrestorCableMapXs: null,
             getDangerStatus: state => {},
             glideSlopes: [],
             tireStrikes: [],
@@ -582,7 +584,13 @@ function processGroundInteractions(state) {
     if(plane.touchedDown) {
         // Plane has touched down and negatively accelerating
         if(plane.horizontalMS > 0) {
-            const deltaHVMF = plane.rwNegAccelerationMS * (!plane.flare ? 1 : 2) / fps;
+            let deltaHVMF;
+            if(plane.carrierRWArrestorCableCaught !== null) {
+                const arrestorCurve = xMS => knotsToMS(-0.02 * Math.pow(mPSToKnots(xMS), 2) - 5)
+                deltaHVMF = arrestorCurve(plane.horizontalMS) / fps;
+            } else {
+                deltaHVMF = plane.rwNegAccelerationMS * (!plane.flare ? 1 : 2) / fps;
+            }
             const newHorizontalMS = Math.max(0, plane.horizontalMS + deltaHVMF)
             state.plane.horizontalMS = newHorizontalMS;
             if(newHorizontalMS > 0) {
@@ -597,7 +605,10 @@ function processGroundInteractions(state) {
                 else {
                     if(
                         plane.flare === IS_FLARING
-                        && newHorizontalMS < plane.touchDownFlareMinMS
+                        && (
+                            newHorizontalMS < plane.touchDownFlareMinMS
+                            || plane.carrierRWArrestorCableCaught !== null
+                        )
                     ) {
                         state.plane.flare = IS_NOT_FLARING;
                         state.map.tireStrikes.push({
@@ -663,7 +674,30 @@ function processGroundInteractions(state) {
             flare: state.plane.flare,
             bigBounceMin,
             noBounceMin,
+            planePosMapCoord: state.plane.posMapCoord,
         });
+
+        const arrestorGearCaught = Boolean(
+            isCarrierLanding
+            && plane.posMapCoord[0] >= state.map.carrierRWArrestorCableMapXs[0]
+            && plane.posMapCoord[0] <= state.map.carrierRWArrestorCableMapXs[
+                state.map.carrierRWArrestorCableMapXs.length - 1
+            ]
+        );
+        let arrestorIXCaught;
+        if(arrestorGearCaught) {
+            for(let i in state.map.carrierRWArrestorCableMapXs) {
+                if(state.plane.posMapCoord[0] <= state.map.carrierRWArrestorCableMapXs[i]){
+                    arrestorIXCaught = parseInt(i);
+                    console.log(`👉 Arrestor Gear #${arrestorIXCaught+1} Caught`);
+                    break;
+                }
+            }
+            if(typeof arrestorIXCaught === "undefined") {
+                throw NOT_IMPLEMENTED;
+            }
+            state.plane.carrierRWArrestorCableCaught = arrestorIXCaught;
+        }
 
         // check for plane crash into runway
         if (isCrash)
@@ -674,7 +708,7 @@ function processGroundInteractions(state) {
             addRubberStrike = false;
             createCrashDebrisObjects(state);
         }
-        else if(!isCrash && touchdownMS >= noBounceMin) {
+        else if(!isCrash && (touchdownMS >= noBounceMin || arrestorGearCaught)) {
             // touchdown
             state.plane.touchedDown = true;
             state.game.acceptControlCommands = false;
@@ -703,12 +737,14 @@ function processGroundInteractions(state) {
         } else if (!isCrash && touchdownMS > bigBounceMin) {
             // small bounce off landing
             state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 0.8;
+            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + (state.plane.posMapCoord[1] - planeBottomMapCoordY);
             state.plane.touchdownStats.bounces++;
             console.log("👉 small bounce");
 
         } else {
             // big bounce off runway
-            state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 1;
+            state.plane.verticalMS = Math.abs(state.plane.verticalMS);
+            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + (state.plane.posMapCoord[1] - planeBottomMapCoordY);
             state.plane.touchdownStats.isRough = true;
             state.plane.touchdownStats.bounces++;
             console.log("👉 big bounce");

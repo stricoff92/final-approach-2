@@ -383,15 +383,17 @@ function setMapProps(state) {
         state.map.rwP0MapCoord = [1500 * mupm, 10 * mupm];
         state.map.rwP1MapCoord = [1565 * mupm, 10 * mupm];
         state.map.carrierRWArrestingGearBounds = {
-            xStart: 1503 * mupm,
+            xStart: 1501 * mupm,
             xEnd: 1520 * mupm,
         };
+        state.map.carrierRWArrestorCableMapXs = [
+            1501, 1508, 1515, 1520].map(v => v * mupm);
         state.map.glideSlopes.push({
             p0: [0, 400 * mupm],
             p1: [1512 * mupm, 10 * mupm],
         });
-        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
-        // state.plane.posMapCoord = [1505 * mupm, 12 * mupm];
+        // state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        state.plane.posMapCoord = [1468 * mupm, 16 * mupm];
         state.map.cloudLayer = {
             topY: 350 * mupm,
             bottomY: 190 * mupm,
