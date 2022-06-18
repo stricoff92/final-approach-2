@@ -1080,6 +1080,9 @@ function _drawCarrierRunway(state, nowTS) {
         rwLength, rwHeight,
     );
     state.ctx.fill();
+    state.ctx.strokeStyle = "#ff0";
+    state.ctx.lineWidth = 3;
+    state.ctx.stroke();
 
     // Arresting Gear Target Area
     if(Math.random() > 0.7) {
