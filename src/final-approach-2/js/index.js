@@ -96,9 +96,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     });
                 } else {
                     if(key === "ArrowLeft") {
-                        window._gamestate.plane.posMapCoord[0] -= 50
+                        window._gamestate.plane.posMapCoord[0] -= (window._fa2_default_slew || 50);
                     } else if (key === "ArrowUp") {
-                        window._gamestate.plane.posMapCoord[1] += 50
+                        window._gamestate.plane.posMapCoord[1] += (window._fa2_default_slew || 50);
                     }
                 }
                 break;
@@ -110,9 +110,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     });
                 } else {
                     if(key === "ArrowRight") {
-                        window._gamestate.plane.posMapCoord[0] += 50
+                        window._gamestate.plane.posMapCoord[0] += (window._fa2_default_slew || 50);
                     } else if (key === "ArrowDown") {
-                        window._gamestate.plane.posMapCoord[1] -= 50
+                        window._gamestate.plane.posMapCoord[1] -= (window._fa2_default_slew || 50);
                     }
                 }
                 break;

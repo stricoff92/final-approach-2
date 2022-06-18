@@ -249,16 +249,23 @@ function drawGameScene(state) {
 
         // Draw Plane Shadow
         const planeCanvasDims = planeMapDims.map(d => d * state.map.mapUnitsPerMeter);
+        let shadowCenterMapCoord;
         if(
             state.map.rwType === RUNWAY_TYPE_CARRIER
+            && state.plane.posMapCoord[0] >= state.map.carrierMinMapX
+            && state.plane.posMapCoord[0] <= state.map.carrierMaxMapX
         ) {
-
+            const rwAlt = state.map.rwP0MapCoord[1];
+            shadowCenterMapCoord = [
+                plane.posMapCoord[0] + ((state.plane.posMapCoord[1] - rwAlt)  * 0.4),
+                (plane.posMapCoord[1] - rwAlt) * -0.2 + rwAlt,
+            ];
+        } else {
+            shadowCenterMapCoord = [
+                plane.posMapCoord[0] + state.plane.posMapCoord[1] * 0.4,
+                plane.posMapCoord[1] * -0.2,
+            ];
         }
-
-        const shadowCenterMapCoord = [
-            plane.posMapCoord[0] + state.plane.posMapCoord[1] * 0.4,
-            plane.posMapCoord[1] * -0.2,
-        ];
         const shadowCenterCanvasCoord = mapCoordToCanvasCoord(
             shadowCenterMapCoord, plane.posMapCoord, state.camera
         );
