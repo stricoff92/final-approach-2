@@ -80,7 +80,7 @@ function setPlaneProps(state) {
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
         state.plane.rwNegAccelerationMS = knotsToMS(-6);
-        state.plane.minTouchdownVerticalMS = feetPerMinToMS(-750)
+        state.plane.minTouchdownVerticalMS = feetPerMinToMS(-900)
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
         state.plane.horizontalMS = knotsToMS(58);
