@@ -1099,9 +1099,22 @@ function _drawCarrierRunway(state, nowTS) {
         rwLength, rwHeight,
     );
     state.ctx.fill();
-    state.ctx.setLineDash([15, 15]);
+    state.ctx.beginPath();
+    state.ctx.strokeStyle = "#000";
+    state.ctx.lineWidth = 7;
+    state.ctx.rect(
+        rwTopLefCC[0], rwTopLefCC[1],
+        rwLength, rwHeight,
+    );
+    state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.setLineDash([25, 25]);
     state.ctx.strokeStyle = "#999902";
     state.ctx.lineWidth = 7;
+    state.ctx.rect(
+        rwTopLefCC[0], rwTopLefCC[1],
+        rwLength, rwHeight,
+    );
     state.ctx.stroke();
     state.ctx.setLineDash([]);
 
@@ -1115,7 +1128,7 @@ function _drawCarrierRunway(state, nowTS) {
         state.ctx.lineWidth = 3;
         let cableX = state.map.carrierRWArrestorCableMapXs[i];
         state.ctx.moveTo(...mapCoordToCanvasCoord(
-            [cableX, rwMapTopLeft[1]],
+            [cableX, rwMapTopLeft[1] + 1.5 * mupm],
             plane.posMapCoord,
             state.camera,
         ));
@@ -1135,7 +1148,7 @@ function _drawCarrierRunway(state, nowTS) {
             ));
         }
         state.ctx.lineTo(...mapCoordToCanvasCoord(
-            [cableX, rwMapTopLeft[1] - rwHeight],
+            [cableX, rwMapTopLeft[1] - (rwHeight + 1.5 * mupm)],
             plane.posMapCoord,
             state.camera,
         ));
