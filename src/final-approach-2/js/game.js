@@ -740,7 +740,6 @@ function processGroundInteractions(state) {
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + (state.plane.posMapCoord[1] - planeBottomMapCoordY);
             state.plane.touchdownStats.bounces++;
             console.log("👉 small bounce");
-
         } else {
             // big bounce off runway
             state.plane.verticalMS = Math.abs(state.plane.verticalMS);
@@ -749,7 +748,6 @@ function processGroundInteractions(state) {
             state.plane.touchdownStats.bounces++;
             console.log("👉 big bounce");
         }
-
         if (addRubberStrike) {
             const shakeSizeCurve = tdMs => Math.max(
                 0.03,
@@ -761,7 +759,7 @@ function processGroundInteractions(state) {
                     planeBottomMapCoordY,
                 ]),
                 createdTS: performance.now(),
-                shakeMeters: shakeSizeCurve(touchdownMS),
+                shakeMeters: shakeSizeCurve(touchdownMS) / (arrestorGearCaught?1.65:1), // reduce shake if carrier landing
             });
         }
     }

@@ -141,7 +141,7 @@ function setPlaneProps(state) {
         state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500)
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
-        state.plane.horizontalMS = knotsToMS(80);
+        state.plane.horizontalMS = knotsToMS(95);
         state.plane.verticalMS = feetPerMinToMS(-550);
         state.plane.lastLevelOutTS = performance.now();
         state.plane.lastLevelOutFrame = state.game.frame;
@@ -393,7 +393,7 @@ function setMapProps(state) {
             p1: [1512 * mupm, 10 * mupm],
         });
         // state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
-        state.plane.posMapCoord = [1468 * mupm, 16 * mupm];
+        state.plane.posMapCoord = [1468 * mupm, 14 * mupm];
         state.map.cloudLayer = {
             topY: 350 * mupm,
             bottomY: 190 * mupm,
