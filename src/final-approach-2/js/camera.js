@@ -302,6 +302,7 @@ function drawGameScene(state) {
         state,
         scBottomLeftMapCoord[1],
         scTopLeftMapCoord[1],
+        scTopLeftMapCoord[0],
         scTopRightMapCoord[0],
     );
 
@@ -841,13 +842,15 @@ function _drawCloudEffects(
     state,
     canvasMinMapCoordY,
     canvasMaxMapCoordY,
+    _canvasMinMapCoordX,
     canvasMaxMapCoordX,
 ) {
+
     const cl = state.map.cloudLayer;
     const planeYPos = state.plane.posMapCoord[1];
     const mupm = state.map.mapUnitsPerMeter;
 
-    if(state.game.frame % 12 === 0 && (planeYPos <= cl.topY && planeYPos >= cl.bottomY)) {
+    if(state.game.frame % 12 === 0 && (canvasMinMapCoordY <= cl.topY && canvasMaxMapCoordY >= cl.bottomY)) {
         const newCloudRadius = getRandomFloat(5 * mupm, 18 * mupm);
         const newCloudPosY = getRandomFloat(
             canvasMinMapCoordY - newCloudRadius * 0.7,
@@ -861,13 +864,13 @@ function _drawCloudEffects(
         }));
     }
 
-    const ixToRemove = [];
+    const ixToRemove = state.game.frame % 60 === 0 ? [] : null;
     for(let i in window._cloudEffects) {
         let ce = window._cloudEffects[i];
         let ceCanvasCoord = mapCoordToCanvasCoord(
             ce.mapCoord, state.plane.posMapCoord, state.camera,
         );
-        if(ceCanvasCoord + ce.radiusX < 0) {
+        if(ixToRemove && (ceCanvasCoord + ce.radiusX) < 0) {
             ixToRemove.push(i);
         }
         else {
@@ -882,7 +885,7 @@ function _drawCloudEffects(
             state.ctx.fill();
         }
     }
-    if(ixToRemove.length) {
+    if(ixToRemove && ixToRemove.length) {
         window._cloudEffects = window._cloudEffects.filter((_ce, ix) => {
             return ixToRemove.indexOf(ix) != -1
         })
