@@ -231,7 +231,7 @@ function drawGameScene(state) {
             );
             state.ctx.beginPath();
             state.ctx.strokeStyle = gsColor;
-            state.ctx.lineWidth = gsLineWidth;
+            state.ctx.lineWidth = gsLineWidth * (gs.bold ? 3.5 : 1);
             state.ctx.moveTo(...gsCanvasP0);
             state.ctx.lineTo(...gsCanvasP1);
             state.ctx.stroke();

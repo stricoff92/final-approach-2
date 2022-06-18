@@ -336,6 +336,7 @@ function setMapProps(state) {
             {
                 p0: [1200 * mupm, 130 * mupm], //  LEVEL_7_MAX_SAFE_X_M
                 p1: [1800 * mupm, 0 * mupm],
+                bold: true,
             },
         );
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
