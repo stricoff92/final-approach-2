@@ -26,7 +26,7 @@ function planeToMapBoxCoords(state) {
 }
 
 function lineInterceptsBoatRear(boatRearCoord, boxCords) {
-    const [boxX1, boxY1, boxX2, boxY2] = boxCords;
+    const [boxX1, boxY1, boxX2, _boxY2] = boxCords;
     return Boolean(
         boxX1 <= boatRearCoord[0]
         && boxX2 >= boatRearCoord[0]
