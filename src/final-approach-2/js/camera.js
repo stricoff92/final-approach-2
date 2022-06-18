@@ -1,4 +1,5 @@
 
+// FIXME: move some logic into functions.
 
 function getCanvasCornerMapCoords(state) {
     const cornerTopLeftMapCoord = [
@@ -219,18 +220,22 @@ function drawGameScene(state) {
 
     // Draw Glide Slope
     if(Math.random() < 0.9) {
-        const gsCanvasP0 = mapCoordToCanvasCoord(
-            state.map.gsP0MapCoord, plane.posMapCoord, state.camera
-        );
-        const gsCanvasP1 = mapCoordToCanvasCoord(
-            state.map.gsP1MapCoord, plane.posMapCoord, state.camera
-        );
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = `rgb(242, 0, 255, ${ getRandomFloat(0.2, 0.8) })`;
-        state.ctx.lineWidth = getRandomFloat(0.3, 2.4);
-        state.ctx.moveTo(...gsCanvasP0);
-        state.ctx.lineTo(...gsCanvasP1);
-        state.ctx.stroke();
+        const gsLineWidth = getRandomFloat(0.3, 2.4);
+        const gsColor = `rgb(242, 0, 255, ${ getRandomFloat(0.2, 0.8) })`;
+        state.map.glideSlopes.forEach(gs => {
+            const gsCanvasP0 = mapCoordToCanvasCoord(
+                gs.p0, plane.posMapCoord, state.camera
+            );
+            const gsCanvasP1 = mapCoordToCanvasCoord(
+                gs.p1, plane.posMapCoord, state.camera
+            );
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = gsColor;
+            state.ctx.lineWidth = gsLineWidth;
+            state.ctx.moveTo(...gsCanvasP0);
+            state.ctx.lineTo(...gsCanvasP1);
+            state.ctx.stroke();
+        });
     }
 
     let planeCanvasX1, planeCanvasY1;
@@ -254,10 +259,28 @@ function drawGameScene(state) {
         );
         state.ctx.fill();
 
-        const shakeLifespanMS = 450;
+        let shakeLifespanTSMS = 450;
+        let shakeLifespanAAFMS = 900;
         const tireStrikeLen = state.map.tireStrikes.length;
+        const aaFireLlen = state.map.aaFire.length;
         const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
-        const showVisualSkake = Boolean(lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanMS >= nowTS);
+        const lastAAFire = aaFireLlen > 0 ? state.map.aaFire[aaFireLlen - 1] : null;
+        const isAAFire = Boolean(lastAAFire !== null && lastAAFire.createdTS + shakeLifespanAAFMS >= nowTS);
+        const isTireStrike = Boolean(!isAAFire && lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanTSMS >= nowTS);
+        const showVisualSkake = isTireStrike || isAAFire;
+        let xAmnt = 0, yAmnt = 0;
+        if(showVisualSkake) {
+            if(isTireStrike) {
+                xAmnt = (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0);
+                yAmnt = (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0);
+            } else if(isAAFire) {
+                const mult = isAAFire.fatal ? 1.6 : 1;
+                xAmnt = getRandomFloat(-0.925 * mult, 0.925 * mult) * mupm;
+                yAmnt = getRandomFloat(-0.925 * mult, 0.925 * mult) * mupm;
+            } else {
+                throw NOT_IMPLEMENTED;
+            }
+        }
 
         // Draw plane
         planeCanvasX1 = state.camera.canvasHalfW - (planeCanvasDims[0] / 2);
@@ -265,14 +288,14 @@ function drawGameScene(state) {
         state.ctx.beginPath();
         state.ctx.drawImage(
             plane.assets[plane.flare],
-            planeCanvasX1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
-            planeCanvasY1 + (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0),
+            planeCanvasX1 + xAmnt,
+            planeCanvasY1 + yAmnt,
             planeCanvasDims[0],
             planeCanvasDims[1],
         );
     }
     else {
-        _drawExplosionEffect(state);
+        _drawCrashingEffect(state);
     }
 
     _drawCloudEffects(
@@ -282,13 +305,38 @@ function drawGameScene(state) {
         scTopRightMapCoord[0],
     );
 
-    if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
-        if(!plane.crashFrame && !plane.touchedDown) {
-            _drawWindIndicator(state);
-        }
-    } else {
-        _drawLevelName(state, nowTS);
+    if(!state.plane.crashFrame) {
+        state.plane.previousAflamePoints.forEach((pfp, ix) => {
+            const raPercent = 1 - ((ix + 1) / AFLAME_NODES_COUNT);
+            const r = MIN_AFLAME_RADIUS_M * mupm + ((MAX_AFLAME_RADIUS_M - MIN_AFLAME_RADIUS_M) * raPercent * mupm);
+            const a = 0.3 * raPercent;
+            const flameP = mapCoordToCanvasCoord(
+                pfp,
+                state.plane.posMapCoord,
+                state.camera,
+            );
+            // Smoke effect
+            state.ctx.beginPath();
+            state.ctx.fillStyle = `rgb(0, 0, 0, ${ getRandomFloat(0.01, 0.1) })`;
+            state.ctx.arc(
+                flameP[0] + getRandomFloat(0.75, 2) * mupm,
+                flameP[1] + getRandomFloat(0.75, 2) * mupm,
+                r * getRandomFloat(0.3, 0.65), 0, TWO_PI,
+            );
+            // Flame effect
+            state.ctx.fill();
+            state.ctx.beginPath();
+            state.ctx.fillStyle = `rgb(255, ${150*(1-raPercent)}, ${150*(1-raPercent)}, ${ a * getRandomFloat(0.9, 1.1) })`;
+            state.ctx.arc(
+                flameP[0], flameP[1],
+                r * getRandomFloat(0.85, 1.15), 0, TWO_PI,
+            );
+            state.ctx.fill();
+        });
     }
+
+    _drawAAFireEffects(state);
+
 
     // Draw altitude indicator if over min altutude
     const runwayAltitudeM = state.map.rwP0MapCoord[1] * state.map.mapUnitsPerMeter;
@@ -299,8 +347,13 @@ function drawGameScene(state) {
             * state.map.mapUnitsPerMeter
         )
     ) / state.map.mapUnitsPerMeter;
-    if(!plane.crashFrame && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
+    if(plane.alive && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
         // Altitude Text
+        const showSafeAltitude = Boolean(
+            state.game.level === 7
+            && planeBottomAltitudeM > LEVEL_7_MAX_SAFE_X_M
+            && state.plane.posMapCoord[0] > 1000 * mupm
+        );
         const altText1P = [
             state.camera.canvasHalfW,
             state.camera.canvasHalfH + state.plane.dimensions[0][1] * mupm
@@ -310,15 +363,21 @@ function drawGameScene(state) {
         state.ctx.font = "20px Arial";
         state.ctx.textBaseline = "middle";
         state.ctx.textAlign = "left";
-        state.ctx.fillText("ground", ...altText1P);
+        state.ctx.fillText(showSafeAltitude?"Safe Altitude":"ground", ...altText1P);
         const altText2P = [
             altText1P[0],
             altText1P[1] + 25,
         ];
         state.ctx.beginPath();
         state.ctx.font = "bold 25px Arial";
-        state.ctx.fillText(`${planeBottomAltitudeM.toFixed(0)} M`, ...altText2P);
-
+        if(showSafeAltitude) {
+            state.ctx.fillText(
+                `${Math.round(planeBottomAltitudeM - LEVEL_7_MAX_SAFE_X_M)} M`,
+                ...altText2P,
+            );
+        } else {
+            state.ctx.fillText(`${planeBottomAltitudeM.toFixed(0)} M`, ...altText2P);
+        }
         // Altitude Arrow
         const altLineP1 = [
             altText1P[0] - 5,
@@ -345,6 +404,9 @@ function drawGameScene(state) {
         state.ctx.stroke();
     }
 
+    drawHorizontalDistanceArrow(state);
+
+    // Draw Previous Points
     if(!plane.touchedDown && !plane.crashFrame) {
         for(let i = 0; i < plane.previousPoints.length; i++) {
             let mapCoord = plane.previousPoints[i];
@@ -362,7 +424,92 @@ function drawGameScene(state) {
             state.ctx.fill();
         }
     }
+
+    if(
+        plane.fuelRemaining !== null
+        && !plane.touchedDown
+        && plane.alive
+    ) {
+        _drawFuelIndicator(state, nowTS);
+    }
+
+    if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
+        if(plane.alive && !plane.touchedDown) {
+            _drawWindIndicator(state);
+        }
+    } else {
+        _drawLevelName(state, nowTS);
+    }
 }
+
+function _drawFuelIndicator(state, nowTS) {
+    const plane = state.plane;
+    const mupm = state.map.mapUnitsPerMeter;
+    const indicatorCenterX = state.camera.canvasHalfW + (plane.dimensions[0][0] / 2 * mupm);
+    const indicatorY2 = state.camera.canvasHalfH - (plane.dimensions[0][1] / 2 * mupm) - 5;
+    const anyLeft = plane.fuelRemaining > 0;
+
+    state.ctx.beginPath();
+    state.ctx.fillStyle = "#f00";
+    state.ctx.font = "bold 20px Courier New";
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "right";
+    state.ctx.fillText(anyLeft?"FUEL":"⚠️ NO FUEL", indicatorCenterX, indicatorY2);
+
+    if(anyLeft) {
+        // Outer bar
+        const barX1 = indicatorCenterX + 5;
+        const percent = plane.fuelRemaining / plane.startingFuel;
+        const barLen = Math.min(plane.startingFuel<6?80:130, state.camera.canvasHalfH / 1.6);
+        const barY1 = indicatorY2 - barLen;
+        const barW = 16;
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#f00";
+        state.ctx.rect(barX1, barY1 + barLen * (1 - percent), barW, barLen * percent);
+        state.ctx.fill();
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#fff";
+        state.ctx.lineWidth = 2;
+        state.ctx.rect(barX1, barY1, barW, barLen);
+        state.ctx.stroke();
+
+        // Tick marks
+        const yInt = Math.round(barLen / plane.startingFuel);
+        for(let i=1; i<plane.startingFuel; i++) {
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = "#fff";
+            state.ctx.lineWidth = 2;
+            state.ctx.moveTo(
+                barX1,
+                barY1 + yInt * i
+            );
+            state.ctx.lineTo(
+                barX1 + barW,
+                barY1 + yInt * i
+            );
+            state.ctx.stroke();
+        }
+
+        const animationLenMS = 700;
+        if(state.plane.fuelUsedLastTS && state.plane.fuelUsedLastTS + animationLenMS >= nowTS) {
+            // fuel used animation
+            const percent = (nowTS - state.plane.fuelUsedLastTS) / animationLenMS
+            const alpha = 1 - percent;
+            const radiusPx = 80 * percent;
+            state.ctx.beginPath();
+            state.ctx.fillStyle = `rgb(255, 0, 0, ${ alpha })`;
+            state.ctx.arc(
+                barX1 + barW / 2,
+                barY1 + barLen * (1 - percent),
+                radiusPx,
+                0, TWO_PI,
+            );
+            state.ctx.fill();
+        }
+    }
+
+}
+
 
 function _drawHorizonAndCloudsLayer(state) {
     const mupm = state.map.mapUnitsPerMeter
@@ -378,7 +525,7 @@ function _drawHorizonAndCloudsLayer(state) {
 
     if(cloudsBelow) {
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_SKY_FOREST;
+        state.ctx.fillStyle = COLOR_SKY;
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
 
@@ -404,7 +551,11 @@ function _drawHorizonAndCloudsLayer(state) {
     }
     else if (cloudsAbove) {
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_GROUND_FOREST;
+        if(state.map.terrain === TERRAIN_FOREST) {
+            state.ctx.fillStyle = COLOR_GROUND_FOREST;
+        } else if(state.map.terrain === TERRAIN_DESERT) {
+            state.ctx.fillStyle = COLOR_GROUD_DESERT;
+        }
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
 
@@ -424,7 +575,7 @@ function _drawHorizonAndCloudsLayer(state) {
     }
 }
 
-function _drawExplosionEffect(state) {
+function _drawCrashingEffect(state) {
     const mupm = state.map.mapUnitsPerMeter;
 
     const markCanvasCoord = mapCoordToCanvasCoord(
@@ -517,7 +668,7 @@ function _drawLevelName(state, nowTS) {
     state.ctx.fillText(
         "\"" + state.game.levelName + "\"",
         state.camera.canvasHalfW,
-        state.camera.canvasH / 4
+        state.camera.canvasH / 5
     );
 }
 
@@ -599,6 +750,91 @@ function _drawWindIndicator(state) {
         )
         state.ctx.fill();
     }
+}
+
+function _drawAAFireEffects(state) {
+    const nowTS = performance.now();
+    const mupm = state.map.mapUnitsPerMeter;
+    state.map.aaFire.forEach(aaf => {
+        const ageFrame = state.game.frame - aaf.createdFrame;
+        if(ageFrame < 6) {
+            let r, a, w;
+            if (ageFrame === 0) {
+                r = 1.5 * mupm;
+                a = 0.9;
+                w = 2
+            } else if (ageFrame === 1) {
+                r = 3 * mupm;
+                a = 0.7;
+                w = 1.7;
+            } else if (ageFrame === 2) {
+                r = 4.25 * mupm;
+                a = 0.7;
+                w = 1.5;
+            } else if (ageFrame === 3) {
+                r = 5.5 * mupm;
+                a = 0.5;
+                w = 1.2;
+            } else if (ageFrame === 4) {
+                r = 7 * mupm;
+                a = 0.4;
+                w = 1;
+            } else if (ageFrame === 5) {
+                r = 7.5 * mupm;
+                a = 0.3;
+                w = 1;
+            } else { throw NOT_IMPLEMENTED; }
+
+            if(ageFrame < 2) {
+                state.ctx.beginPath();
+                state.ctx.strokeStyle = "#000";
+                state.ctx.lineWidth = w;
+                const lineCanvasP0 = mapCoordToCanvasCoord(
+                    aaf.p0, state.plane.posMapCoord, state.camera
+                );
+                const lineCanvasP1 = mapCoordToCanvasCoord(
+                    aaf.p1, state.plane.posMapCoord, state.camera
+                );
+                state.ctx.moveTo(...lineCanvasP0);
+                state.ctx.lineTo(...lineCanvasP1);
+                state.ctx.stroke();
+            }
+
+            const expP = mapCoordToCanvasCoord(
+                aaf.p1, state.plane.posMapCoord, state.camera
+            );
+            state.ctx.beginPath();
+            state.ctx.fillStyle = AA_EXPLOSION_COLOR(a);
+            state.ctx.arc(
+                expP[0], expP[1],
+                r,
+                0, TWO_PI,
+            );
+            state.ctx.fill();
+            state.ctx.beginPath();
+            state.ctx.fillStyle = `rgb(255, 0, 0, ${a/1.2})`;
+            state.ctx.arc(
+                expP[0] + getRandomFloat(-2, 2) * mupm,
+                expP[1] + getRandomFloat(-2, 2) * mupm,
+                r / getRandomFloat(1, 3),
+                0, TWO_PI,
+            );
+            state.ctx.fill();
+        }
+        else if (nowTS < aaf.createdTS + AA_FIRE_TOTAL_DURATION) {
+            const expP = mapCoordToCanvasCoord(
+                aaf.p1, state.plane.posMapCoord, state.camera
+            );
+            state.ctx.beginPath();
+            state.ctx.fillStyle = AA_EXPLOSION_COLOR(0.3);
+            state.ctx.arc(
+                expP[0], expP[1],
+                7.5 * mupm,
+                0, TWO_PI,
+            );
+            state.ctx.fill();
+        }
+    });
 }
 
 function _drawCloudEffects(
@@ -938,6 +1174,68 @@ function drawScoreScreen(state) {
     }
 }
 
+function drawHorizontalDistanceArrow(state) {
+    const plane = state.plane;
+    if(
+        !plane.alive
+        || plane.posMapCoord[0] > state.map.rwP0MapCoord[0]
+        || state.game.level !== 7
+    ) {
+        return;
+    }
+
+    // Horizontal Distance Text
+    const mupm = state.map.mapUnitsPerMeter;
+    const distanceToDiveM = Math.round((state.map.glideSlopes[0].p1[0] - plane.posMapCoord[0]) / mupm);
+    const diveSoon = distanceToDiveM < 400;
+    if(distanceToDiveM < 0) {
+        return;
+    }
+    const rwDText1P = [
+        state.camera.canvasHalfW,
+        Math.round(state.camera.canvasH * 0.35),
+    ];
+    state.ctx.beginPath();
+    state.ctx.fillStyle = (diveSoon && state.game.frame % 120 < 60) ? "#f00" : "#000";
+    state.ctx.font = `${diveSoon ? "bold 32" : 20}px Arial`;
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "left";
+    state.ctx.fillText("DIVE", ...rwDText1P);
+    const rwDText2P = [
+        rwDText1P[0],
+        rwDText1P[1] + 25,
+    ];
+    state.ctx.beginPath();
+    state.ctx.fillStyle = diveSoon ? "#f00" : "#000";
+    state.ctx.font = "bold 25px Arial";
+    state.ctx.fillText(`${distanceToDiveM.toFixed(0)} M`, ...rwDText2P);
+
+    // Runway Distance Arrow
+    const rwDLineP1 = [
+        rwDText2P[0],
+        rwDText2P[1] + 17,
+    ];
+    const rwDLineP2 = [
+        state.camera.canvasW * 0.9,
+        rwDText2P[1] + 17,
+    ];
+    state.ctx.beginPath();
+    state.ctx.strokeStyle = "#000";
+    state.ctx.lineWidth = 1;
+    state.ctx.moveTo(...rwDLineP1);
+    state.ctx.lineTo(...rwDLineP2);
+    state.ctx.stroke();
+    const altArrowHeadLen = 15;
+    state.ctx.beginPath();
+    state.ctx.moveTo(...rwDLineP2);
+    state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] - altArrowHeadLen / 2);
+    state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.moveTo(...rwDLineP2);
+    state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] + altArrowHeadLen / 2);
+    state.ctx.stroke();
+}
+
 function drawDebugData(state) {
     // Text info
     state.ctx.beginPath();
@@ -982,7 +1280,7 @@ function drawDebugData(state) {
         const msXOffset = 25;
         const msYOffset = 15;
         const msPXLen = state.camera.canvasW / 3;
-        const msMLen = Math.round(msPXLen / state.map.mapUnitsPerMeter, 1)
+        const msMLen = Math.round(msPXLen / state.map.mapUnitsPerMeter, 1);
         const msP0 = [msXOffset, state.camera.canvasH - msYOffset];
         const msP1 = [msXOffset + msPXLen, state.camera.canvasH - msYOffset];
         state.ctx.beginPath();

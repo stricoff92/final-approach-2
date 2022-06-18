@@ -1,6 +1,5 @@
 
 function innerAdjustPlanePosition(state) {
-    state.game.acceptControlCommands = state.plane.flare === IS_NOT_FLARING;
 
     if(state.isPaused) {
         return state;
@@ -138,11 +137,11 @@ function setPlaneProps(state) {
         // F18
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
-        state.plane.rwNegAccelerationMS = knotsToMS(-10);
+        state.plane.rwNegAccelerationMS = knotsToMS(-15);
         state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500)
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
-        state.plane.horizontalMS = knotsToMS(58);
+        state.plane.horizontalMS = knotsToMS(80);
         state.plane.verticalMS = feetPerMinToMS(-550);
         state.plane.lastLevelOutTS = performance.now();
         state.plane.lastLevelOutFrame = state.game.frame;
@@ -205,9 +204,11 @@ function setMapProps(state) {
         state.map.rwVisualWidthM = 8;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1800 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1050 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.glideSlopes.push({
+            p0: [0, 250 * mupm],
+            p1: [1050 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.cloudLayer = {
             topY: 120 * mupm,
             bottomY: 85 * mupm,
@@ -220,9 +221,11 @@ function setMapProps(state) {
         state.map.rwVisualWidthM = 7;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1500 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1050 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.glideSlopes.push({
+            p0: [0, 250 * mupm],
+            p1: [1050 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.windXVel = 0; // +=tailwind, -=headwind
         state.map.windMaxDeltaPerSecond = 4;
         state.map.windXMin = -6;
@@ -239,10 +242,12 @@ function setMapProps(state) {
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 4.5;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [1220 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1020 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.rwP1MapCoord = [1130 * mupm, 0];
+        state.map.glideSlopes.push({
+            p0: [0, 250 * mupm],
+            p1: [1013 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.windXVel = 0; // +=tailwind, -=headwind
         state.map.windMaxDeltaPerSecond = 6;
         state.map.windXMin = -7;
@@ -260,9 +265,11 @@ function setMapProps(state) {
         state.map.rwVisualWidthM = 7;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
         state.map.rwP1MapCoord = [1500 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 250 * mupm];
-        state.map.gsP1MapCoord = [1050 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.glideSlopes.push({
+            p0: [0, 250 * mupm],
+            p1: [1050 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.windXVel = 0; // +=tailwind, -=headwind
         state.map.windMaxDeltaPerSecond = 8;
         state.map.windXMin = 1;
@@ -279,14 +286,93 @@ function setMapProps(state) {
         state.map.rwType = RUNWAY_TYPE_CONCRETE;
         state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1500 * mupm, 0];
-        state.map.rwP1MapCoord = [2500 * mupm, 0];
-        state.map.gsP0MapCoord = [0, 400 * mupm];
-        state.map.gsP1MapCoord = [1575 * mupm, 0];
-        state.plane.posMapCoord = deepCopy(state.map.gsP0MapCoord);
+        state.map.rwP1MapCoord = [2400 * mupm, 0];
+        state.map.glideSlopes.push({
+            p0: [0, 400 * mupm],
+            p1: [1575 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         state.map.cloudLayer = {
             topY: 150 * mupm,
             bottomY: 70 * mupm,
         };
+    }
+    else if (level === 6) {
+        state.game.levelName = "Low Fuel";
+        state.plane.startingFuel = 4;
+        state.plane.fuelRemaining = 3;
+        state.map.terrain = TERRAIN_DESERT;
+        state.map.rwType = RUNWAY_TYPE_DIRT;
+        state.map.rwVisualWidthM = 9;
+        state.map.rwP0MapCoord = [1500 * mupm, 0];
+        state.map.rwP1MapCoord = [1900 * mupm, 0];
+        state.map.glideSlopes.push({
+            p0: [0, 400 * mupm],
+            p1: [1575 * mupm, 0],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        state.map.cloudLayer = {
+            topY: 150 * mupm,
+            bottomY: 70 * mupm,
+        };
+    }
+    else if (level === 7) {
+        state.game.levelName = "Dangerous Airspace";
+        state.map.terrain = TERRAIN_DESERT;
+        state.map.rwType = RUNWAY_TYPE_DIRT;
+        state.map.rwVisualWidthM = 9;
+        state.map.rwP0MapCoord = [1750 * mupm, 0];
+        const rwEnd = (1750 + 320) * mupm
+        state.map.rwP1MapCoord = [(1750 + 320) * mupm, 0];
+        state.map.glideSlopes.push(
+            {
+                p0: [0, 1000 * mupm],
+                p1: [1000 * mupm, 900 * mupm],
+            },
+            {
+                p0: [1000 * mupm, 900 * mupm],
+                p1: [1200 * mupm, 130 * mupm], //  LEVEL_7_MAX_SAFE_X_M
+            },
+            {
+                p0: [1200 * mupm, 130 * mupm], //  LEVEL_7_MAX_SAFE_X_M
+                p1: [1800 * mupm, 0 * mupm],
+            },
+        );
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        const cloudTopY = 900 * mupm;
+        const cloudBottomY = 800 * mupm;
+        state.map.cloudLayer = {
+            topY: cloudTopY,
+            bottomY: cloudBottomY,
+        };
+        state.map.aaFireP0 = [1000 * mupm, 0];
+        state.map.getDangerStatus = state => {
+            const mupm = state.map.mapUnitsPerMeter;
+            const [px, py] = state.plane.posMapCoord;
+            // Flew past runway
+            if(px > rwEnd && py > LEVEL_7_MAX_SAFE_X_M * mupm) {
+                return DANGER_STATUS_INSTANT;
+            }
+            // In dive zone
+            else if(
+                py > (LEVEL_7_MAX_SAFE_X_M * mupm)
+                && py < cloudBottomY
+                && px < rwEnd
+                && px > 1000 * mupm
+            ) {
+                return DANGER_STATUS_ON_LEVEL;
+            }
+            // East of dive zone
+            else if( py < cloudBottomY && px < (900 * mupm)) {
+                return DANGER_STATUS_INSTANT;
+            }
+            else if (py > cloudTopY && px > (1200 * mupm)) {
+                return DANGER_STATUS_INSTANT;
+            }
+            else {
+                return DANGER_STATUS_NONE;
+            }
+        }
     }
     else {
         throw NOT_IMPLEMENTED;

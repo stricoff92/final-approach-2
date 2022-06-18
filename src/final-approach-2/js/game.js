@@ -10,7 +10,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
     window._cloudEffects = [];
     window._debrisObjects = [];
 
-    const canvas = document.getElementById("game-canvas");
+    const canvas = document.getElementById(CANVAS_ID);
     const ctx = canvas.getContext("2d")
     maxCompletedLevel = maxCompletedLevel || 0;
     const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -86,6 +86,9 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             flareVerticalAccelerationMS2Curve: null,
             touchDownFlareMinMS: null,
             minTouchdownVerticalMS: null,
+            startingFuel: null,
+            fuelRemaining: null,
+            fuelUsedLastTS: null,
             touchdownStats: {
                 runwayUsedStartX: null,
                 runwayUsedEndX: null,
@@ -98,8 +101,11 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
                 isFlaired: false,
                 bounces: 0,
             },
-            adjustPlanePosition: (state) => {},
+            adjustPlanePosition: state => {},
             previousPoints: [],
+            previousAflamePoints: [],
+            alive: true,
+            aflame: false,
             crashFrame: 0,
             touchedDown: false,
             halted: false,
@@ -118,9 +124,11 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             rwP1MapCoord: null,
             rwType: null,
             rwVisualWidthM: null,
-            gsP0MapCoord: null,
-            gsP1MapCoord: null,
+            getDangerStatus: state => {},
+            glideSlopes: [],
             tireStrikes: [],
+            aaFire: [],
+            aaFireP0: null,
             sunImg: null,
         },
         buttons: skipHelpScreen ? availableLevels.map(levelNumber => {
@@ -227,6 +235,7 @@ function runDataLoop() {
     let state = window.readGameState();
 
     // Calculate FPS
+    const mupm = state.map.mapUnitsPerMeter;
     const nowTS = performance.now();
     const lastFrameTS = state.game.lastFrameTS;
     const diff = nowTS - lastFrameTS;
@@ -304,10 +313,44 @@ function runDataLoop() {
             console.log({ state });
         }
 
+        const aaFireIXsToRemove = []
+        state.map.aaFire.forEach((d, ix) => {
+            if(nowTS > d.createdTS + AA_FIRE_TOTAL_DURATION) {
+                aaFireIXsToRemove.push(ix);
+            }
+        });
+        if(aaFireIXsToRemove.length) {
+            state.map.aaFire = state.map.aaFire.filter((_d, ix) => {
+                return aaFireIXsToRemove.indexOf(ix) === -1;
+            });
+        }
+
+        let dangerStatus;
+        if(state.plane.alive && state.map.getDangerStatus) {
+            dangerStatus = state.map.getDangerStatus(state);
+        }
+        if(dangerStatus && dangerStatus === DANGER_STATUS_INSTANT) {
+            state.game.acceptControlCommands = false;
+            state.plane.alive = false;
+            state.plane.aflame = true;
+            state.map.aaFire.push({
+                createdTS: nowTS,
+                createdFrame: state.game.frame,
+                fatal: true,
+                p0: state.map.aaFireP0,
+                p1: [
+                    state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
+                    state.plane.posMapCoord[1] + (getRandomFloat(-1, 1) * mupm),
+                ],
+            });
+            console.log({ instantDEATH:  state.map.aaFire})
+        }
+
         // Process commands
         const cmdCt = commands.length;
         for(let i=0; i<cmdCt; i++) {
             let cmd = commands[i];
+            let maneuverPerformed = false;
             if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
                     updateCameraCanvasMetaData(
@@ -318,19 +361,75 @@ function runDataLoop() {
                 return;
             }
             else if(cmd.cmd === COMMAND_LEVEL_OUT && state.game.acceptControlCommands) {
-                state.plane.lastLevelOutTS = performance.now();
-                state.plane.lastLevelOutFrame = state.game.frame;
+                if(state.plane.startingFuel !== null) {
+                    if(state.plane.fuelRemaining > 0) {
+                        state.plane.lastLevelOutTS = performance.now();
+                        state.plane.lastLevelOutFrame = state.game.frame;
+                        state.plane.fuelRemaining--;
+                        state.plane.fuelUsedLastTS = nowTS;
+                        maneuverPerformed = true;
+                    }
+                } else {
+                    state.plane.lastLevelOutTS = performance.now();
+                    state.plane.lastLevelOutFrame = state.game.frame;
+                    maneuverPerformed = true;
+                }
             }
             else if(cmd.cmd === COMMAND_FLARE && state.game.acceptControlCommands) {
                 state.plane.flare = IS_FLARING;
                 state.plane.lastFlareTS = performance.now();
                 state.plane.lastFlareFrame = state.game.frame;
+                maneuverPerformed = true;
             }
+            if(
+                maneuverPerformed
+                && dangerStatus
+                && dangerStatus === DANGER_STATUS_ON_LEVEL
+            ) {
+                state.game.acceptControlCommands = false;
+                state.plane.alive = false;
+                state.plane.aflame = true;
+                state.map.aaFire.push({
+                    createdTS: nowTS,
+                    createdFrame: state.game.frame,
+                    fatal: true,
+                    p0: state.map.aaFireP0,
+                    p1: [
+                        state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
+                        state.plane.posMapCoord[1] + (getRandomFloat(-1, 1) * mupm),
+                    ],
+                });
+            }
+        }
+
+        if(
+            dangerStatus
+            && dangerStatus === DANGER_STATUS_ON_LEVEL
+            && state.game.frame % 16 === 0
+            && Math.random() > 0.33
+        ) {
+            const getNearby = () => {
+                if(Math.random() > 0.5) {
+                    return getRandomFloat(5, 7.5) * mupm;
+                } else {
+                    return getRandomFloat(-7.5, -5) * mupm;
+                }
+            }
+            state.map.aaFire.push({
+                createdTS: nowTS,
+                createdFrame: state.game.frame,
+                fatal: false,
+                p0: state.map.aaFireP0,
+                p1: [
+                    state.plane.posMapCoord[0] + getNearby(),
+                    state.plane.posMapCoord[1] + getNearby(),
+                ],
+            });
         }
 
         if(state.plane.crashFrame) {
             state.plane.crashFrame++;
-            adjustDebrisPositions(state);
+            adjustCrashDebrisPositions(state);
         }
 
         // Adjust state for plane flying through the air
@@ -365,7 +464,15 @@ function runDataLoop() {
             }
         }
 
-        if(state.game.frame %  10 === 0 && !state.plane.halted && !state.plane.touchedDown) {
+        if (state.plane.aflame && !state.plane.crashFrame) {
+            state.plane.previousAflamePoints.unshift(
+                deepCopy(state.plane.posMapCoord)
+            );
+            if(state.plane.previousAflamePoints.length > AFLAME_NODES_COUNT) {
+                state.plane.previousAflamePoints = state.plane.previousAflamePoints.slice(0, AFLAME_NODES_COUNT);
+            }
+        }
+        if(state.game.frame % 10 === 0 && !state.plane.halted && !state.plane.touchedDown) {
             state.plane.previousPoints.unshift(
                 deepCopy(state.plane.posMapCoord)
             );
@@ -477,7 +584,8 @@ function processGroundInteractions(state) {
                     // Plane overan the runway
                     console.log("👉 overran runway");
                     state.plane.crashFrame++;
-                    createDebrisObjects(state);
+                    state.plane.alive = false;
+                    createCrashDebrisObjects(state);
                 }
                 else {
                     if(
@@ -518,7 +626,8 @@ function processGroundInteractions(state) {
     // Plane crashed into the ground
     if(!overRunway && planeBottomMapCoordY <= 0) {
         state.plane.crashFrame++;
-        createDebrisObjects(state);
+        state.plane.alive = false;
+        createCrashDebrisObjects(state);
         return state;
     }
 
@@ -546,8 +655,9 @@ function processGroundInteractions(state) {
         {
             console.log("👉 crash");
             state.plane.crashFrame++;
+            state.plane.alive = false;
             addRubberStrike = false;
-            createDebrisObjects(state);
+            createCrashDebrisObjects(state);
         }
         else if(!isCrash && touchdownMS >= noBounceMin) {
             // touchdown
@@ -559,13 +669,16 @@ function processGroundInteractions(state) {
             state.plane.touchdownStats.verticalMS = touchdownMS;
             state.plane.touchdownStats.isFlaired = plane.flare === IS_FLARING;
             state.plane.touchdownStats.runwayUsedStartX = plane.posMapCoord[0];
+            const lastGSIX = state.map.glideSlopes.length - 1;
             state.plane.touchdownStats.distanceToGlideSlopeM = Math.abs(
-                (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                // (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                (plane.posMapCoord[0] - state.map.glideSlopes[lastGSIX].p1[0])
                 / state.map.mapUnitsPerMeter
             )
             state.plane.touchdownStats.runwayWastedM = Math.max(
                 0,
-                (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                // (plane.posMapCoord[0] - state.map.gsP1MapCoord[0])
+                (plane.posMapCoord[0] - state.map.glideSlopes[lastGSIX].p1[0])
                 / state.map.mapUnitsPerMeter
             );
 
@@ -646,7 +759,7 @@ function adjustMapWindValues(state) {
 }
 
 
-function createDebrisObjects(state) {
+function createCrashDebrisObjects(state) {
     if(window._debrisObjects.length) {
         throw NOT_IMPLEMENTED;
     }
@@ -668,7 +781,7 @@ function createDebrisObjects(state) {
     }
 }
 
-function adjustDebrisPositions(state) {
+function adjustCrashDebrisPositions(state) {
     const fps = state.game.dataFPS;
     const mupm = state.map.mapUnitsPerMeter;
     for(let i in window._debrisObjects) {
