@@ -1099,13 +1099,48 @@ function _drawCarrierRunway(state, nowTS) {
         rwLength, rwHeight,
     );
     state.ctx.fill();
-    state.ctx.strokeStyle = "#ff0";
-    state.ctx.lineWidth = 3;
+    state.ctx.setLineDash([15, 15]);
+    state.ctx.strokeStyle = "#999902";
+    state.ctx.lineWidth = 7;
     state.ctx.stroke();
-
+    state.ctx.setLineDash([]);
 
     // Tire Strikes
     drawTireStrikes(state, nowTS);
+
+    // Arrestor cables
+    for(let i in state.map.carrierRWArrestorCableMapXs) {
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#5e5e5e";
+        state.ctx.lineWidth = 3;
+        let cableX = state.map.carrierRWArrestorCableMapXs[i];
+        state.ctx.moveTo(...mapCoordToCanvasCoord(
+            [cableX, rwMapTopLeft[1]],
+            plane.posMapCoord,
+            state.camera,
+        ));
+        const pointOfContactX = plane.posMapCoord[0] - plane.dimensions[plane.flare][0] / 2 * mupm
+        if(
+            plane.carrierRWArrestorCableCaught !== null
+            && i == plane.carrierRWArrestorCableCaught
+            && cableX < pointOfContactX
+        ) {
+            state.ctx.lineTo(...mapCoordToCanvasCoord(
+                [
+                    pointOfContactX,
+                    plane.posMapCoord[1] - plane.dimensions[plane.flare][1] / 3 * mupm,
+                ],
+                plane.posMapCoord,
+                state.camera,
+            ));
+        }
+        state.ctx.lineTo(...mapCoordToCanvasCoord(
+            [cableX, rwMapTopLeft[1] - rwHeight],
+            plane.posMapCoord,
+            state.camera,
+        ));
+        state.ctx.stroke();
+    }
 
     // Arresting Gear Target Area
     if(Math.random() > 0.7) {
@@ -1122,7 +1157,7 @@ function _drawCarrierRunway(state, nowTS) {
             - state.map.carrierRWArrestingGearBounds.xStart
         );
         state.ctx.beginPath();
-        state.ctx.fillStyle = `rgb(0, 255, 0, ${ getRandomFloat(0.1, 0.4) })`;
+        state.ctx.fillStyle = `rgb(0, 255, 0, ${ getRandomFloat(0.3, 0.6) })`;
         const flickerExt = getRandomFloat(0, 2 * mupm)
         state.ctx.rect(
             agtaCCTopLeft[0], agtaCCTopLeft[1] - flickerExt,

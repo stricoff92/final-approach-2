@@ -759,7 +759,7 @@ function processGroundInteractions(state) {
                     planeBottomMapCoordY,
                 ]),
                 createdTS: performance.now(),
-                shakeMeters: shakeSizeCurve(touchdownMS) / (arrestorGearCaught?1.65:1), // reduce shake if carrier landing
+                shakeMeters: shakeSizeCurve(touchdownMS),
             });
         }
     }
