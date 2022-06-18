@@ -360,7 +360,7 @@ function drawGameScene(state) {
 
 
     // Draw altitude indicator if over min altutude
-    const runwayAltitudeM = state.map.rwP0MapCoord[1] * state.map.mapUnitsPerMeter;
+    const runwayAltitudeM = state.map.rwP0MapCoord[1] / state.map.mapUnitsPerMeter;
     const planeBottomAltitudeM = (
         state.plane.posMapCoord[1]
         - (
