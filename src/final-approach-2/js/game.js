@@ -564,6 +564,7 @@ function processGroundInteractions(state) {
     if(window._fa2_isPaused) {
         return;
     }
+    const isCarrierLanding = state.map.rwType === RUNWAY_TYPE_CARRIER;
     const plane = state.plane;
     if(plane.crashFrame) {
         throw NOT_IMPLEMENTED;
@@ -628,9 +629,17 @@ function processGroundInteractions(state) {
         state.plane.posMapCoord[0] >= state.map.rwP0MapCoord[0]
         && state.plane.posMapCoord[0] <= state.map.rwP1MapCoord[0]
     );
+    const overNonLandableBoatPart = Boolean(
+        isCarrierLanding
+        && state.plane.posMapCoord[0] >= state.map.rwP1MapCoord[0]
+        && state.plane.posMapCoord[0] <= state.map.carrierMaxMapX
+    );
 
-    // Plane crashed into the ground
-    if(!overRunway && planeBottomMapCoordY <= 0) {
+    // Plane crashed into the ground or non landable part of boat.
+    if(
+        (!overRunway && planeBottomMapCoordY <= 0)
+        || (overNonLandableBoatPart && planeBottomMapCoordY < state.map.rwP1MapCoord[1])
+    ) {
         state.plane.crashFrame++;
         state.plane.alive = false;
         createCrashDebrisObjects(state);
@@ -729,7 +738,7 @@ function adjustMapWindValues(state) {
     }
 
     const fps = state.game.dataFPS;
-    let delta
+    let delta;
     if(state.map.windXVel < state.map.windXTarg) {
         // Increase windMS to reach target.
         delta = Math.min(
@@ -759,11 +768,8 @@ function adjustMapWindValues(state) {
             state.map.windXMax,
         );
     }
-
-
     return state;
 }
-
 
 function createCrashDebrisObjects(state) {
     if(window._debrisObjects.length) {
