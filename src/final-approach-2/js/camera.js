@@ -302,6 +302,7 @@ function drawGameScene(state) {
         state,
         scBottomLeftMapCoord[1],
         scTopLeftMapCoord[1],
+        scTopLeftMapCoord[0],
         scTopRightMapCoord[0],
     );
 
@@ -841,13 +842,15 @@ function _drawCloudEffects(
     state,
     canvasMinMapCoordY,
     canvasMaxMapCoordY,
+    _canvasMinMapCoordX,
     canvasMaxMapCoordX,
 ) {
+
     const cl = state.map.cloudLayer;
     const planeYPos = state.plane.posMapCoord[1];
     const mupm = state.map.mapUnitsPerMeter;
 
-    if(state.game.frame % 12 === 0 && (planeYPos <= cl.topY && planeYPos >= cl.bottomY)) {
+    if(state.game.frame % 12 === 0 && (canvasMinMapCoordY <= cl.topY && canvasMaxMapCoordY >= cl.bottomY)) {
         const newCloudRadius = getRandomFloat(5 * mupm, 18 * mupm);
         const newCloudPosY = getRandomFloat(
             canvasMinMapCoordY - newCloudRadius * 0.7,
