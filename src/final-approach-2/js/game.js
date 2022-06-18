@@ -664,11 +664,16 @@ function processGroundInteractions(state) {
     if(touchingRunway) {
 
         const touchdownMS = state.plane.verticalMS;
-        const isCrash = touchdownMS < state.plane.minTouchdownVerticalMS
+        const isCrash = Boolean(
+            touchdownMS < state.plane.minTouchdownVerticalMS
+            || (isCarrierLanding && lineInterceptsBoatRear(
+                state.map.rwP0MapCoord,
+                planeToMapBoxCoords(state)
+            ))
+        );
         const noBounceMin = state.plane.minTouchdownVerticalMS * 0.333;
         const bigBounceMin = state.plane.minTouchdownVerticalMS * 0.666;
         let addRubberStrike = true;
-
         console.log({
             touchdownMS,
             flare: state.plane.flare,
