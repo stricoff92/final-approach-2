@@ -597,10 +597,20 @@ function processGroundInteractions(state) {
                 state.plane.posMapCoord[0] += (newHorizontalMS * state.map.mapUnitsPerMeter / fps);
                 if(state.plane.posMapCoord[0] > state.map.rwP1MapCoord[0]) {
                     // Plane overan the runway
-                    console.log("👉 overran runway");
-                    state.plane.crashFrame++;
-                    state.plane.alive = false;
-                    createCrashDebrisObjects(state);
+                    if(state.plane.carrierRWArrestorCableCaught === null) {
+                        console.log("👉 overran runway");
+                        state.plane.crashFrame++;
+                        state.plane.alive = false;
+                        createCrashDebrisObjects(state);
+                    } else {
+                        console.log("👉 forced halted");
+                        state.plane.halted = true;
+                        state.plane.touchdownStats.runwayUsedEndX = plane.posMapCoord[0];
+                        state.plane.touchdownStats.runwayUsedM = (
+                            state.plane.touchdownStats.runwayUsedEndX
+                            - state.plane.touchdownStats.runwayUsedStartX
+                        ) / state.map.mapUnitsPerMeter;
+                    }
                 }
                 else {
                     if(
