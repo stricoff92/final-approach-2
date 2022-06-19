@@ -227,7 +227,12 @@ function drawGameScene(state) {
     // Draw Glide Slope
     if(Math.random() < 0.9) {
         const gsLineWidth = getRandomFloat(0.3, 2.4);
-        const gsColor = `rgb(242, 0, 255, ${ getRandomFloat(0.2, 0.8) })`;
+        let gsColor
+        if(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY) {
+            gsColor = `rgb(250, 204, 252, ${ getRandomFloat(0.2, 0.8) })`;
+        } else {
+            gsColor = `rgb(242, 0, 255, ${ getRandomFloat(0.2, 0.8) })`;
+        }
         state.map.glideSlopes.forEach(gs => {
             const gsCanvasP0 = mapCoordToCanvasCoord(
                 gs.p0, plane.posMapCoord, state.camera
@@ -368,37 +373,43 @@ function drawGameScene(state) {
             * state.map.mapUnitsPerMeter
         )
     ) / state.map.mapUnitsPerMeter;
-    if(plane.alive && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
+    if(plane.alive && planeBottomAltitudeM > (runwayAltitudeM + 5)) {
         // Altitude Text
         const showSafeAltitude = Boolean(
             state.game.level === 7
             && planeBottomAltitudeM > LEVEL_7_MAX_SAFE_X_M
             && state.plane.posMapCoord[0] > 1000 * mupm
         );
+        let altitudeLabel, altitudeValueM;
+        if(showSafeAltitude) {
+            altitudeLabel = "Safe Altitude";
+            altitudeValueM = `${Math.round(planeBottomAltitudeM - LEVEL_7_MAX_SAFE_X_M)} M`;
+        }
+        else if(state.game.level > 7) {
+            altitudeLabel = "Carrier Deck";
+            altitudeValueM = `${Math.round((plane.posMapCoord[1] - state.map.rwP0MapCoord[1]) / mupm)} M`
+        } else {
+            altitudeLabel = "ground";
+            altitudeValueM = `${planeBottomAltitudeM.toFixed(0)} M`;
+        }
         const altText1P = [
             state.camera.canvasHalfW,
             state.camera.canvasHalfH + state.plane.dimensions[0][1] * mupm
         ];
+        const isDarkBackground = Boolean(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY);
         state.ctx.beginPath();
-        state.ctx.fillStyle = "#000";
+        state.ctx.fillStyle = isDarkBackground ? "#fff" : "#000";
         state.ctx.font = "20px Arial";
         state.ctx.textBaseline = "middle";
         state.ctx.textAlign = "left";
-        state.ctx.fillText(showSafeAltitude?"Safe Altitude":"ground", ...altText1P);
+        state.ctx.fillText(altitudeLabel, ...altText1P);
         const altText2P = [
             altText1P[0],
             altText1P[1] + 25,
         ];
         state.ctx.beginPath();
         state.ctx.font = "bold 25px Arial";
-        if(showSafeAltitude) {
-            state.ctx.fillText(
-                `${Math.round(planeBottomAltitudeM - LEVEL_7_MAX_SAFE_X_M)} M`,
-                ...altText2P,
-            );
-        } else {
-            state.ctx.fillText(`${planeBottomAltitudeM.toFixed(0)} M`, ...altText2P);
-        }
+        state.ctx.fillText(altitudeValueM, ...altText2P);
         // Altitude Arrow
         const altLineP1 = [
             altText1P[0] - 5,
@@ -409,7 +420,7 @@ function drawGameScene(state) {
             state.camera.canvasH * 0.9,
         ];
         state.ctx.beginPath();
-        state.ctx.strokeStyle = "#000"
+        state.ctx.strokeStyle = isDarkBackground ? "#fff" : "#000";
         state.ctx.lineWidth = 1;
         state.ctx.moveTo(...altLineP1);
         state.ctx.lineTo(...altLineP2);
@@ -457,10 +468,36 @@ function drawGameScene(state) {
     if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
         if(plane.alive && !plane.touchedDown) {
             _drawWindIndicator(state);
+            if(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY) {
+                _drawcarrierLandingHUD(state);
+            }
         }
     } else {
         _drawLevelName(state, nowTS);
     }
+}
+
+function _drawcarrierLandingHUD(state) {
+    const mupm = state.map.mapUnitsPerMeter;
+    const hudX1 = state.camera.canvasHalfW + state.plane.dimensions[0][0] / 2 * mupm + 3;
+    const hudX2 = Math.min(hudX1 + 160, state.camera.canvasW - 3);
+    const  hudY2 = state.camera.canvasH * 0.75;
+    const  hudY1 = state.camera.canvasH / 4;
+
+    state.ctx.beginPath();
+    state.ctx.fillStyle = "#daf0d3";
+    state.ctx.lineWidth = 2;
+    state.ctx.moveTo(hudX1, hudY1);
+    state.ctx.lineTo(hudX1, hudY2);
+    state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.fillStyle = "#daf0d3";
+    state.ctx.lineWidth = 2;
+    state.ctx.moveTo(hudX2, hudY1);
+    state.ctx.lineTo(hudX2, hudY2);
+    state.ctx.stroke();
+
+
 }
 
 function _drawFuelIndicator(state, nowTS) {
