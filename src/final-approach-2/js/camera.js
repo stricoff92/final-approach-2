@@ -485,8 +485,10 @@ function _drawcarrierLandingHUD(state, nowTS) {
     // Canvas Coords
     const hudX1 = state.camera.canvasHalfW + plane.dimensions[0][0] / 2 * mupm + 3;
     const hudX2 = Math.min(hudX1 + 160, state.camera.canvasW - 3);
-    const  hudY2 = state.camera.canvasH / 4;
-    const  hudY1 = state.camera.canvasH * 0.75;
+    const hudY2 = state.camera.canvasH / 4;
+    const hudY1 = state.camera.canvasH * 0.75;
+    const hudXMid = (hudX2 + hudX1) / 2;
+    const hudW = hudX2 - hudX1;
 
     state.ctx.beginPath();
     state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
@@ -506,7 +508,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
     state.ctx.textAlign = "center";
     state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
     if(nowTS % 3000 > 1500) {
-        state.ctx.fillText("FNL APPRCH 2", (hudX2 + hudX1) / 2, hudY2);
+        state.ctx.fillText("FNL APPRCH 2", hudXMid, hudY2);
     }
     const bottomBuffer = 25;
     state.ctx.beginPath();
@@ -518,8 +520,12 @@ function _drawcarrierLandingHUD(state, nowTS) {
         bottomBuffer
     );
     state.ctx.fill();
+    const distanceToDeckM = (
+        (plane.posMapCoord[1] - plane.dimensions[plane.flare][1] / 2 * mupm)
+        - state.map.rwP0MapCoord[1]
+    ) / mupm;
     state.ctx.beginPath();
-    state.ctx.fillStyle = "#000";
+    state.ctx.fillStyle = distanceToDeckM > 0 ?"#000":"#f00";
     state.ctx.font = "20px Courier New";
     state.ctx.textBaseline = "bottom";
     state.ctx.textAlign = "left";
@@ -528,10 +534,6 @@ function _drawcarrierLandingHUD(state, nowTS) {
     state.ctx.textAlign = "right";
     state.ctx.textBaseline = "top";
     state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
-    const distanceToDeckM = (
-        (plane.posMapCoord[1] - plane.dimensions[plane.flare][1] / 2 * mupm)
-        - state.map.rwP0MapCoord[1]
-    ) / mupm;
     state.ctx.fillText(
         `${ Math.round(distanceToDeckM) } M`,
         hudX1 - 5,
@@ -540,7 +542,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
     // Distance to deck bar
     const barMaxAltM = 40;
     if(distanceToDeckM <= barMaxAltM) {
-        const barW = 15;
+        const barW = hudW / 3;
         const fullBarYLen = (hudY1 - bottomBuffer) - hudY2;
         const percentFilled = 1 - (Math.max(0, distanceToDeckM) / barMaxAltM);
         state.ctx.beginPath();
@@ -594,7 +596,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
             state.ctx.setLineDash([5, 5]);
             const gsiCenterX = ((hudY1 - bottomBuffer) + hudY2) / 2;
             state.ctx.moveTo(hudX2, gsiCenterX);
-            state.ctx.lineTo((hudX2 + hudX1) / 2, gsiCenterX);
+            state.ctx.lineTo(hudXMid, gsiCenterX);
             state.ctx.stroke();
             state.ctx.setLineDash([]);
             const totalPXSpaceGSI = (hudY1 - bottomBuffer) - hudY2;
@@ -603,12 +605,33 @@ function _drawcarrierLandingHUD(state, nowTS) {
             state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
             state.ctx.lineWidth = 2;
             state.ctx.moveTo(hudX2, gsIY);
-            state.ctx.lineTo((hudX2 + hudX1) / 2, gsIY);
+            state.ctx.lineTo(hudXMid, gsIY);
             state.ctx.stroke();
         }
     }
     else {
         // Touchdown location estimator
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#000";
+        state.ctx.font = "20px Courier New";
+        state.ctx.textBaseline = "bottom";
+        state.ctx.textAlign = "right";
+        state.ctx.fillText("RNWY", hudX2, hudY1);
+
+        tdlYBuff = 20;
+        const tdlX1 = hudX1 + (hudW / 2) + (hudW / 8);
+        const tdlX2 = hudX2 - hudW / 8;
+        const tldY1 = hudY1 - bottomBuffer - tdlYBuff;
+        const tldY2 = hudY2 + tdlYBuff;
+        state.ctx.beginPath()
+        state.ctx.lineWidth = 2;
+        state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
+        state.ctx.rect(
+            tdlX1, tldY2,
+            tdlX2 - tdlX1,
+            tldY1 - tldY2,
+        );
+        state.ctx.stroke();
     }
 }
 
