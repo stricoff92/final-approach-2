@@ -554,12 +554,62 @@ function _drawcarrierLandingHUD(state, nowTS) {
         state.ctx.fill();
     }
 
-    state.ctx.beginPath();
-    state.ctx.fillStyle = "#000";
-    state.ctx.font = "20px Courier New";
-    state.ctx.textBaseline = "bottom";
-    state.ctx.textAlign = "right";
-    state.ctx.fillText("G/S", hudX2, hudY1);
+    const glideSlopeIndicatorMinAltM = 40
+    if(distanceToDeckM > glideSlopeIndicatorMinAltM) {
+        // Relative Glide Slope indicator
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#000";
+        state.ctx.font = "20px Courier New";
+        state.ctx.textBaseline = "bottom";
+        state.ctx.textAlign = "right";
+        state.ctx.fillText("G/S", hudX2, hudY1);
+
+        const gsY = getGlideSlopeY(state.map.glideSlopes, plane.posMapCoord[0]);
+        if(typeof gsY !== "undefined") {
+            // (+) means above GS, (-) means below GS
+            const gsDiffM = (plane.posMapCoord[1] - gsY) / mupm;
+            const gsIndicatorHalfRangeM = 40;
+            let percentFromBottom;
+            if(gsDiffM >= gsIndicatorHalfRangeM) {
+                // Above GS, needle at bottom of HUD
+                percentFromBottom = 0;
+            }
+            else if(gsDiffM <= (-1 * gsIndicatorHalfRangeM)) {
+                // Below GS, needle at top of HUD
+                percentFromBottom = 1
+            }
+            else {
+                if(gsDiffM >= 0) {
+                    // means above GS, needle between 0% and 50% from bottom
+                    percentFromBottom = 0.5 - gsDiffM / gsIndicatorHalfRangeM / 2;
+                }
+                else {
+                    // needle between 50% and 100%
+                    percentFromBottom = 0.5 + Math.abs(gsDiffM) / gsIndicatorHalfRangeM / 2;
+                }
+            }
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
+            state.ctx.lineWidth = 8;
+            state.ctx.setLineDash([5, 5]);
+            const gsiCenterX = ((hudY1 - bottomBuffer) + hudY2) / 2;
+            state.ctx.moveTo(hudX2, gsiCenterX);
+            state.ctx.lineTo((hudX2 + hudX1) / 2, gsiCenterX);
+            state.ctx.stroke();
+            state.ctx.setLineDash([]);
+            const totalPXSpaceGSI = (hudY1 - bottomBuffer) - hudY2;
+            const gsIY = (hudY1 - bottomBuffer) - (totalPXSpaceGSI * percentFromBottom)
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
+            state.ctx.lineWidth = 2;
+            state.ctx.moveTo(hudX2, gsIY);
+            state.ctx.lineTo((hudX2 + hudX1) / 2, gsIY);
+            state.ctx.stroke();
+        }
+    }
+    else {
+        // Touchdown location estimator
+    }
 }
 
 function _drawFuelIndicator(state, nowTS) {

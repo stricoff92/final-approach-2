@@ -3,7 +3,7 @@ function urlContainsDebug() {
     return window.location.search.indexOf("debug") !== -1;
 }
 
-function glideSlopeToFunction(glideSlopes, xPos) {
+function getGlideSlopeY(glideSlopes, xPos) {
     // Given an array of glide slops and an X position,
     // calculate the Y position that exists on the glide slope.
     for(let i in glideSlopes) {
