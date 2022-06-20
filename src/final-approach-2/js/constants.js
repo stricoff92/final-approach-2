@@ -88,3 +88,5 @@ const AA_EXPLOSION_COLOR = a => `rgb(66, 47, 1, ${ a.toFixed(2) })`;
 const AFLAME_NODES_COUNT = 25;
 const MAX_AFLAME_RADIUS_M = 4;
 const MIN_AFLAME_RADIUS_M = 1.5;
+
+const CARRIER_DECK_SIZE_AFTER_RW_M = 30;

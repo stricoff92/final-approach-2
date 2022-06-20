@@ -401,9 +401,8 @@ function setMapProps(state) {
             topY: 350 * mupm,
             bottomY: 190 * mupm,
         };
-        const rwLen = state.map.rwP1MapCoord[0] - state.map.rwP0MapCoord[0];
         state.map.carrierMinMapX = state.map.rwP0MapCoord[0];
-        state.map.carrierMaxMapX = state.map.rwP1MapCoord[0] + rwLen;
+        state.map.carrierMaxMapX = state.map.rwP1MapCoord[0] + CARRIER_DECK_SIZE_AFTER_RW_M * mupm;
     }
     else {
         throw NOT_IMPLEMENTED;
