@@ -526,11 +526,28 @@ function _drawcarrierLandingHUD(state, nowTS) {
     state.ctx.textAlign = "right";
     state.ctx.textBaseline = "top";
     state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
+    const distanceToDeckM = (state.plane.posMapCoord[1] - state.map.rwP0MapCoord[1]) / mupm;
     state.ctx.fillText(
-        `${ Math.round((state.plane.posMapCoord[1] - state.map.rwP0MapCoord[1]) / mupm) } M`,
+        `${ Math.round(distanceToDeckM) } M`,
         hudX1 - 5,
         hudY2);
 
+    // Distance to deck bar
+    const barMaxAltM = 40;
+    if(distanceToDeckM <= barMaxAltM) {
+        const barW = 15;
+        const fullBarYLen = (hudX2 - bottomBuffer) - hudX1;
+        const percentFilled = 1 - (Math.max(0, distanceToDeckM) / barMaxAltM);
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
+        state.ctx.rect(
+            hudX1,
+            hudY2,
+            barW,
+            fullBarYLen * percentFilled,
+        );
+        state.ctx.fill();
+    }
 
     state.ctx.beginPath();
     state.ctx.fillStyle = "#000";
