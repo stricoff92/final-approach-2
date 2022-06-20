@@ -480,8 +480,10 @@ function drawGameScene(state) {
 }
 
 function _drawcarrierLandingHUD(state, nowTS) {
+    const plane = state.plane;
     const mupm = state.map.mapUnitsPerMeter;
-    const hudX1 = state.camera.canvasHalfW + state.plane.dimensions[0][0] / 2 * mupm + 3;
+    // Canvas Coords
+    const hudX1 = state.camera.canvasHalfW + plane.dimensions[0][0] / 2 * mupm + 3;
     const hudX2 = Math.min(hudX1 + 160, state.camera.canvasW - 3);
     const  hudY2 = state.camera.canvasH / 4;
     const  hudY1 = state.camera.canvasH * 0.75;
@@ -526,7 +528,10 @@ function _drawcarrierLandingHUD(state, nowTS) {
     state.ctx.textAlign = "right";
     state.ctx.textBaseline = "top";
     state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
-    const distanceToDeckM = (state.plane.posMapCoord[1] - state.map.rwP0MapCoord[1]) / mupm;
+    const distanceToDeckM = (
+        (plane.posMapCoord[1] - plane.dimensions[plane.flare][1] / 2 * mupm)
+        - state.map.rwP0MapCoord[1]
+    ) / mupm;
     state.ctx.fillText(
         `${ Math.round(distanceToDeckM) } M`,
         hudX1 - 5,
@@ -536,7 +541,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
     const barMaxAltM = 40;
     if(distanceToDeckM <= barMaxAltM) {
         const barW = 15;
-        const fullBarYLen = (hudX2 - bottomBuffer) - hudX1;
+        const fullBarYLen = (hudY1 - bottomBuffer) - hudY2;
         const percentFilled = 1 - (Math.max(0, distanceToDeckM) / barMaxAltM);
         state.ctx.beginPath();
         state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
@@ -555,7 +560,6 @@ function _drawcarrierLandingHUD(state, nowTS) {
     state.ctx.textBaseline = "bottom";
     state.ctx.textAlign = "right";
     state.ctx.fillText("G/S", hudX2, hudY1);
-
 }
 
 function _drawFuelIndicator(state, nowTS) {
