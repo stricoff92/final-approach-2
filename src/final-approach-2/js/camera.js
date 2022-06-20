@@ -1391,6 +1391,7 @@ function _drawCarrierRunway(state, nowTS) {
     );
     state.ctx.fill();
 
+    // Eye Candy
 
 }
 
