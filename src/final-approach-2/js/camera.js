@@ -618,7 +618,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
         state.ctx.textAlign = "right";
         state.ctx.fillText("RNWY", hudX2, hudY1);
 
-        tdlYBuff = 20;
+        const tdlYBuff = 20;
         const tdlX1 = hudX1 + (hudW / 2) + (hudW / 8);
         const tdlX2 = hudX2 - hudW / 8;
         const tldY1 = hudY1 - bottomBuffer - tdlYBuff;
