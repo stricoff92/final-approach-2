@@ -633,7 +633,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
         );
         state.ctx.stroke();
 
-        yDistanceToDeckM = distanceToDeckM;
+        const yDistanceToDeckM = distanceToDeckM;
         const secondsAloft = plane.verticalMS != 0 ? yDistanceToDeckM / Math.abs(plane.verticalMS) : 1000;
         const xMapUnitsCanTravel = secondsAloft * plane.horizontalMS * mupm;
         const estimatedX = plane.posMapCoord[0] + xMapUnitsCanTravel;
