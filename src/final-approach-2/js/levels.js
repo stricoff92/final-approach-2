@@ -396,7 +396,7 @@ function setMapProps(state) {
             p1: [1512 * mupm, 10 * mupm],
         });
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
-        // state.plane.posMapCoord = [1250 * mupm, 50 * mupm];
+        // state.plane.posMapCoord = [900 * mupm, 65 * mupm];
         state.map.cloudLayer = {
             topY: 350 * mupm,
             bottomY: 190 * mupm,

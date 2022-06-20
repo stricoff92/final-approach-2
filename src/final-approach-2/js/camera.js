@@ -491,13 +491,13 @@ function _drawcarrierLandingHUD(state, nowTS) {
     const hudW = hudX2 - hudX1;
 
     state.ctx.beginPath();
-    state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
+    state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN_A;
     state.ctx.lineWidth = 2;
     state.ctx.moveTo(hudX1, hudY1);
     state.ctx.lineTo(hudX1, hudY2);
     state.ctx.stroke();
     state.ctx.beginPath();
-    state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
+    state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN_A;
     state.ctx.lineWidth = 2;
     state.ctx.moveTo(hudX2, hudY1);
     state.ctx.lineTo(hudX2, hudY2);
@@ -512,7 +512,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
     }
     const bottomBuffer = 25;
     state.ctx.beginPath();
-    state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
+    state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN_A;
     state.ctx.rect(
         hudX1,
         hudY1 - bottomBuffer,
@@ -546,7 +546,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
         const fullBarYLen = (hudY1 - bottomBuffer) - hudY2;
         const percentFilled = 1 - (Math.max(0, distanceToDeckM) / barMaxAltM);
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
+        state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN_A;
         state.ctx.rect(
             hudX1,
             hudY2,
@@ -632,6 +632,48 @@ function _drawcarrierLandingHUD(state, nowTS) {
             tldY1 - tldY2,
         );
         state.ctx.stroke();
+
+        yDistanceToDeckM = distanceToDeckM;
+        const secondsAloft = plane.verticalMS != 0 ? yDistanceToDeckM / Math.abs(plane.verticalMS) : 1000;
+        const xMapUnitsCanTravel = secondsAloft * plane.horizontalMS * mupm;
+        const estimatedX = plane.posMapCoord[0] + xMapUnitsCanTravel;
+        let crossHairP, chColor = COLOR_HUD_LIGHT_GREEN;
+        if(estimatedX > state.map.carrierRWArrestingGearBounds.xEnd) {
+            crossHairP = [
+                (tdlX1 + tdlX2) / 2,
+                tldY2 - tdlYBuff / 2];
+            chColor = "#f00";
+        }
+        else if(estimatedX < state.map.carrierRWArrestingGearBounds.xStart) {
+            crossHairP = [
+                (tdlX1 + tdlX2) / 2,
+                tldY1 + tdlYBuff / 2];
+                chColor = "#ff0";
+        }
+        else {
+            let targetSize = state.map.carrierRWArrestingGearBounds.xEnd - state.map.carrierRWArrestingGearBounds.xStart;
+            let gaugeDistance = tldY1 - tldY2;
+            let percentFilled = (estimatedX - state.map.carrierRWArrestingGearBounds.xStart) / targetSize;
+            crossHairP = [
+                (tdlX1 + tdlX2) / 2,
+                tldY1 - gaugeDistance * percentFilled];
+        }
+        if(crossHairP) {
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = chColor;
+            state.ctx.lineWidth = 4;
+            state.ctx.arc(crossHairP[0], crossHairP[1], tdlYBuff / 3, 0, TWO_PI);
+            state.ctx.stroke();
+            state.ctx.beginPath();
+            state.ctx.lineWidth = 2;
+            state.ctx.moveTo(crossHairP[0], crossHairP[1] - tdlYBuff / 2);
+            state.ctx.lineTo(crossHairP[0], crossHairP[1] + tdlYBuff / 2);
+            state.ctx.stroke();
+            state.ctx.beginPath();
+            state.ctx.moveTo(crossHairP[0] - tdlYBuff / 2, crossHairP[1]);
+            state.ctx.lineTo(crossHairP[0] + tdlYBuff / 2, crossHairP[1]);
+            state.ctx.stroke();
+        }
     }
 }
 
@@ -700,7 +742,6 @@ function _drawFuelIndicator(state, nowTS) {
             state.ctx.fill();
         }
     }
-
 }
 
 
