@@ -3,6 +3,21 @@ function urlContainsDebug() {
     return window.location.search.indexOf("debug") !== -1;
 }
 
+function glideSlopeToFunction(glideSlopes, xPos) {
+    // Given an array of glide slops and an X position,
+    // calculate the Y position that exists on the glide slope.
+    for(let i in glideSlopes) {
+        let gs = glideSlopes[i];
+        if(xPos >= gs.p0[0] && xPos <= gs.p1[0]) {
+            let yDistance = gs.p0[1] - gs.p1[1];
+            let xDistance = gs.p1[0] - gs.p0[0];
+            let deltaYPerX = yDistance / xDistance
+            let xProgress = xPos - gs.p0[0];
+            return gs.p0[1] - xProgress * deltaYPerX;
+        }
+    }
+}
+
 function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
     const mapDx = mapCoord[0] - cameraPosition[0];
     const mapDy = mapCoord[1] - cameraPosition[1];
