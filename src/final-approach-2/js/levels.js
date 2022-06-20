@@ -140,7 +140,7 @@ function setPlaneProps(state) {
         state.plane.rwNegAccelerationMS = knotsToMS(-15);
         state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500);
         if(state.game.level > 7) {
-            state.plane.minTouchdownVerticalMS = feetPerMinToMS(-2000);
+            state.plane.minTouchdownVerticalMS = feetPerMinToMS(-2700);
         }
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
