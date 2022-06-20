@@ -21,7 +21,7 @@ function innerAdjustPlanePosition(state) {
         newHorizontalMS = plane.leveledOutInitialHorizontalMS;
     }
     else if (plane.lastFlareFrame === state.game.frame) {
-        newVerticalMS = 0;
+        newVerticalMS = feetPerMinToMS(-375);
         newHorizontalMS = plane.horizontalMS;
     }
     else if (plane.flare) {
@@ -138,7 +138,10 @@ function setPlaneProps(state) {
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
         state.plane.rwNegAccelerationMS = knotsToMS(-15);
-        state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500)
+        state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500);
+        if(state.game.level > 7) {
+            state.plane.minTouchdownVerticalMS = feetPerMinToMS(-2000);
+        }
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
         state.plane.horizontalMS = knotsToMS(95);

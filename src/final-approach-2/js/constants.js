@@ -38,6 +38,7 @@ const COLOR_SKY = "#e3e3ff";
 const COLOR_GROUND_FOREST = "#bcd4ab";
 const COLOR_GROUD_DESERT = "#dbd6af";
 const COLOR_SURFACE_OCEAN = "#362ae8";
+const COLOR_HUD_LIGHT_GREEN = "#daf0d3";
 
 COLOR_CARRIER_DECK = "#ababab";
 COLOR_CARRIER_RUNWAY = "#c9c6bf";

@@ -386,8 +386,8 @@ function drawGameScene(state) {
             altitudeValueM = `${Math.round(planeBottomAltitudeM - LEVEL_7_MAX_SAFE_X_M)} M`;
         }
         else if(state.game.level > 7) {
-            altitudeLabel = "Carrier Deck";
-            altitudeValueM = `${Math.round((plane.posMapCoord[1] - state.map.rwP0MapCoord[1]) / mupm)} M`
+            altitudeLabel = null;
+            altitudeValueM = null;
         } else {
             altitudeLabel = "ground";
             altitudeValueM = `${planeBottomAltitudeM.toFixed(0)} M`;
@@ -396,44 +396,46 @@ function drawGameScene(state) {
             state.camera.canvasHalfW,
             state.camera.canvasHalfH + state.plane.dimensions[0][1] * mupm
         ];
-        const isDarkBackground = Boolean(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY);
-        state.ctx.beginPath();
-        state.ctx.fillStyle = isDarkBackground ? "#fff" : "#000";
-        state.ctx.font = "20px Arial";
-        state.ctx.textBaseline = "middle";
-        state.ctx.textAlign = "left";
-        state.ctx.fillText(altitudeLabel, ...altText1P);
-        const altText2P = [
-            altText1P[0],
-            altText1P[1] + 25,
-        ];
-        state.ctx.beginPath();
-        state.ctx.font = "bold 25px Arial";
-        state.ctx.fillText(altitudeValueM, ...altText2P);
-        // Altitude Arrow
-        const altLineP1 = [
-            altText1P[0] - 5,
-            altText1P[1] - 7,
-        ];
-        const altLineP2 = [
-            altText2P[0] - 5,
-            state.camera.canvasH * 0.9,
-        ];
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = isDarkBackground ? "#fff" : "#000";
-        state.ctx.lineWidth = 1;
-        state.ctx.moveTo(...altLineP1);
-        state.ctx.lineTo(...altLineP2);
-        state.ctx.stroke();
-        const altArrowHeadLen = 15
-        state.ctx.beginPath();
-        state.ctx.moveTo(...altLineP2);
-        state.ctx.lineTo(altLineP2[0] - altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
-        state.ctx.stroke();
-        state.ctx.beginPath();
-        state.ctx.moveTo(...altLineP2);
-        state.ctx.lineTo(altLineP2[0] + altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
-        state.ctx.stroke();
+        if(altitudeLabel !== null) {
+            const isDarkBackground = Boolean(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY);
+            state.ctx.beginPath();
+            state.ctx.fillStyle = isDarkBackground ? "#fff" : "#000";
+            state.ctx.font = "20px Arial";
+            state.ctx.textBaseline = "middle";
+            state.ctx.textAlign = "left";
+            state.ctx.fillText(altitudeLabel, ...altText1P);
+            const altText2P = [
+                altText1P[0],
+                altText1P[1] + 25,
+            ];
+            state.ctx.beginPath();
+            state.ctx.font = "bold 25px Arial";
+            state.ctx.fillText(altitudeValueM, ...altText2P);
+            // Altitude Arrow
+            const altLineP1 = [
+                altText1P[0] - 5,
+                altText1P[1] - 7,
+            ];
+            const altLineP2 = [
+                altText2P[0] - 5,
+                state.camera.canvasH * 0.9,
+            ];
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = isDarkBackground ? "#fff" : "#000";
+            state.ctx.lineWidth = 1;
+            state.ctx.moveTo(...altLineP1);
+            state.ctx.lineTo(...altLineP2);
+            state.ctx.stroke();
+            const altArrowHeadLen = 15
+            state.ctx.beginPath();
+            state.ctx.moveTo(...altLineP2);
+            state.ctx.lineTo(altLineP2[0] - altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
+            state.ctx.stroke();
+            state.ctx.beginPath();
+            state.ctx.moveTo(...altLineP2);
+            state.ctx.lineTo(altLineP2[0] + altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
+            state.ctx.stroke();
+        }
     }
 
     drawHorizontalDistanceArrow(state);
@@ -469,7 +471,7 @@ function drawGameScene(state) {
         if(plane.alive && !plane.touchedDown) {
             _drawWindIndicator(state);
             if(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY) {
-                _drawcarrierLandingHUD(state);
+                _drawcarrierLandingHUD(state, nowTS);
             }
         }
     } else {
@@ -477,26 +479,65 @@ function drawGameScene(state) {
     }
 }
 
-function _drawcarrierLandingHUD(state) {
+function _drawcarrierLandingHUD(state, nowTS) {
     const mupm = state.map.mapUnitsPerMeter;
     const hudX1 = state.camera.canvasHalfW + state.plane.dimensions[0][0] / 2 * mupm + 3;
     const hudX2 = Math.min(hudX1 + 160, state.camera.canvasW - 3);
-    const  hudY2 = state.camera.canvasH * 0.75;
-    const  hudY1 = state.camera.canvasH / 4;
+    const  hudY2 = state.camera.canvasH / 4;
+    const  hudY1 = state.camera.canvasH * 0.75;
 
     state.ctx.beginPath();
-    state.ctx.fillStyle = "#daf0d3";
+    state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
     state.ctx.lineWidth = 2;
     state.ctx.moveTo(hudX1, hudY1);
     state.ctx.lineTo(hudX1, hudY2);
     state.ctx.stroke();
     state.ctx.beginPath();
-    state.ctx.fillStyle = "#daf0d3";
+    state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
     state.ctx.lineWidth = 2;
     state.ctx.moveTo(hudX2, hudY1);
     state.ctx.lineTo(hudX2, hudY2);
     state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.font = "20px Courier New";
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "center";
+    state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
+    if(nowTS % 3000 > 1500) {
+        state.ctx.fillText("FNL APPRCH 2", (hudX2 + hudX1) / 2, hudY2);
+    }
+    const bottomBuffer = 25;
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
+    state.ctx.rect(
+        hudX1,
+        hudY1 - bottomBuffer,
+        hudX2 - hudX1,
+        bottomBuffer
+    );
+    state.ctx.fill();
+    state.ctx.beginPath();
+    state.ctx.fillStyle = "#000";
+    state.ctx.font = "20px Courier New";
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "left";
+    state.ctx.fillText("DECK", hudX1, hudY1);
+    state.ctx.font = "bold 28px Courier New";
+    state.ctx.textAlign = "right";
+    state.ctx.textBaseline = "top";
+    state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
+    state.ctx.fillText(
+        `${ Math.round((state.plane.posMapCoord[1] - state.map.rwP0MapCoord[1]) / mupm) } M`,
+        hudX1 - 5,
+        hudY2);
 
+
+    state.ctx.beginPath();
+    state.ctx.fillStyle = "#000";
+    state.ctx.font = "20px Courier New";
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "right";
+    state.ctx.fillText("G/S", hudX2, hudY1);
 
 }
 
@@ -511,7 +552,7 @@ function _drawFuelIndicator(state, nowTS) {
     state.ctx.fillStyle = "#f00";
     state.ctx.font = "bold 20px Courier New";
     state.ctx.textBaseline = "middle";
-    state.ctx.textAlign = "right";
+    state.ctx.textAlign = "left";
     state.ctx.fillText(anyLeft?"FUEL":"⚠️ NO FUEL", indicatorCenterX, indicatorY2);
 
     if(anyLeft) {
