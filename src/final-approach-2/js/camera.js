@@ -1408,8 +1408,177 @@ function _drawCarrierRunway(state, nowTS) {
     );
     state.ctx.fill();
 
-    // Eye Candy
-
+    // control tower
+    let objY1, objY2;
+    // Base
+    const ctBaseMapX1 = state.map.rwP0MapCoord[0] + (rwLength * 0.5);
+    const ctBaseMapX2 = ctBaseMapX1 + (8 * mupm);
+    const ctBaseMapY1 = boatMapTopLeft[1] - (0.5 * mupm);
+    const ctBaseMapY2 = ctBaseMapY1 + (6 * mupm);
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctBaseMapX1, ctBaseMapY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctBaseMapX1, ctBaseMapY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctBaseMapX2, ctBaseMapY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctBaseMapX2, ctBaseMapY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    const ctWindowMapX1 = ctBaseMapX1 - 3 * mupm;
+    const ctWindowMapX2 = ctBaseMapX2 + 3 * mupm;
+    const ctWindowDivX1 = ctWindowMapX1 - 0.6 * mupm
+    const ctWindowDivX2 = ctWindowMapX2 + 0.6 * mupm
+    const ctwindowYHeight = 1.5 * mupm;
+    const ctWindowDivHeight = 0.6 * mupm;
+    // Window layer 1
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_WINDOW
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 3;
+    objY1 = ctBaseMapY2;
+    objY2 = ctBaseMapY2 + ctwindowYHeight;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    state.ctx.stroke();
+    // Divider layer 1
+    objY1 = ctBaseMapY2 + ctwindowYHeight
+    objY2 = ctBaseMapY2 + ctwindowYHeight + ctWindowDivHeight
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 1;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    // Window Layer 2
+    objY1 = objY2;
+    objY2 = objY1 + ctwindowYHeight;
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_WINDOW
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 3;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    state.ctx.stroke();
+    // Divider Layer 2
+    objY1 = objY2;
+    objY2 = objY1 + ctWindowDivHeight;
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 1;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    // Window Layer 3
+    objY1 = objY2;
+    objY2 = objY1 + ctwindowYHeight;
+    const topWindowX1 = ctWindowMapX1 + ((ctWindowMapX2 - ctWindowMapX1) / 2);
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_WINDOW
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 3;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [topWindowX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [topWindowX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [topWindowX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    state.ctx.stroke();
+    // Divider Layer 3
+    objY1 = objY2;
+    objY2 = objY1 + ctWindowDivHeight;
+    const topDivX1 = topWindowX1 - (0.5 * mupm);
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 1;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [topDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [topDivX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [topDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
 }
 
 function drawScoreScreen(state) {
