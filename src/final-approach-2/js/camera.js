@@ -1598,8 +1598,8 @@ function _drawCarrierRunway(state, nowTS) {
         topLeftPlaneCorner[0], topLeftPlaneCorner[1],
         planeXPX, planeYPX,
     );
-    planeRowXPointer += xInt
-    planeRowYPointer -= yInt
+    planeRowXPointer += xInt;
+    planeRowYPointer -= yInt;
     topLeftPlaneCorner = mapCoordToCanvasCoord(
         [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
     );
@@ -1608,8 +1608,8 @@ function _drawCarrierRunway(state, nowTS) {
         topLeftPlaneCorner[0], topLeftPlaneCorner[1],
         planeXPX, planeYPX,
     );
-    planeRowXPointer += xInt
-    planeRowYPointer -= yInt
+    planeRowXPointer += xInt;
+    planeRowYPointer -= yInt;
     topLeftPlaneCorner = mapCoordToCanvasCoord(
         [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
     );
@@ -1618,8 +1618,8 @@ function _drawCarrierRunway(state, nowTS) {
         topLeftPlaneCorner[0], topLeftPlaneCorner[1],
         planeXPX, planeYPX,
     );
-    planeRowXPointer += xInt
-    planeRowYPointer -= yInt
+    planeRowXPointer += xInt;
+    planeRowYPointer -= yInt;
     topLeftPlaneCorner = mapCoordToCanvasCoord(
         [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
     );
