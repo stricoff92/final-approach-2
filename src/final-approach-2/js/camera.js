@@ -1579,15 +1579,63 @@ function _drawCarrierRunway(state, nowTS) {
         [topDivX1, objY1], plane.posMapCoord, state.camera,
     ));
     state.ctx.fill();
+
+    // Draw planes on deck
+    const noFlare = IS_NOT_FLARING;
+    let topLeftPlaneCorner, planeRowXPointer, planeRowYPointer;
+    const planeXPX = state.plane.dimensions[noFlare][0] * mupm;
+    const planeYPX = state.plane.dimensions[noFlare][1] * mupm;
+    const xInt = (0.75 * mupm);
+    const yInt = (0.9 * mupm)
+
+    planeRowXPointer = state.map.rwP1MapCoord[0] + (5 * mupm);
+    planeRowYPointer = boatMapTopLeft[1] - (0.5 * mupm);
+    topLeftPlaneCorner = mapCoordToCanvasCoord(
+        [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
+    );
+    state.ctx.drawImage(
+        state.plane.assets[noFlare],
+        topLeftPlaneCorner[0], topLeftPlaneCorner[1],
+        planeXPX, planeYPX,
+    );
+    planeRowXPointer += xInt
+    planeRowYPointer -= yInt
+    topLeftPlaneCorner = mapCoordToCanvasCoord(
+        [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
+    );
+    state.ctx.drawImage(
+        state.plane.assets[noFlare],
+        topLeftPlaneCorner[0], topLeftPlaneCorner[1],
+        planeXPX, planeYPX,
+    );
+    planeRowXPointer += xInt
+    planeRowYPointer -= yInt
+    topLeftPlaneCorner = mapCoordToCanvasCoord(
+        [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
+    );
+    state.ctx.drawImage(
+        state.plane.assets[noFlare],
+        topLeftPlaneCorner[0], topLeftPlaneCorner[1],
+        planeXPX, planeYPX,
+    );
+    planeRowXPointer += xInt
+    planeRowYPointer -= yInt
+    topLeftPlaneCorner = mapCoordToCanvasCoord(
+        [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
+    );
+    state.ctx.drawImage(
+        state.plane.assets[noFlare],
+        topLeftPlaneCorner[0], topLeftPlaneCorner[1],
+        planeXPX, planeYPX,
+    );
 }
 
 function drawScoreScreen(state) {
     const sbAgeMS = performance.now() - state.game.score.scorePhaseStartedTS;
-
     const sbXMaxPX = 500;
     const sbXMinOffset = 10;
     const sbWidth = Math.min(sbXMaxPX, state.camera.canvasW - sbXMinOffset * 2);
-    const sbXOffset = (state.camera.canvasW - sbWidth) / 2
+    const sbXOffset = (state.camera.canvasW - sbWidth) / 2;
 
     const sbYMaxPX = 800;
     const sbHeightTopOffset = MAIN_BUTTON_Y_LENGTH + 10;
