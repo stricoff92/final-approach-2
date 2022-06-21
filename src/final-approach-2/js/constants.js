@@ -28,9 +28,10 @@ const MAIN_BUTTON_Y_LENGTH = 38;
 
 const COMMAND_QUIT_LEVEL = 0;
 const COMMAND_LEVEL_OUT = 1;
-const COMMAND_FLARE = 2;
-const COMMAND_START_LEVEL = 3;
-const COMMAND_SHOW_HELP = 4;
+// const COMMAND_FLARE = 2;
+// const COMMAND_START_LEVEL = 3;
+const COMMAND_ACCELERATE_UP = 4;
+const COMMAND_ACCELERATE_DOWN = 5;
 
 const COLOR_PURPLE = "#620080";
 const COLOR_BLACK = "#000";
@@ -52,8 +53,6 @@ const CLOUD_GRADIENT_SIZE_M = 30;
 const CLICK_RING_MAX_FRAME_AGE = 20;
 const CLICK_RING_WIDTH = 12;
 const CLICK_RING_MAX_RADIUS_CANVAS_PX = 65;
-const COLOR_CLICK_RING_SINGLE = a => `rgb(0, 138, 57, ${a.toFixed(2)})`;
-const COLOR_CLICK_RING_DOUBLE = a => `rgb(138, 0, 138, ${a.toFixed(2)})`;
 
 const COLOR_SCORE_BOARD_BACKGROUND = a => `rgb(80, 0, 105, ${a.toFixed(2)})`;
 

@@ -83,41 +83,13 @@ function setPlaneProps(state) {
         state.plane.minTouchdownVerticalMS = feetPerMinToMS(-900)
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
-        state.plane.horizontalMS = knotsToMS(58);
+        state.plane.horizontalMS = knotsToMS(69.420);
         state.plane.verticalMS = feetPerMinToMS(-550);
 
-        state.plane.lastLevelOutTS = performance.now();
-        state.plane.lastLevelOutFrame = state.game.frame;
-        state.plane.leveledOutInitialHorizontalMS = knotsToMS(50);
-        state.plane.leveledOutHorizontalAccelerationMS2 = knotsToMS(3);
-        state.plane.leveledOutTerminalHorizontalMS = knotsToMS(69);
+        state.plane.terminalVerticalMS = feetPerMinToMS(-1800);
+        state.plane.verticalAccelerationMS = feetPerMinToMS(-400);
 
-        state.plane.leveledOutTerminalVerticalMS = feetPerMinToMS(-1800);
-        state.plane.leveledOutVerticalAccelerationMS2Curve = (elapsedMS, windMS) => {
-            const f = elapsedMS => -0.125 * Math.pow(elapsedMS / 1000, 2) - 1.5;
-            if(!windMS) {
-                return f(elapsedMS);
-            }
-            let windAdj;
-            if(windMS < 0) {
-                // Headwind, less -acceleration
-                // Adj between 0.1 and 1
-                windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
-            }
-            else {
-                // Tailwind, more -acceleration
-                // Adj between 1 and 7
-                windAdj = minMaxValue(0.03 * Math.pow(windMS, 2) + 1, 1, 7);
-            }
-            return f(elapsedMS) * windAdj;
-        }
-
-        state.plane.flareTerminalHorizontalMS = knotsToMS(40);
-        state.plane.flareHorizontalAccelerationMS2 = knotsToMS(-5);
-        state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
-            return -0.02 * Math.pow(elapsedMS / 1000, 2) - 0.75;
-        }
-        state.plane.touchDownFlareMinMS = 18;
+        state.plane.touchDownFlareMinMS = knotsToMS(36);
 
         const noFlareAsset = new Image();
         noFlareAsset.src = "img/" + PLANE_C152 + "-0.svg";
@@ -144,38 +116,11 @@ function setPlaneProps(state) {
         }
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
-        state.plane.horizontalMS = knotsToMS(95);
+        state.plane.horizontalMS = knotsToMS(130.69);
         state.plane.verticalMS = feetPerMinToMS(-550);
-        state.plane.lastLevelOutTS = performance.now();
-        state.plane.lastLevelOutFrame = state.game.frame;
-        state.plane.leveledOutInitialHorizontalMS = knotsToMS(100);
-        state.plane.leveledOutHorizontalAccelerationMS2 = knotsToMS(10);
-        state.plane.leveledOutTerminalHorizontalMS = knotsToMS(140);
-        state.plane.leveledOutTerminalVerticalMS = feetPerMinToMS(-2200);
-        state.plane.leveledOutVerticalAccelerationMS2Curve = (elapsedMS, windMS) => {
-            const f = elapsedMS => -0.3 * Math.pow(elapsedMS / 1000, 2) - 4;
-            if(!windMS) {
-                return f(elapsedMS);
-            }
-            let windAdj;
-            if(windMS < 0) {
-                // Headwind, less -acceleration
-                // Adj between 0.1 and 1
-                windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
-            }
-            else {
-                // Tailwind, more -acceleration
-                // Adj between 1 and 7
-                windAdj = minMaxValue(0.03 * Math.pow(windMS, 2) + 1, 1, 7);
-            }
-            return f(elapsedMS) * windAdj;
-        }
-        state.plane.flareTerminalHorizontalMS = knotsToMS(85);
-        state.plane.flareHorizontalAccelerationMS2 = knotsToMS(-8);
-        state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
-            return -0.03 * Math.pow(elapsedMS / 1000, 2) - 1;
-        }
-        state.plane.touchDownFlareMinMS = 35;
+        state.plane.terminalVerticalMS = feetPerMinToMS(-2200);
+        state.plane.verticalAccelerationMS = feetPerMinToMS(-500);
+        state.plane.touchDownFlareMinMS = knotsToMS(70);
 
         const noFlareAsset = new Image();
         noFlareAsset.src = "img/" + PLANE_F18 + "-0.svg";

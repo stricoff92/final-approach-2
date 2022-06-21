@@ -50,32 +50,11 @@ function runDisplayLoop() {
     }
 
     drawButtons(state);
-    drawClickRing(state);
     window.requestAnimationFrame(runDisplayLoop)
 }
 
 function clearCanvas(state) {
     state.ctx.clearRect(0, 0, state.camera.canvasW * 2, state.camera.canvasH * 2)
-}
-
-function drawClickRing(state) {
-    if(state.game.lastClick.frameCreated !== null && state.game.phase === PHASE_2_LIVE) {
-        if(state.game.frame > state.game.lastClick.frameCreated + CLICK_RING_MAX_FRAME_AGE) {
-            return;
-        }
-        const percentRemaining = (CLICK_RING_MAX_FRAME_AGE - (state.game.frame - state.game.lastClick.frameCreated)) / CLICK_RING_MAX_FRAME_AGE;
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = state.game.lastClick.color(Math.max(0.1, 1 * percentRemaining));
-        state.ctx.lineWidth = CLICK_RING_WIDTH;
-        state.ctx.arc(
-            state.game.lastClick.canvasCoord[0],
-            state.game.lastClick.canvasCoord[1],
-            CLICK_RING_MAX_RADIUS_CANVAS_PX * (1 - percentRemaining),
-            0,
-            TWO_PI,
-        );
-        state.ctx.stroke()
-    }
 }
 
 function drawButtons(state) {
