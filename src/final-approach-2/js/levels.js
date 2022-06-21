@@ -383,23 +383,24 @@ function setMapProps(state) {
         state.map.terrain = TERRAIN_OCEAN;
         state.map.rwType = RUNWAY_TYPE_CARRIER;
         state.map.rwVisualWidthM = 5;
-        state.map.rwP0MapCoord = [1500 * mupm, 10 * mupm];
-        state.map.rwP1MapCoord = [1565 * mupm, 10 * mupm];
-        state.map.carrierRWArrestingGearBounds = {
-            xStart: 1501 * mupm,
-            xEnd: 1520 * mupm,
-        };
+        state.map.rwP0MapCoord = [1500 * mupm, 15 * mupm];
+        state.map.rwP1MapCoord = [1565 * mupm, 15 * mupm];
         state.map.carrierRWArrestorCableMapXs = [
-            1501, 1508, 1515, 1520].map(v => v * mupm);
+            1501, 1508, 1515, 1520
+        ].map(v => v * mupm);
+        state.map.carrierRWArrestingGearBounds = {
+            xStart: state.map.carrierRWArrestorCableMapXs.reduce((v1, v2) => v1 < v2 ? v1 : v2),
+            xEnd: state.map.carrierRWArrestorCableMapXs.reduce((v1, v2) => v1 > v2 ? v1 : v2),
+        };
         state.map.glideSlopes.push({
             p0: [0, 400 * mupm],
-            p1: [1512 * mupm, 10 * mupm],
+            p1: [1512 * mupm, 15 * mupm],
         });
-        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
-        // state.plane.posMapCoord = [900 * mupm, 65 * mupm];
+        // state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        state.plane.posMapCoord = [1400 * mupm, 65 * mupm];
         state.map.cloudLayer = {
-            topY: 350 * mupm,
-            bottomY: 190 * mupm,
+            topY: 360 * mupm,
+            bottomY: 200 * mupm,
         };
         state.map.carrierMinMapX = state.map.rwP0MapCoord[0];
         state.map.carrierMaxMapX = state.map.rwP1MapCoord[0] + CARRIER_DECK_SIZE_AFTER_RW_M * mupm;

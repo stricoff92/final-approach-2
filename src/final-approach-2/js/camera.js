@@ -1260,9 +1260,10 @@ function _drawCarrierRunway(state, nowTS) {
     const rwHeight = state.map.rwVisualWidthM * mupm;
 
     // Boat Map coords
+    const mapMidY = state.map.rwP0MapCoord[1] - ((state.map.rwVisualWidthM / 2  * mupm) + (2.5 * mupm));
     const boatMapTopLeft = [
         rwMapTopLeft[0],
-        rwMapTopLeft[1] + 3 * mupm
+        rwMapTopLeft[1] + 2.5 * mupm
     ];
     const boatMapTopRight = [
         state.map.carrierMaxMapX,
@@ -1270,15 +1271,19 @@ function _drawCarrierRunway(state, nowTS) {
     ];
     const boatMapMiddleRight = [
         boatMapTopRight[0],
-        state.map.rwP0MapCoord[1],
+        mapMidY,
     ];
     const boatMapBottomRight = [
         boatMapTopRight[0] - (4 * mupm),
         0,
     ];
     const boatMapBottomLeft = [
-        boatMapTopLeft[0],
+        boatMapTopLeft[0] + (6 * mupm),
         0,
+    ];
+    const boatMapMidLeft = [
+        boatMapTopLeft[0],
+        mapMidY,
     ];
 
     // Boat Deck
@@ -1294,10 +1299,22 @@ function _drawCarrierRunway(state, nowTS) {
         boatMapMiddleRight, plane.posMapCoord, state.camera,
     ));
     state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapMidLeft, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        boatMapMiddleRight, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
         boatMapBottomRight, plane.posMapCoord, state.camera,
     ));
     state.ctx.lineTo(...mapCoordToCanvasCoord(
         boatMapBottomLeft, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapMidLeft, plane.posMapCoord, state.camera,
     ));
     state.ctx.fill();
 

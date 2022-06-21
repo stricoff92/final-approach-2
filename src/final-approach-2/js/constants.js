@@ -42,8 +42,8 @@ const COLOR_HUD_LIGHT_GREEN = "#daf0d3";
 const COLOR_HUD_LIGHT_GREEN_A = "rgb(218, 240, 211, 0.5)";
 
 const COLOR_CARRIER_DECK = "#ababab";
+const COLOR_CARRIER_SIDE = "#919191";
 const COLOR_CARRIER_RUNWAY = "#c9c6bf";
-const COLOR_CARRIER_WATER_LINE = "#4f0000";
 
 const COLOR_CLOUD_LAYER = a => `rgb(219, 219, 219, ${a.toFixed(2)})`;
 const CLOUD_GRADIENT_SIZE_M = 30;
