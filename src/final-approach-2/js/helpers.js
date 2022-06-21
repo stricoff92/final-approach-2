@@ -3,6 +3,21 @@ function urlContainsDebug() {
     return window.location.search.indexOf("debug") !== -1;
 }
 
+function getGlideSlopeY(glideSlopes, xPos) {
+    // Given an array of glide slops and an X position,
+    // calculate the Y position that exists on the glide slope.
+    for(let i in glideSlopes) {
+        let gs = glideSlopes[i];
+        if(xPos >= gs.p0[0] && xPos <= gs.p1[0]) {
+            let yDistance = gs.p0[1] - gs.p1[1];
+            let xDistance = gs.p1[0] - gs.p0[0];
+            let deltaYPerX = yDistance / xDistance
+            let xProgress = xPos - gs.p0[0];
+            return gs.p0[1] - xProgress * deltaYPerX;
+        }
+    }
+}
+
 function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
     const mapDx = mapCoord[0] - cameraPosition[0];
     const mapDy = mapCoord[1] - cameraPosition[1];
@@ -10,6 +25,28 @@ function mapCoordToCanvasCoord(mapCoord, cameraPosition, camera) {
         mapDx + camera.canvasHalfW,
         camera.canvasH - (mapDy + camera.canvasHalfH),
     ];
+}
+
+function planeToMapBoxCoords(state) {
+    // return x1, y1, x2, y2
+    const plane = state.plane;
+    const f = state.plane.flare;
+    const mupm = state.map.mapUnitsPerMeter;
+    return [
+        plane.posMapCoord[0] - plane.dimensions[f][0] / 2 * mupm,
+        plane.posMapCoord[1] - plane.dimensions[f][1] / 2 * mupm,
+        plane.posMapCoord[0] + plane.dimensions[f][0] / 2 * mupm,
+        plane.posMapCoord[1] + plane.dimensions[f][1] / 2 * mupm,
+    ];
+}
+
+function lineInterceptsBoatRear(boatRearCoord, boxCords) {
+    const [boxX1, boxY1, boxX2, _boxY2] = boxCords;
+    return Boolean(
+        boxX1 <= boatRearCoord[0]
+        && boxX2 >= boatRearCoord[0]
+        && boxY1 < boatRearCoord[1]
+    );
 }
 
 function updateCameraCanvasMetaData(state) {

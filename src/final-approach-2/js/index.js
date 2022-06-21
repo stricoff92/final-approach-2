@@ -83,21 +83,41 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
+    window._fa2_isPaused = false;
     window.addEventListener('keydown', event => {
         const key = event.key;
         const clickCanvasCoord = null;
         switch (true) {
-            case event.key === "ArrowLeft" || event.key === "ArrowUp" || event.key === " ":
-                window.registerClick({
-                    clickCanvasCoord,
-                    isTopHalfOfScreenClick: true,
-                });
+            case key === "ArrowLeft" || key === "ArrowUp" || key === " ":
+                if(!window._fa2_isPaused) {
+                    window.registerClick({
+                        clickCanvasCoord,
+                        isTopHalfOfScreenClick: true,
+                    });
+                } else {
+                    if(key === "ArrowLeft") {
+                        window._gamestate.plane.posMapCoord[0] -= (window._fa2_default_slew || 50);
+                    } else if (key === "ArrowUp") {
+                        window._gamestate.plane.posMapCoord[1] += (window._fa2_default_slew || 50);
+                    }
+                }
                 break;
-            case event.key === "ArrowRight" || event.key === "ArrowDown":
-                window.registerClick({
-                    clickCanvasCoord,
-                    isTopHalfOfScreenClick: false,
-                });
+            case key === "ArrowRight" || key === "ArrowDown":
+                if(!window._fa2_isPaused) {
+                    window.registerClick({
+                        clickCanvasCoord,
+                        isTopHalfOfScreenClick: false,
+                    });
+                } else {
+                    if(key === "ArrowRight") {
+                        window._gamestate.plane.posMapCoord[0] += (window._fa2_default_slew || 50);
+                    } else if (key === "ArrowDown") {
+                        window._gamestate.plane.posMapCoord[1] -= (window._fa2_default_slew || 50);
+                    }
+                }
+                break;
+            case key === "p":
+                window._fa2_isPaused = !!!window._fa2_isPaused;
         }
     });
 

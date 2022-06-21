@@ -204,24 +204,35 @@ function drawGameScene(state) {
     // Draw runway
     const cameraMapCoordXMin = scTopLeftMapCoord[0];
     const cameraMapCoordXMax = scTopRightMapCoord[0];
+    const rwLength = state.map.rwP1MapCoord[0] - state.map.rwP0MapCoord[0];
+    const rwViewBuffer = rwLength * 3;
     const runwayVisible = Boolean((
-        state.map.rwP0MapCoord[0] >= cameraMapCoordXMin
-        && state.map.rwP0MapCoord[0] <= cameraMapCoordXMax
+        state.map.rwP0MapCoord[0] >= (cameraMapCoordXMin - rwViewBuffer)
+        && state.map.rwP0MapCoord[0] <= (cameraMapCoordXMax + rwViewBuffer)
     ) || (
-        state.map.rwP1MapCoord[0] >= cameraMapCoordXMin
-        && state.map.rwP1MapCoord[0] <= cameraMapCoordXMax
+        state.map.rwP1MapCoord[0] >= (cameraMapCoordXMin - rwViewBuffer)
+        && state.map.rwP1MapCoord[0] <= (cameraMapCoordXMax + rwViewBuffer)
     ) || (
-        state.map.rwP0MapCoord[0] <= cameraMapCoordXMin
-        && state.map.rwP1MapCoord[0] >= cameraMapCoordXMax
+        state.map.rwP0MapCoord[0] <= (cameraMapCoordXMin + rwViewBuffer)
+        && state.map.rwP1MapCoord[0] >= (cameraMapCoordXMax - rwViewBuffer)
     ));
     if(runwayVisible) {
-        _drawRunway(state, nowTS, cameraMapCoordXMax);
+        if(state.map.rwType === RUNWAY_TYPE_CARRIER) {
+            _drawCarrierRunway(state, nowTS);
+        } else {
+            _drawRunway(state, nowTS, cameraMapCoordXMax);
+        }
     }
 
     // Draw Glide Slope
     if(Math.random() < 0.9) {
         const gsLineWidth = getRandomFloat(0.3, 2.4);
-        const gsColor = `rgb(242, 0, 255, ${ getRandomFloat(0.2, 0.8) })`;
+        let gsColor
+        if(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY) {
+            gsColor = `rgb(250, 204, 252, ${ getRandomFloat(0.2, 0.8) })`;
+        } else {
+            gsColor = `rgb(242, 0, 255, ${ getRandomFloat(0.2, 0.8) })`;
+        }
         state.map.glideSlopes.forEach(gs => {
             const gsCanvasP0 = mapCoordToCanvasCoord(
                 gs.p0, plane.posMapCoord, state.camera
@@ -240,12 +251,26 @@ function drawGameScene(state) {
 
     let planeCanvasX1, planeCanvasY1;
     if(!plane.crashFrame) {
+
         // Draw Plane Shadow
         const planeCanvasDims = planeMapDims.map(d => d * state.map.mapUnitsPerMeter);
-        const shadowCenterMapCoord = [
-            plane.posMapCoord[0] + state.plane.posMapCoord[1] * 0.4,
-            plane.posMapCoord[1] * -0.2,
-        ];
+        let shadowCenterMapCoord;
+        if(
+            state.map.rwType === RUNWAY_TYPE_CARRIER
+            && state.plane.posMapCoord[0] >= state.map.carrierMinMapX
+            && state.plane.posMapCoord[0] <= state.map.carrierMaxMapX
+        ) {
+            const rwAlt = state.map.rwP0MapCoord[1];
+            shadowCenterMapCoord = [
+                plane.posMapCoord[0] + ((state.plane.posMapCoord[1] - rwAlt)  * 0.4),
+                (plane.posMapCoord[1] - rwAlt) * -0.2 + rwAlt,
+            ];
+        } else {
+            shadowCenterMapCoord = [
+                plane.posMapCoord[0] + state.plane.posMapCoord[1] * 0.4,
+                plane.posMapCoord[1] * -0.2,
+            ];
+        }
         const shadowCenterCanvasCoord = mapCoordToCanvasCoord(
             shadowCenterMapCoord, plane.posMapCoord, state.camera
         );
@@ -340,7 +365,7 @@ function drawGameScene(state) {
 
 
     // Draw altitude indicator if over min altutude
-    const runwayAltitudeM = state.map.rwP0MapCoord[1] * state.map.mapUnitsPerMeter;
+    const runwayAltitudeM = state.map.rwP0MapCoord[1] / state.map.mapUnitsPerMeter;
     const planeBottomAltitudeM = (
         state.plane.posMapCoord[1]
         - (
@@ -348,61 +373,69 @@ function drawGameScene(state) {
             * state.map.mapUnitsPerMeter
         )
     ) / state.map.mapUnitsPerMeter;
-    if(plane.alive && planeBottomAltitudeM > (runwayAltitudeM + 8)) {
+    if(plane.alive && planeBottomAltitudeM > (runwayAltitudeM + 5)) {
         // Altitude Text
         const showSafeAltitude = Boolean(
             state.game.level === 7
             && planeBottomAltitudeM > LEVEL_7_MAX_SAFE_X_M
             && state.plane.posMapCoord[0] > 1000 * mupm
         );
+        let altitudeLabel, altitudeValueM;
+        if(showSafeAltitude) {
+            altitudeLabel = "Safe Altitude";
+            altitudeValueM = `${Math.round(planeBottomAltitudeM - LEVEL_7_MAX_SAFE_X_M)} M`;
+        }
+        else if(state.game.level > 7) {
+            altitudeLabel = null;
+            altitudeValueM = null;
+        } else {
+            altitudeLabel = "ground";
+            altitudeValueM = `${planeBottomAltitudeM.toFixed(0)} M`;
+        }
         const altText1P = [
             state.camera.canvasHalfW,
             state.camera.canvasHalfH + state.plane.dimensions[0][1] * mupm
         ];
-        state.ctx.beginPath();
-        state.ctx.fillStyle = "#000";
-        state.ctx.font = "20px Arial";
-        state.ctx.textBaseline = "middle";
-        state.ctx.textAlign = "left";
-        state.ctx.fillText(showSafeAltitude?"Safe Altitude":"ground", ...altText1P);
-        const altText2P = [
-            altText1P[0],
-            altText1P[1] + 25,
-        ];
-        state.ctx.beginPath();
-        state.ctx.font = "bold 25px Arial";
-        if(showSafeAltitude) {
-            state.ctx.fillText(
-                `${Math.round(planeBottomAltitudeM - LEVEL_7_MAX_SAFE_X_M)} M`,
-                ...altText2P,
-            );
-        } else {
-            state.ctx.fillText(`${planeBottomAltitudeM.toFixed(0)} M`, ...altText2P);
+        if(altitudeLabel !== null) {
+            const isDarkBackground = Boolean(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY);
+            state.ctx.beginPath();
+            state.ctx.fillStyle = isDarkBackground ? "#fff" : "#000";
+            state.ctx.font = "20px Arial";
+            state.ctx.textBaseline = "middle";
+            state.ctx.textAlign = "left";
+            state.ctx.fillText(altitudeLabel, ...altText1P);
+            const altText2P = [
+                altText1P[0],
+                altText1P[1] + 25,
+            ];
+            state.ctx.beginPath();
+            state.ctx.font = "bold 25px Arial";
+            state.ctx.fillText(altitudeValueM, ...altText2P);
+            // Altitude Arrow
+            const altLineP1 = [
+                altText1P[0] - 5,
+                altText1P[1] - 7,
+            ];
+            const altLineP2 = [
+                altText2P[0] - 5,
+                state.camera.canvasH * 0.9,
+            ];
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = isDarkBackground ? "#fff" : "#000";
+            state.ctx.lineWidth = 1;
+            state.ctx.moveTo(...altLineP1);
+            state.ctx.lineTo(...altLineP2);
+            state.ctx.stroke();
+            const altArrowHeadLen = 15
+            state.ctx.beginPath();
+            state.ctx.moveTo(...altLineP2);
+            state.ctx.lineTo(altLineP2[0] - altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
+            state.ctx.stroke();
+            state.ctx.beginPath();
+            state.ctx.moveTo(...altLineP2);
+            state.ctx.lineTo(altLineP2[0] + altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
+            state.ctx.stroke();
         }
-        // Altitude Arrow
-        const altLineP1 = [
-            altText1P[0] - 5,
-            altText1P[1] - 7,
-        ];
-        const altLineP2 = [
-            altText2P[0] - 5,
-            state.camera.canvasH * 0.9,
-        ];
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = "#000"
-        state.ctx.lineWidth = 1;
-        state.ctx.moveTo(...altLineP1);
-        state.ctx.lineTo(...altLineP2);
-        state.ctx.stroke();
-        const altArrowHeadLen = 15
-        state.ctx.beginPath();
-        state.ctx.moveTo(...altLineP2);
-        state.ctx.lineTo(altLineP2[0] - altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
-        state.ctx.stroke();
-        state.ctx.beginPath();
-        state.ctx.moveTo(...altLineP2);
-        state.ctx.lineTo(altLineP2[0] + altArrowHeadLen/2, altLineP2[1] - altArrowHeadLen);
-        state.ctx.stroke();
     }
 
     drawHorizontalDistanceArrow(state);
@@ -437,9 +470,210 @@ function drawGameScene(state) {
     if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
         if(plane.alive && !plane.touchedDown) {
             _drawWindIndicator(state);
+            if(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY) {
+                _drawcarrierLandingHUD(state, nowTS);
+            }
         }
     } else {
         _drawLevelName(state, nowTS);
+    }
+}
+
+function _drawcarrierLandingHUD(state, nowTS) {
+    const plane = state.plane;
+    const mupm = state.map.mapUnitsPerMeter;
+    // Canvas Coords
+    const hudX1 = state.camera.canvasHalfW + plane.dimensions[0][0] / 2 * mupm + 3;
+    const hudX2 = Math.min(hudX1 + 160, state.camera.canvasW - 3);
+    const hudY2 = state.camera.canvasH / 4;
+    const hudY1 = state.camera.canvasH * 0.75;
+    const hudXMid = (hudX2 + hudX1) / 2;
+    const hudW = hudX2 - hudX1;
+
+    state.ctx.beginPath();
+    state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN_A;
+    state.ctx.lineWidth = 2;
+    state.ctx.moveTo(hudX1, hudY1);
+    state.ctx.lineTo(hudX1, hudY2);
+    state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN_A;
+    state.ctx.lineWidth = 2;
+    state.ctx.moveTo(hudX2, hudY1);
+    state.ctx.lineTo(hudX2, hudY2);
+    state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.font = "20px Courier New";
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "center";
+    state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
+    if(nowTS % 3000 > 1500) {
+        state.ctx.fillText("FNL APPRCH 2", hudXMid, hudY2);
+    }
+    const bottomBuffer = 25;
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN_A;
+    state.ctx.rect(
+        hudX1,
+        hudY1 - bottomBuffer,
+        hudX2 - hudX1,
+        bottomBuffer
+    );
+    state.ctx.fill();
+    const distanceToDeckM = (
+        (plane.posMapCoord[1] - plane.dimensions[plane.flare][1] / 2 * mupm)
+        - state.map.rwP0MapCoord[1]
+    ) / mupm;
+    state.ctx.beginPath();
+    state.ctx.fillStyle = distanceToDeckM > 0 ?"#000":"#f00";
+    state.ctx.font = "20px Courier New";
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "left";
+    state.ctx.fillText("DECK", hudX1, hudY1);
+    state.ctx.font = "bold 28px Courier New";
+    state.ctx.textAlign = "right";
+    state.ctx.textBaseline = "top";
+    state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN;
+    state.ctx.fillText(
+        `${ Math.round(distanceToDeckM) } M`,
+        hudX1 - 5,
+        hudY2);
+
+    // Distance to deck bar
+    const barMaxAltM = 40;
+    if(distanceToDeckM <= barMaxAltM) {
+        const barW = hudW / 3;
+        const fullBarYLen = (hudY1 - bottomBuffer) - hudY2;
+        const percentFilled = 1 - (Math.max(0, distanceToDeckM) / barMaxAltM);
+        state.ctx.beginPath();
+        state.ctx.fillStyle = COLOR_HUD_LIGHT_GREEN_A;
+        state.ctx.rect(
+            hudX1,
+            hudY2,
+            barW,
+            fullBarYLen * percentFilled,
+        );
+        state.ctx.fill();
+    }
+
+    const glideSlopeIndicatorMinAltM = 40
+    if(distanceToDeckM > glideSlopeIndicatorMinAltM) {
+        // Relative Glide Slope indicator
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#000";
+        state.ctx.font = "20px Courier New";
+        state.ctx.textBaseline = "bottom";
+        state.ctx.textAlign = "right";
+        state.ctx.fillText("G/S", hudX2, hudY1);
+
+        const gsY = getGlideSlopeY(state.map.glideSlopes, plane.posMapCoord[0]);
+        if(typeof gsY !== "undefined") {
+            // (+) means above GS, (-) means below GS
+            const gsDiffM = (plane.posMapCoord[1] - gsY) / mupm;
+            const gsIndicatorHalfRangeM = 40;
+            let percentFromBottom;
+            if(gsDiffM >= gsIndicatorHalfRangeM) {
+                // Above GS, needle at bottom of HUD
+                percentFromBottom = 0;
+            }
+            else if(gsDiffM <= (-1 * gsIndicatorHalfRangeM)) {
+                // Below GS, needle at top of HUD
+                percentFromBottom = 1
+            }
+            else {
+                if(gsDiffM >= 0) {
+                    // means above GS, needle between 0% and 50% from bottom
+                    percentFromBottom = 0.5 - gsDiffM / gsIndicatorHalfRangeM / 2;
+                }
+                else {
+                    // needle between 50% and 100%
+                    percentFromBottom = 0.5 + Math.abs(gsDiffM) / gsIndicatorHalfRangeM / 2;
+                }
+            }
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
+            state.ctx.lineWidth = 8;
+            state.ctx.setLineDash([5, 5]);
+            const gsiCenterX = ((hudY1 - bottomBuffer) + hudY2) / 2;
+            state.ctx.moveTo(hudX2, gsiCenterX);
+            state.ctx.lineTo(hudXMid, gsiCenterX);
+            state.ctx.stroke();
+            state.ctx.setLineDash([]);
+            const totalPXSpaceGSI = (hudY1 - bottomBuffer) - hudY2;
+            const gsIY = (hudY1 - bottomBuffer) - (totalPXSpaceGSI * percentFromBottom)
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
+            state.ctx.lineWidth = 2;
+            state.ctx.moveTo(hudX2, gsIY);
+            state.ctx.lineTo(hudXMid, gsIY);
+            state.ctx.stroke();
+        }
+    }
+    else {
+        // Touchdown location estimator
+        state.ctx.beginPath();
+        state.ctx.fillStyle = "#000";
+        state.ctx.font = "20px Courier New";
+        state.ctx.textBaseline = "bottom";
+        state.ctx.textAlign = "right";
+        state.ctx.fillText("RNWY", hudX2, hudY1);
+
+        const tdlYBuff = 20;
+        const tdlX1 = hudX1 + (hudW / 2) + (hudW / 8);
+        const tdlX2 = hudX2 - hudW / 8;
+        const tldY1 = hudY1 - bottomBuffer - tdlYBuff;
+        const tldY2 = hudY2 + tdlYBuff;
+        state.ctx.beginPath()
+        state.ctx.lineWidth = 2;
+        state.ctx.strokeStyle = COLOR_HUD_LIGHT_GREEN;
+        state.ctx.rect(
+            tdlX1, tldY2,
+            tdlX2 - tdlX1,
+            tldY1 - tldY2,
+        );
+        state.ctx.stroke();
+
+        const yDistanceToDeckM = distanceToDeckM;
+        const secondsAloft = plane.verticalMS != 0 ? yDistanceToDeckM / Math.abs(plane.verticalMS) : 1000;
+        const xMapUnitsCanTravel = secondsAloft * plane.horizontalMS * mupm;
+        const estimatedX = plane.posMapCoord[0] + xMapUnitsCanTravel;
+        let crossHairP, chColor = COLOR_HUD_LIGHT_GREEN;
+        if(estimatedX > state.map.carrierRWArrestingGearBounds.xEnd) {
+            crossHairP = [
+                (tdlX1 + tdlX2) / 2,
+                tldY2 - tdlYBuff / 2];
+            chColor = "#f00";
+        }
+        else if(estimatedX < state.map.carrierRWArrestingGearBounds.xStart) {
+            crossHairP = [
+                (tdlX1 + tdlX2) / 2,
+                tldY1 + tdlYBuff / 2];
+                chColor = "#ff0";
+        }
+        else {
+            let targetSize = state.map.carrierRWArrestingGearBounds.xEnd - state.map.carrierRWArrestingGearBounds.xStart;
+            let gaugeDistance = tldY1 - tldY2;
+            let percentFilled = (estimatedX - state.map.carrierRWArrestingGearBounds.xStart) / targetSize;
+            crossHairP = [
+                (tdlX1 + tdlX2) / 2,
+                tldY1 - gaugeDistance * percentFilled];
+        }
+        if(crossHairP) {
+            state.ctx.beginPath();
+            state.ctx.strokeStyle = chColor;
+            state.ctx.lineWidth = 4;
+            state.ctx.arc(crossHairP[0], crossHairP[1], tdlYBuff / 3, 0, TWO_PI);
+            state.ctx.stroke();
+            state.ctx.beginPath();
+            state.ctx.lineWidth = 2;
+            state.ctx.moveTo(crossHairP[0], crossHairP[1] - tdlYBuff / 2);
+            state.ctx.lineTo(crossHairP[0], crossHairP[1] + tdlYBuff / 2);
+            state.ctx.stroke();
+            state.ctx.beginPath();
+            state.ctx.moveTo(crossHairP[0] - tdlYBuff / 2, crossHairP[1]);
+            state.ctx.lineTo(crossHairP[0] + tdlYBuff / 2, crossHairP[1]);
+            state.ctx.stroke();
+        }
     }
 }
 
@@ -454,7 +688,7 @@ function _drawFuelIndicator(state, nowTS) {
     state.ctx.fillStyle = "#f00";
     state.ctx.font = "bold 20px Courier New";
     state.ctx.textBaseline = "middle";
-    state.ctx.textAlign = "right";
+    state.ctx.textAlign = "left";
     state.ctx.fillText(anyLeft?"FUEL":"⚠️ NO FUEL", indicatorCenterX, indicatorY2);
 
     if(anyLeft) {
@@ -508,7 +742,6 @@ function _drawFuelIndicator(state, nowTS) {
             state.ctx.fill();
         }
     }
-
 }
 
 
@@ -556,7 +789,9 @@ function _drawHorizonAndCloudsLayer(state) {
             state.ctx.fillStyle = COLOR_GROUND_FOREST;
         } else if(state.map.terrain === TERRAIN_DESERT) {
             state.ctx.fillStyle = COLOR_GROUD_DESERT;
-        }
+        } else if (state.map.terrain === TERRAIN_OCEAN) {
+            state.ctx.fillStyle = COLOR_SURFACE_OCEAN;
+        } else { throw NOT_IMPLEMENTED; }
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
 
@@ -845,6 +1080,9 @@ function _drawCloudEffects(
     _canvasMinMapCoordX,
     canvasMaxMapCoordX,
 ) {
+    if(window._fa2_isPaused) {
+        return;
+    }
 
     const cl = state.map.cloudLayer;
     const planeYPos = state.plane.posMapCoord[1];
@@ -891,6 +1129,53 @@ function _drawCloudEffects(
         })
     }
 }
+
+function drawTireStrikes(state, nowTS) {
+    // Draw tire strikes
+    state.map.tireStrikes.forEach(ts => {
+        const tsCanvasPoint = mapCoordToCanvasCoord(
+            ts.originMapPoint, state.plane.posMapCoord, state.camera,
+        );
+        // Draw mark on runway
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "rgb(0, 0, 0, 0.6)";
+        state.ctx.lineWidth = 6;
+        state.ctx.moveTo(
+            tsCanvasPoint[0] - (0.75 * state.map.mapUnitsPerMeter),
+            tsCanvasPoint[1],
+        );
+        state.ctx.lineTo(
+            tsCanvasPoint[0] + (0.75 * state.map.mapUnitsPerMeter),
+            tsCanvasPoint[1],
+        );
+        state.ctx.stroke();
+
+        // Draw "rising haze" effect if strike was recent
+        const tireStrikeRHLifespanMS = 1600;
+        const ageMS = nowTS - ts.createdTS;
+        if(ageMS > tireStrikeRHLifespanMS) {
+            return;
+        }
+        const radiusCurve = ageSeconds => Math.pow(ageSeconds, 2) * 0.5 + 0.5;
+        const percentAge = ageMS / tireStrikeRHLifespanMS;
+        const alpha = 1 - percentAge;
+        const radius = Math.max(0.2, radiusCurve(ageMS / 1000)) * state.map.mapUnitsPerMeter;
+        const xOffset = -1 * state.map.mapUnitsPerMeter * percentAge;
+        const yOffset = 2 * state.map.mapUnitsPerMeter * percentAge;
+
+        state.ctx.beginPath();
+        state.ctx.fillStyle = `rgb(50, 50, 50, ${ alpha })`;
+        state.ctx.arc(
+            tsCanvasPoint[0] + xOffset,
+            tsCanvasPoint[1] - yOffset,
+            radius,
+            0,
+            TWO_PI,
+        );
+        state.ctx.fill();
+    });
+}
+
 
 function _drawRunway(state, nowTS, cameraMapCoordXMax) {
     const runwayHalfVisualH = state.map.rwVisualWidthM / 2 * state.map.mapUnitsPerMeter;
@@ -960,58 +1245,397 @@ function _drawRunway(state, nowTS, cameraMapCoordXMax) {
         rwMeterPtr += (paintLineLengthMeters + paintLineIntervalMeters);
     }
 
-    // Draw tire strikes
-    state.map.tireStrikes.forEach(ts => {
-        const tsCanvasPoint = mapCoordToCanvasCoord(
-            ts.originMapPoint, state.plane.posMapCoord, state.camera,
-        );
-        // Draw mark on runway
-        state.ctx.beginPath();
-        state.ctx.strokeStyle = "rgb(0, 0, 0, 0.6)";
-        state.ctx.lineWidth = 6;
-        state.ctx.moveTo(
-            tsCanvasPoint[0] - (0.75 * state.map.mapUnitsPerMeter),
-            tsCanvasPoint[1],
-        );
-        state.ctx.lineTo(
-            tsCanvasPoint[0] + (0.75 * state.map.mapUnitsPerMeter),
-            tsCanvasPoint[1],
-        );
-        state.ctx.stroke();
+    drawTireStrikes(state, nowTS);
+}
 
-        // Draw "rising haze" effect if strike was recent
-        const tireStrikeRHLifespanMS = 1600;
-        const ageMS = nowTS - ts.createdTS;
-        if(ageMS > tireStrikeRHLifespanMS) {
-            return;
+function _drawCarrierRunway(state, nowTS) {
+    const mupm = state.map.mapUnitsPerMeter;
+    const plane = state.plane;
+    // Runway Map Coords
+    const rwMapTopLeft = [
+        state.map.rwP0MapCoord[0],
+        state.map.rwP0MapCoord[1] + (state.map.rwVisualWidthM * mupm / 2),
+    ];
+    const rwLength = state.map.rwP1MapCoord[0] - state.map.rwP0MapCoord[0];
+    const rwHeight = state.map.rwVisualWidthM * mupm;
+
+    // Boat Map coords
+    const mapMidY = state.map.rwP0MapCoord[1] - ((state.map.rwVisualWidthM / 2  * mupm) + (2.5 * mupm));
+    const boatMapTopLeft = [
+        rwMapTopLeft[0],
+        rwMapTopLeft[1] + 2.5 * mupm
+    ];
+    const boatMapTopRight = [
+        state.map.carrierMaxMapX,
+        boatMapTopLeft[1],
+    ];
+    const boatMapMiddleRight = [
+        boatMapTopRight[0],
+        mapMidY,
+    ];
+    const boatMapBottomRight = [
+        boatMapTopRight[0] - (4 * mupm),
+        0,
+    ];
+    const boatMapBottomLeft = [
+        boatMapTopLeft[0] + (6 * mupm),
+        0,
+    ];
+    const boatMapMidLeft = [
+        boatMapTopLeft[0],
+        mapMidY,
+    ];
+
+    // Boat Deck
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_DECK;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        boatMapTopLeft, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapTopRight, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapMiddleRight, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapMidLeft, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        boatMapMiddleRight, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapBottomRight, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapBottomLeft, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        boatMapMidLeft, plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+
+    // Runway
+    const rwTopLefCC = mapCoordToCanvasCoord(
+        rwMapTopLeft, plane.posMapCoord, state.camera,
+    );
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_RUNWAY;
+    state.ctx.rect(
+        rwTopLefCC[0], rwTopLefCC[1],
+        rwLength, rwHeight,
+    );
+    state.ctx.fill();
+    state.ctx.beginPath();
+    state.ctx.strokeStyle = "#000";
+    state.ctx.lineWidth = 7;
+    state.ctx.rect(
+        rwTopLefCC[0], rwTopLefCC[1],
+        rwLength, rwHeight,
+    );
+    state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.setLineDash([25, 25]);
+    state.ctx.strokeStyle = "#999902";
+    state.ctx.lineWidth = 7;
+    state.ctx.rect(
+        rwTopLefCC[0], rwTopLefCC[1],
+        rwLength, rwHeight,
+    );
+    state.ctx.stroke();
+    state.ctx.setLineDash([]);
+
+    // Tire Strikes
+    drawTireStrikes(state, nowTS);
+
+    // Arrestor cables
+    for(let i in state.map.carrierRWArrestorCableMapXs) {
+        state.ctx.beginPath();
+        state.ctx.strokeStyle = "#5e5e5e";
+        state.ctx.lineWidth = 3;
+        let cableX = state.map.carrierRWArrestorCableMapXs[i];
+        state.ctx.moveTo(...mapCoordToCanvasCoord(
+            [cableX, rwMapTopLeft[1] + 1.5 * mupm],
+            plane.posMapCoord,
+            state.camera,
+        ));
+        const pointOfContactX = plane.posMapCoord[0] - plane.dimensions[plane.flare][0] / 2 * mupm
+        if(
+            plane.carrierRWArrestorCableCaught !== null
+            && i == plane.carrierRWArrestorCableCaught
+            && cableX < pointOfContactX
+        ) {
+            state.ctx.lineTo(...mapCoordToCanvasCoord(
+                [
+                    pointOfContactX,
+                    plane.posMapCoord[1] - plane.dimensions[plane.flare][1] / 3 * mupm,
+                ],
+                plane.posMapCoord,
+                state.camera,
+            ));
         }
-        const radiusCurve = ageSeconds => Math.pow(ageSeconds, 2) * 0.5 + 0.5;
-        const percentAge = ageMS / tireStrikeRHLifespanMS;
-        const alpha = 1 - percentAge;
-        const radius = Math.max(0.2, radiusCurve(ageMS / 1000)) * state.map.mapUnitsPerMeter;
-        const xOffset = -1 * state.map.mapUnitsPerMeter * percentAge;
-        const yOffset = 2 * state.map.mapUnitsPerMeter * percentAge;
+        state.ctx.lineTo(...mapCoordToCanvasCoord(
+            [cableX, rwMapTopLeft[1] - (rwHeight + 1.5 * mupm)],
+            plane.posMapCoord,
+            state.camera,
+        ));
+        state.ctx.stroke();
+    }
 
-        state.ctx.beginPath();
-        state.ctx.fillStyle = `rgb(50, 50, 50, ${ alpha })`;
-        state.ctx.arc(
-            tsCanvasPoint[0] + xOffset,
-            tsCanvasPoint[1] - yOffset,
-            radius,
-            0,
-            TWO_PI,
-        );
-        state.ctx.fill();
-    });
+    // Arresting Gear Target Area
+    const agtaCCTopLeft = mapCoordToCanvasCoord(
+        [
+            state.map.carrierRWArrestingGearBounds.xStart,
+            rwMapTopLeft[1],
+        ],
+        plane.posMapCoord,
+        state.camera,
+    );
+    const agtaWidth = (
+        state.map.carrierRWArrestingGearBounds.xEnd
+        - state.map.carrierRWArrestingGearBounds.xStart
+    );
+    state.ctx.beginPath();
+    state.ctx.fillStyle = 'rgb(0, 255, 0, 0.3)';
+    const flickerExt = getRandomFloat(0, 2 * mupm)
+    state.ctx.rect(
+        agtaCCTopLeft[0], agtaCCTopLeft[1] - flickerExt,
+        agtaWidth,
+        rwHeight + flickerExt * 2,
+    );
+    state.ctx.fill();
+
+    // control tower
+    let objY1, objY2;
+    // Base
+    const ctBaseMapX1 = state.map.rwP0MapCoord[0] + (rwLength * 0.5);
+    const ctBaseMapX2 = ctBaseMapX1 + (8 * mupm);
+    const ctBaseMapY1 = boatMapTopLeft[1] - (0.5 * mupm);
+    const ctBaseMapY2 = ctBaseMapY1 + (6 * mupm);
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctBaseMapX1, ctBaseMapY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctBaseMapX1, ctBaseMapY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctBaseMapX2, ctBaseMapY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctBaseMapX2, ctBaseMapY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    const ctWindowMapX1 = ctBaseMapX1 - 3 * mupm;
+    const ctWindowMapX2 = ctBaseMapX2 + 3 * mupm;
+    const ctWindowDivX1 = ctWindowMapX1 - 0.6 * mupm
+    const ctWindowDivX2 = ctWindowMapX2 + 0.6 * mupm
+    const ctwindowYHeight = 1.5 * mupm;
+    const ctWindowDivHeight = 0.6 * mupm;
+    // Window layer 1
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_WINDOW
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 3;
+    objY1 = ctBaseMapY2;
+    objY2 = ctBaseMapY2 + ctwindowYHeight;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    state.ctx.stroke();
+    // Divider layer 1
+    objY1 = ctBaseMapY2 + ctwindowYHeight
+    objY2 = ctBaseMapY2 + ctwindowYHeight + ctWindowDivHeight
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 1;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    // Window Layer 2
+    objY1 = objY2;
+    objY2 = objY1 + ctwindowYHeight;
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_WINDOW
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 3;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    state.ctx.stroke();
+    // Divider Layer 2
+    objY1 = objY2;
+    objY2 = objY1 + ctWindowDivHeight;
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 1;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    // Window Layer 3
+    objY1 = objY2;
+    objY2 = objY1 + ctwindowYHeight;
+    const topWindowX1 = ctWindowMapX1 + ((ctWindowMapX2 - ctWindowMapX1) / 2);
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_WINDOW
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 3;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [topWindowX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [topWindowX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowMapX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [topWindowX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+    state.ctx.stroke();
+    // Divider Layer 3
+    objY1 = objY2;
+    objY2 = objY1 + ctWindowDivHeight;
+    const topDivX1 = topWindowX1 - (0.5 * mupm);
+    state.ctx.beginPath();
+    state.ctx.fillStyle = COLOR_CARRIER_SIDE
+    state.ctx.strokeStyle = "#000";
+    state.lineWidth = 1;
+    state.ctx.moveTo(...mapCoordToCanvasCoord(
+        [topDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [topDivX1, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY2], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [ctWindowDivX2, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.lineTo(...mapCoordToCanvasCoord(
+        [topDivX1, objY1], plane.posMapCoord, state.camera,
+    ));
+    state.ctx.fill();
+
+    // Draw planes on deck
+    const noFlare = IS_NOT_FLARING;
+    let topLeftPlaneCorner, planeRowXPointer, planeRowYPointer;
+    const planeXPX = state.plane.dimensions[noFlare][0] * mupm;
+    const planeYPX = state.plane.dimensions[noFlare][1] * mupm;
+    const xInt = (1 * mupm);
+    const yInt = (0.85 * mupm);
+
+    planeRowXPointer = state.map.rwP1MapCoord[0] + (5 * mupm);
+    planeRowYPointer = boatMapTopLeft[1] - (0.5 * mupm);
+    topLeftPlaneCorner = mapCoordToCanvasCoord(
+        [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
+    );
+    state.ctx.drawImage(
+        state.plane.assets[noFlare],
+        topLeftPlaneCorner[0], topLeftPlaneCorner[1],
+        planeXPX, planeYPX,
+    );
+    planeRowXPointer += xInt;
+    planeRowYPointer -= yInt;
+    topLeftPlaneCorner = mapCoordToCanvasCoord(
+        [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
+    );
+    state.ctx.drawImage(
+        state.plane.assets[noFlare],
+        topLeftPlaneCorner[0], topLeftPlaneCorner[1],
+        planeXPX, planeYPX,
+    );
+    planeRowXPointer += xInt;
+    planeRowYPointer -= yInt;
+    topLeftPlaneCorner = mapCoordToCanvasCoord(
+        [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
+    );
+    state.ctx.drawImage(
+        state.plane.assets[noFlare],
+        topLeftPlaneCorner[0], topLeftPlaneCorner[1],
+        planeXPX, planeYPX,
+    );
+    planeRowXPointer += xInt;
+    planeRowYPointer -= yInt;
+    topLeftPlaneCorner = mapCoordToCanvasCoord(
+        [planeRowXPointer, planeRowYPointer], plane.posMapCoord, state.camera,
+    );
+    state.ctx.drawImage(
+        state.plane.assets[noFlare],
+        topLeftPlaneCorner[0], topLeftPlaneCorner[1],
+        planeXPX, planeYPX,
+    );
 }
 
 function drawScoreScreen(state) {
     const sbAgeMS = performance.now() - state.game.score.scorePhaseStartedTS;
-
     const sbXMaxPX = 500;
     const sbXMinOffset = 10;
     const sbWidth = Math.min(sbXMaxPX, state.camera.canvasW - sbXMinOffset * 2);
-    const sbXOffset = (state.camera.canvasW - sbWidth) / 2
+    const sbXOffset = (state.camera.canvasW - sbWidth) / 2;
 
     const sbYMaxPX = 800;
     const sbHeightTopOffset = MAIN_BUTTON_Y_LENGTH + 10;

@@ -86,6 +86,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             flareVerticalAccelerationMS2Curve: null,
             touchDownFlareMinMS: null,
             minTouchdownVerticalMS: null,
+            carrierRWArrestorCableCaught: null,
             startingFuel: null,
             fuelRemaining: null,
             fuelUsedLastTS: null,
@@ -124,6 +125,10 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             rwP1MapCoord: null,
             rwType: null,
             rwVisualWidthM: null,
+            carrierRWArrestingGearBounds: null,
+            carrierMinMapX: null,
+            carrierMaxMapX: null,
+            carrierRWArrestorCableMapXs: null,
             getDangerStatus: state => {},
             glideSlopes: [],
             tireStrikes: [],
@@ -558,6 +563,10 @@ function runDataLoop() {
 
 
 function processGroundInteractions(state) {
+    if(window._fa2_isPaused) {
+        return;
+    }
+    const isCarrierLanding = state.map.rwType === RUNWAY_TYPE_CARRIER;
     const plane = state.plane;
     if(plane.crashFrame) {
         throw NOT_IMPLEMENTED;
@@ -575,22 +584,41 @@ function processGroundInteractions(state) {
     if(plane.touchedDown) {
         // Plane has touched down and negatively accelerating
         if(plane.horizontalMS > 0) {
-            const deltaHVMF = plane.rwNegAccelerationMS * (!plane.flare ? 1 : 2) / fps;
+            let deltaHVMF;
+            if(plane.carrierRWArrestorCableCaught !== null) {
+                const arrestorCurve = xMS => knotsToMS(-0.02 * Math.pow(mPSToKnots(xMS), 2) - 5)
+                deltaHVMF = arrestorCurve(plane.horizontalMS) / fps;
+            } else {
+                deltaHVMF = plane.rwNegAccelerationMS * (!plane.flare ? 1 : 2) / fps;
+            }
             const newHorizontalMS = Math.max(0, plane.horizontalMS + deltaHVMF)
             state.plane.horizontalMS = newHorizontalMS;
             if(newHorizontalMS > 0) {
                 state.plane.posMapCoord[0] += (newHorizontalMS * state.map.mapUnitsPerMeter / fps);
                 if(state.plane.posMapCoord[0] > state.map.rwP1MapCoord[0]) {
                     // Plane overan the runway
-                    console.log("👉 overran runway");
-                    state.plane.crashFrame++;
-                    state.plane.alive = false;
-                    createCrashDebrisObjects(state);
+                    if(state.plane.carrierRWArrestorCableCaught === null) {
+                        console.log("👉 overran runway");
+                        state.plane.crashFrame++;
+                        state.plane.alive = false;
+                        createCrashDebrisObjects(state);
+                    } else {
+                        console.log("👉 forced halted");
+                        state.plane.halted = true;
+                        state.plane.touchdownStats.runwayUsedEndX = plane.posMapCoord[0];
+                        state.plane.touchdownStats.runwayUsedM = (
+                            state.plane.touchdownStats.runwayUsedEndX
+                            - state.plane.touchdownStats.runwayUsedStartX
+                        ) / state.map.mapUnitsPerMeter;
+                    }
                 }
                 else {
                     if(
                         plane.flare === IS_FLARING
-                        && newHorizontalMS < plane.touchDownFlareMinMS
+                        && (
+                            newHorizontalMS < plane.touchDownFlareMinMS
+                            || plane.carrierRWArrestorCableCaught !== null
+                        )
                     ) {
                         state.plane.flare = IS_NOT_FLARING;
                         state.map.tireStrikes.push({
@@ -622,9 +650,17 @@ function processGroundInteractions(state) {
         state.plane.posMapCoord[0] >= state.map.rwP0MapCoord[0]
         && state.plane.posMapCoord[0] <= state.map.rwP1MapCoord[0]
     );
+    const overNonLandableBoatPart = Boolean(
+        isCarrierLanding
+        && state.plane.posMapCoord[0] >= state.map.rwP1MapCoord[0]
+        && state.plane.posMapCoord[0] <= state.map.carrierMaxMapX
+    );
 
-    // Plane crashed into the ground
-    if(!overRunway && planeBottomMapCoordY <= 0) {
+    // Plane crashed into the ground or non landable part of boat.
+    if(
+        (!overRunway && planeBottomMapCoordY <= 0)
+        || (overNonLandableBoatPart && planeBottomMapCoordY < state.map.rwP1MapCoord[1])
+    ) {
         state.plane.crashFrame++;
         state.plane.alive = false;
         createCrashDebrisObjects(state);
@@ -638,17 +674,45 @@ function processGroundInteractions(state) {
     if(touchingRunway) {
 
         const touchdownMS = state.plane.verticalMS;
-        const isCrash = touchdownMS < state.plane.minTouchdownVerticalMS
+        const isCrash = Boolean(
+            touchdownMS < state.plane.minTouchdownVerticalMS
+            || (isCarrierLanding && lineInterceptsBoatRear(
+                state.map.rwP0MapCoord,
+                planeToMapBoxCoords(state)
+            ))
+        );
         const noBounceMin = state.plane.minTouchdownVerticalMS * 0.333;
         const bigBounceMin = state.plane.minTouchdownVerticalMS * 0.666;
         let addRubberStrike = true;
-
         console.log({
             touchdownMS,
             flare: state.plane.flare,
             bigBounceMin,
             noBounceMin,
+            planePosMapCoord: state.plane.posMapCoord,
         });
+
+        const arrestorGearCaught = Boolean(
+            isCarrierLanding
+            && plane.posMapCoord[0] >= state.map.carrierRWArrestorCableMapXs[0]
+            && plane.posMapCoord[0] <= state.map.carrierRWArrestorCableMapXs[
+                state.map.carrierRWArrestorCableMapXs.length - 1
+            ]
+        );
+        let arrestorIXCaught;
+        if(arrestorGearCaught) {
+            for(let i in state.map.carrierRWArrestorCableMapXs) {
+                if(state.plane.posMapCoord[0] <= state.map.carrierRWArrestorCableMapXs[i]){
+                    arrestorIXCaught = parseInt(i);
+                    console.log(`👉 Arrestor Gear #${arrestorIXCaught+1} Caught`);
+                    break;
+                }
+            }
+            if(typeof arrestorIXCaught === "undefined") {
+                throw NOT_IMPLEMENTED;
+            }
+            state.plane.carrierRWArrestorCableCaught = arrestorIXCaught;
+        }
 
         // check for plane crash into runway
         if (isCrash)
@@ -659,7 +723,7 @@ function processGroundInteractions(state) {
             addRubberStrike = false;
             createCrashDebrisObjects(state);
         }
-        else if(!isCrash && touchdownMS >= noBounceMin) {
+        else if(!isCrash && (touchdownMS >= noBounceMin || arrestorGearCaught)) {
             // touchdown
             state.plane.touchedDown = true;
             state.game.acceptControlCommands = false;
@@ -688,17 +752,17 @@ function processGroundInteractions(state) {
         } else if (!isCrash && touchdownMS > bigBounceMin) {
             // small bounce off landing
             state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 0.8;
+            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + (state.plane.posMapCoord[1] - planeBottomMapCoordY);
             state.plane.touchdownStats.bounces++;
             console.log("👉 small bounce");
-
         } else {
             // big bounce off runway
-            state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 1;
+            state.plane.verticalMS = Math.abs(state.plane.verticalMS);
+            state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + (state.plane.posMapCoord[1] - planeBottomMapCoordY);
             state.plane.touchdownStats.isRough = true;
             state.plane.touchdownStats.bounces++;
             console.log("👉 big bounce");
         }
-
         if (addRubberStrike) {
             const shakeSizeCurve = tdMs => Math.max(
                 0.03,
@@ -723,7 +787,7 @@ function adjustMapWindValues(state) {
     }
 
     const fps = state.game.dataFPS;
-    let delta
+    let delta;
     if(state.map.windXVel < state.map.windXTarg) {
         // Increase windMS to reach target.
         delta = Math.min(
@@ -753,11 +817,8 @@ function adjustMapWindValues(state) {
             state.map.windXMax,
         );
     }
-
-
     return state;
 }
-
 
 function createCrashDebrisObjects(state) {
     if(window._debrisObjects.length) {

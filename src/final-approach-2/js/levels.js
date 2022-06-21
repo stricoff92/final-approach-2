@@ -1,7 +1,7 @@
 
 function innerAdjustPlanePosition(state) {
 
-    if(state.isPaused) {
+    if(window._fa2_isPaused) {
         return state;
     }
 
@@ -21,7 +21,7 @@ function innerAdjustPlanePosition(state) {
         newHorizontalMS = plane.leveledOutInitialHorizontalMS;
     }
     else if (plane.lastFlareFrame === state.game.frame) {
-        newVerticalMS = 0;
+        newVerticalMS = feetPerMinToMS(-375);
         newHorizontalMS = plane.horizontalMS;
     }
     else if (plane.flare) {
@@ -138,10 +138,13 @@ function setPlaneProps(state) {
         state.plane.asset = PLANE_C152;
         state.plane.dimensions = [],
         state.plane.rwNegAccelerationMS = knotsToMS(-15);
-        state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500)
+        state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500);
+        if(state.game.level > 7) {
+            state.plane.minTouchdownVerticalMS = feetPerMinToMS(-2700);
+        }
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
-        state.plane.horizontalMS = knotsToMS(80);
+        state.plane.horizontalMS = knotsToMS(95);
         state.plane.verticalMS = feetPerMinToMS(-550);
         state.plane.lastLevelOutTS = performance.now();
         state.plane.lastLevelOutFrame = state.game.frame;
@@ -374,6 +377,33 @@ function setMapProps(state) {
                 return DANGER_STATUS_NONE;
             }
         }
+    }
+    else if (level === 8) {
+        state.game.levelName = "Carrier Landing I";
+        state.map.terrain = TERRAIN_OCEAN;
+        state.map.rwType = RUNWAY_TYPE_CARRIER;
+        state.map.rwVisualWidthM = 5;
+        state.map.rwP0MapCoord = [1500 * mupm, 15 * mupm];
+        state.map.rwP1MapCoord = [1565 * mupm, 15 * mupm];
+        state.map.carrierRWArrestorCableMapXs = [
+            1501, 1508, 1515, 1520
+        ].map(v => v * mupm);
+        state.map.carrierRWArrestingGearBounds = {
+            xStart: state.map.carrierRWArrestorCableMapXs.reduce((v1, v2) => v1 < v2 ? v1 : v2),
+            xEnd: state.map.carrierRWArrestorCableMapXs.reduce((v1, v2) => v1 > v2 ? v1 : v2),
+        };
+        state.map.glideSlopes.push({
+            p0: [0, 400 * mupm],
+            p1: [1512 * mupm, 15 * mupm],
+        });
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        // state.plane.posMapCoord = [1400 * mupm, 65 * mupm];
+        state.map.cloudLayer = {
+            topY: 360 * mupm,
+            bottomY: 200 * mupm,
+        };
+        state.map.carrierMinMapX = state.map.rwP0MapCoord[0];
+        state.map.carrierMaxMapX = state.map.rwP1MapCoord[0] + CARRIER_DECK_SIZE_AFTER_RW_M * mupm;
     }
     else {
         throw NOT_IMPLEMENTED;
