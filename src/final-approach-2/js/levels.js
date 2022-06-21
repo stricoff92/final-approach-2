@@ -57,11 +57,11 @@ function setPlaneProps(state) {
         state.plane.horizontalMS = knotsToMS(69.420);
         state.plane.verticalMS = feetPerMinToMS(-550);
 
-        state.plane.terminalVerticalMS = feetPerMinToMS(-1800);
-        state.plane.verticalAccelerationMS = feetPerMinToMS(-400);
+        state.plane.terminalVerticalMS = feetPerMinToMS(-2300);
+        state.plane.verticalAccelerationMS = feetPerMinToMS(-600);
 
-        state.plane.upAccelerationPerCmdMS = feetPerMinToMS(200);
-        state.plane.downAccelerationPerCmdMS = feetPerMinToMS(-300);
+        state.plane.upAccelerationPerCmdMS = feetPerMinToMS(550);
+        state.plane.downAccelerationPerCmdMS = feetPerMinToMS(-400);
 
         state.plane.touchDownFlareMinMS = knotsToMS(36);
 
@@ -91,12 +91,12 @@ function setPlaneProps(state) {
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
         state.plane.horizontalMS = knotsToMS(130.69);
-        state.plane.verticalMS = feetPerMinToMS(-550);
-        state.plane.terminalVerticalMS = feetPerMinToMS(-2200);
-        state.plane.verticalAccelerationMS = feetPerMinToMS(-500);
+        state.plane.verticalMS = feetPerMinToMS(-700);
+        state.plane.terminalVerticalMS = feetPerMinToMS(-25000);
+        state.plane.verticalAccelerationMS = feetPerMinToMS(-800);
 
-        state.plane.upAccelerationPerCmdMS = feetPerMinToMS(300);
-        state.plane.downAccelerationPerCmdMS = feetPerMinToMS(-350);
+        state.plane.upAccelerationPerCmdMS = feetPerMinToMS(750);
+        state.plane.downAccelerationPerCmdMS = feetPerMinToMS(-500);
 
         state.plane.touchDownFlareMinMS = knotsToMS(70);
 
