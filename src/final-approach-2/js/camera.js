@@ -1372,7 +1372,7 @@ function _drawCarrierRunway(state, nowTS) {
     const agtaCCTopLeft = mapCoordToCanvasCoord(
         [
             state.map.carrierRWArrestingGearBounds.xStart,
-            rwMapTopLeft[1]
+            rwMapTopLeft[1],
         ],
         plane.posMapCoord,
         state.camera,
