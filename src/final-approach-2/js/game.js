@@ -68,6 +68,8 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             verticalMS: null,
             lastAccelerateUpFrame: null,
             lastAccelerateDownFrame: null,
+            upAccelerationPerCmdMS: null,
+            downAccelerationPerCmdMS: null,
             terminalVerticalMS: null,
             verticalAccelerationMS: null,
             flare: IS_FLARING,
@@ -350,26 +352,18 @@ function runDataLoop() {
             else if(cmd.cmd === COMMAND_ACCELERATE_UP && state.game.acceptControlCommands) {
                 if(state.plane.startingFuel !== null) {
                     if(state.plane.fuelRemaining > 0) {
-                        // state.plane.lastLevelOutTS = performance.now();
-                        // state.plane.lastLevelOutFrame = state.game.frame;
                         state.plane.lastAccelerateUpFrame = state.game.frame;
                         state.plane.fuelRemaining--;
                         state.plane.fuelUsedLastTS = nowTS;
                         maneuverPerformed = true;
                     }
                 } else {
-                    // state.plane.lastLevelOutTS = performance.now();
-                    // state.plane.lastLevelOutFrame = state.game.frame;
                     state.plane.lastAccelerateUpFrame = state.game.frame;
                     maneuverPerformed = true;
                 }
             }
             else if(cmd.cmd === COMMAND_ACCELERATE_DOWN && state.game.acceptControlCommands) {
-                // state.plane.flare = IS_FLARING;
-                // state.plane.lastFlareTS = performance.now();
-                // state.plane.lastFlareFrame = state.game.frame;
                 state.plane.lastAccelerateDownFrame = state.game.frame;
-                maneuverPerformed = true;
             }
             if(
                 maneuverPerformed

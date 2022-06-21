@@ -1,67 +1,38 @@
 
 function innerAdjustPlanePosition(state) {
-
     if(window._fa2_isPaused) {
         return state;
     }
-
     const fps = state.game.dataFPS;
     const plane = state.plane;
     const mupm = state.map.mapUnitsPerMeter
     const nowTS = performance.now();
 
-    // Calculate these new values
-    let newHorizontalMS;
     let newVerticalMS;
-
     if(
-        plane.lastLevelOutFrame === state.game.frame
+        plane.lastAccelerateUpFrame === state.game.frame
     ) {
-        newVerticalMS = 0;
-        newHorizontalMS = plane.leveledOutInitialHorizontalMS;
+        newVerticalMS = Math.min(
+            0,
+            plane.verticalMS + plane.upAccelerationPerCmdMS,
+        );
     }
-    else if (plane.lastFlareFrame === state.game.frame) {
-        newVerticalMS = feetPerMinToMS(-375);
-        newHorizontalMS = plane.horizontalMS;
-    }
-    else if (plane.flare) {
-        if (plane.horizontalMS < plane.flareTerminalHorizontalMS) {
-            // End of flare.
-            state.plane.flare = IS_NOT_FLARING;
-            newVerticalMS = 0;
-            const deltaHorizontalMF = plane.leveledOutHorizontalAccelerationMS2 / fps;
-            newHorizontalMS = plane.horizontalMS + deltaHorizontalMF;
-        } else {
-            // Continue flaring.
-            const elapsedFlareMS = nowTS - plane.lastFlareTS;
-            const verticalAccMS = plane.flareVerticalAccelerationMS2Curve(elapsedFlareMS);
-            const verticalAccMF = verticalAccMS / fps;
-            newVerticalMS = plane.verticalMS + verticalAccMF;
-
-            const deltaHorizontalMF = plane.flareHorizontalAccelerationMS2 / fps;
-            newHorizontalMS = plane.horizontalMS + deltaHorizontalMF;
-        }
+    else if (plane.lastAccelerateDownFrame === state.game.frame) {
+        newVerticalMS = Math.max(
+            plane.verticalMS + plane.downAccelerationPerCmdMS,
+            plane.terminalVerticalMS,
+        );
     }
     else {
-        const elapsedLeveledOutMS = nowTS - plane.lastLevelOutTS;
-        const verticalAccMS = plane.leveledOutVerticalAccelerationMS2Curve(
-            elapsedLeveledOutMS,
-            state.map.windXVel,
-        );
-        const verticalAccMF = verticalAccMS / fps;
-        newVerticalMS = plane.verticalMS + verticalAccMF;
-
-        const deltaHorizontalMF = plane.leveledOutHorizontalAccelerationMS2 / fps;
-        newHorizontalMS = Math.min(
-            plane.leveledOutTerminalHorizontalMS,
-            plane.horizontalMS + deltaHorizontalMF,
+        newVerticalMS = Math.max(
+            plane.verticalMS + plane.verticalAccelerationMS / fps,
+            plane.terminalVerticalMS,
         )
     }
 
-    state.plane.horizontalMS = newHorizontalMS;
     state.plane.verticalMS = newVerticalMS;
     state.plane.posMapCoord[0] += (
-        (newHorizontalMS * mupm / fps)
+        (state.plane.horizontalMS * mupm / fps)
         + (state.map.windXVel === null ? 0 : state.map.windXVel * mupm / fps)
     );
     state.plane.posMapCoord[1] += (
@@ -88,6 +59,9 @@ function setPlaneProps(state) {
 
         state.plane.terminalVerticalMS = feetPerMinToMS(-1800);
         state.plane.verticalAccelerationMS = feetPerMinToMS(-400);
+
+        state.plane.upAccelerationPerCmdMS = feetPerMinToMS(200);
+        state.plane.downAccelerationPerCmdMS = feetPerMinToMS(-300);
 
         state.plane.touchDownFlareMinMS = knotsToMS(36);
 
@@ -120,6 +94,10 @@ function setPlaneProps(state) {
         state.plane.verticalMS = feetPerMinToMS(-550);
         state.plane.terminalVerticalMS = feetPerMinToMS(-2200);
         state.plane.verticalAccelerationMS = feetPerMinToMS(-500);
+
+        state.plane.upAccelerationPerCmdMS = feetPerMinToMS(300);
+        state.plane.downAccelerationPerCmdMS = feetPerMinToMS(-350);
+
         state.plane.touchDownFlareMinMS = knotsToMS(70);
 
         const noFlareAsset = new Image();
