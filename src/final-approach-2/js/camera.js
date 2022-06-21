@@ -1585,7 +1585,7 @@ function _drawCarrierRunway(state, nowTS) {
     let topLeftPlaneCorner, planeRowXPointer, planeRowYPointer;
     const planeXPX = state.plane.dimensions[noFlare][0] * mupm;
     const planeYPX = state.plane.dimensions[noFlare][1] * mupm;
-    const xInt = (0.85 * mupm);
+    const xInt = (1 * mupm);
     const yInt = (0.85 * mupm);
 
     planeRowXPointer = state.map.rwP1MapCoord[0] + (5 * mupm);
