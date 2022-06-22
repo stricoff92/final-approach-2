@@ -1,67 +1,77 @@
 
-function innerAdjustPlanePosition(state) {
+function AP_dangerousAirspace(state) {
+    const fps = state.game.dataFPS;
+    const plane = state.plane;
+    const mupm = state.map.mapUnitsPerMeter;
+    state.plane.posMapCoord[0] += (
+        (state.plane.horizontalMS * mupm / fps)
+        + (state.map.windXVel === null ? 0 : state.map.windXVel * mupm / fps)
+    );
+    const newYPos = getGlideSlopeY(state.map.glideSlopes, plane.posMapCoord[0]);
+    const oldYPos = deepCopy(state.plane.posMapCoord[1]);
+    state.plane.posMapCoord[1] = newYPos;
+    state.plane.verticalMS = (newYPos - oldYPos) / mupm * fps;
+    state.plane.levelOnNextManeuver = true;
+    return state;
+}
 
+function autoPilot(state) {
+    if(state.game.level === 7) {
+        return AP_dangerousAirspace(state);
+    }
+    else {throw NOT_IMPLEMENTED;}
+}
+
+
+function innerAdjustPlanePosition(state) {
     if(window._fa2_isPaused) {
         return state;
     }
-
+    if(
+        state.map.getAutopilotStatus
+        && state.map.getAutopilotStatus(state)
+    ) {
+        return autoPilot(state);
+    }
     const fps = state.game.dataFPS;
     const plane = state.plane;
-    const mupm = state.map.mapUnitsPerMeter
-    const nowTS = performance.now();
+    const mupm = state.map.mapUnitsPerMeter;
 
-    // Calculate these new values
-    let newHorizontalMS;
     let newVerticalMS;
-
     if(
-        plane.lastLevelOutFrame === state.game.frame
+        state.plane.levelOnNextManeuver
+        && (
+            plane.lastAccelerateUpFrame === state.game.frame
+            || plane.lastAccelerateDownFrame === state.game.frame
+        )
     ) {
+        state.plane.levelOnNextManeuver = false;
         newVerticalMS = 0;
-        newHorizontalMS = plane.leveledOutInitialHorizontalMS;
     }
-    else if (plane.lastFlareFrame === state.game.frame) {
-        newVerticalMS = feetPerMinToMS(-375);
-        newHorizontalMS = plane.horizontalMS;
+    else if(
+        plane.lastAccelerateUpFrame === state.game.frame
+    ) {
+        newVerticalMS = Math.min(
+            0,
+            plane.verticalMS + plane.upAccelerationPerCmdMS,
+        );
     }
-    else if (plane.flare) {
-        if (plane.horizontalMS < plane.flareTerminalHorizontalMS) {
-            // End of flare.
-            state.plane.flare = IS_NOT_FLARING;
-            newVerticalMS = 0;
-            const deltaHorizontalMF = plane.leveledOutHorizontalAccelerationMS2 / fps;
-            newHorizontalMS = plane.horizontalMS + deltaHorizontalMF;
-        } else {
-            // Continue flaring.
-            const elapsedFlareMS = nowTS - plane.lastFlareTS;
-            const verticalAccMS = plane.flareVerticalAccelerationMS2Curve(elapsedFlareMS);
-            const verticalAccMF = verticalAccMS / fps;
-            newVerticalMS = plane.verticalMS + verticalAccMF;
-
-            const deltaHorizontalMF = plane.flareHorizontalAccelerationMS2 / fps;
-            newHorizontalMS = plane.horizontalMS + deltaHorizontalMF;
-        }
+    else if (plane.lastAccelerateDownFrame === state.game.frame) {
+        newVerticalMS = Math.max(
+            plane.verticalMS + plane.downAccelerationPerCmdMS,
+            plane.terminalVerticalMS,
+        );
     }
     else {
-        const elapsedLeveledOutMS = nowTS - plane.lastLevelOutTS;
-        const verticalAccMS = plane.leveledOutVerticalAccelerationMS2Curve(
-            elapsedLeveledOutMS,
-            state.map.windXVel,
-        );
-        const verticalAccMF = verticalAccMS / fps;
-        newVerticalMS = plane.verticalMS + verticalAccMF;
-
-        const deltaHorizontalMF = plane.leveledOutHorizontalAccelerationMS2 / fps;
-        newHorizontalMS = Math.min(
-            plane.leveledOutTerminalHorizontalMS,
-            plane.horizontalMS + deltaHorizontalMF,
+        newVerticalMS = Math.max(
+            plane.verticalMS + plane.verticalAccelerationMS / fps,
+            plane.terminalVerticalMS,
         )
     }
 
-    state.plane.horizontalMS = newHorizontalMS;
     state.plane.verticalMS = newVerticalMS;
     state.plane.posMapCoord[0] += (
-        (newHorizontalMS * mupm / fps)
+        (state.plane.horizontalMS * mupm / fps)
         + (state.map.windXVel === null ? 0 : state.map.windXVel * mupm / fps)
     );
     state.plane.posMapCoord[1] += (
@@ -83,41 +93,16 @@ function setPlaneProps(state) {
         state.plane.minTouchdownVerticalMS = feetPerMinToMS(-900)
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
-        state.plane.horizontalMS = knotsToMS(58);
+        state.plane.horizontalMS = knotsToMS(69.420);
         state.plane.verticalMS = feetPerMinToMS(-550);
 
-        state.plane.lastLevelOutTS = performance.now();
-        state.plane.lastLevelOutFrame = state.game.frame;
-        state.plane.leveledOutInitialHorizontalMS = knotsToMS(50);
-        state.plane.leveledOutHorizontalAccelerationMS2 = knotsToMS(3);
-        state.plane.leveledOutTerminalHorizontalMS = knotsToMS(69);
+        state.plane.terminalVerticalMS = feetPerMinToMS(-2300);
+        state.plane.verticalAccelerationMS = feetPerMinToMS(-600);
 
-        state.plane.leveledOutTerminalVerticalMS = feetPerMinToMS(-1800);
-        state.plane.leveledOutVerticalAccelerationMS2Curve = (elapsedMS, windMS) => {
-            const f = elapsedMS => -0.125 * Math.pow(elapsedMS / 1000, 2) - 1.5;
-            if(!windMS) {
-                return f(elapsedMS);
-            }
-            let windAdj;
-            if(windMS < 0) {
-                // Headwind, less -acceleration
-                // Adj between 0.1 and 1
-                windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
-            }
-            else {
-                // Tailwind, more -acceleration
-                // Adj between 1 and 7
-                windAdj = minMaxValue(0.03 * Math.pow(windMS, 2) + 1, 1, 7);
-            }
-            return f(elapsedMS) * windAdj;
-        }
+        state.plane.upAccelerationPerCmdMS = feetPerMinToMS(550);
+        state.plane.downAccelerationPerCmdMS = feetPerMinToMS(-400);
 
-        state.plane.flareTerminalHorizontalMS = knotsToMS(40);
-        state.plane.flareHorizontalAccelerationMS2 = knotsToMS(-5);
-        state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
-            return -0.02 * Math.pow(elapsedMS / 1000, 2) - 0.75;
-        }
-        state.plane.touchDownFlareMinMS = 18;
+        state.plane.touchDownFlareMinMS = knotsToMS(36);
 
         const noFlareAsset = new Image();
         noFlareAsset.src = "img/" + PLANE_C152 + "-0.svg";
@@ -144,38 +129,15 @@ function setPlaneProps(state) {
         }
         state.plane.adjustPlanePosition = innerAdjustPlanePosition;
 
-        state.plane.horizontalMS = knotsToMS(95);
-        state.plane.verticalMS = feetPerMinToMS(-550);
-        state.plane.lastLevelOutTS = performance.now();
-        state.plane.lastLevelOutFrame = state.game.frame;
-        state.plane.leveledOutInitialHorizontalMS = knotsToMS(100);
-        state.plane.leveledOutHorizontalAccelerationMS2 = knotsToMS(10);
-        state.plane.leveledOutTerminalHorizontalMS = knotsToMS(140);
-        state.plane.leveledOutTerminalVerticalMS = feetPerMinToMS(-2200);
-        state.plane.leveledOutVerticalAccelerationMS2Curve = (elapsedMS, windMS) => {
-            const f = elapsedMS => -0.3 * Math.pow(elapsedMS / 1000, 2) - 4;
-            if(!windMS) {
-                return f(elapsedMS);
-            }
-            let windAdj;
-            if(windMS < 0) {
-                // Headwind, less -acceleration
-                // Adj between 0.1 and 1
-                windAdj = minMaxValue(-0.005 * Math.pow(windMS, 2) + 1, 0.1, 1);
-            }
-            else {
-                // Tailwind, more -acceleration
-                // Adj between 1 and 7
-                windAdj = minMaxValue(0.03 * Math.pow(windMS, 2) + 1, 1, 7);
-            }
-            return f(elapsedMS) * windAdj;
-        }
-        state.plane.flareTerminalHorizontalMS = knotsToMS(85);
-        state.plane.flareHorizontalAccelerationMS2 = knotsToMS(-8);
-        state.plane.flareVerticalAccelerationMS2Curve = elapsedMS => {
-            return -0.03 * Math.pow(elapsedMS / 1000, 2) - 1;
-        }
-        state.plane.touchDownFlareMinMS = 35;
+        state.plane.horizontalMS = knotsToMS(130.69);
+        state.plane.verticalMS = feetPerMinToMS(-700);
+        state.plane.terminalVerticalMS = feetPerMinToMS(-50000);
+        state.plane.verticalAccelerationMS = feetPerMinToMS(-800);
+
+        state.plane.upAccelerationPerCmdMS = feetPerMinToMS(750);
+        state.plane.downAccelerationPerCmdMS = feetPerMinToMS(-500);
+
+        state.plane.touchDownFlareMinMS = knotsToMS(70);
 
         const noFlareAsset = new Image();
         noFlareAsset.src = "img/" + PLANE_F18 + "-0.svg";
@@ -190,9 +152,7 @@ function setPlaneProps(state) {
             [9.7, 3.8],  // flare    (nose us)
         );
     }
-    else {
-        throw NOT_IMPLEMENTED;
-    }
+    else {throw NOT_IMPLEMENTED;}
     return state;
 }
 
@@ -302,8 +262,8 @@ function setMapProps(state) {
     }
     else if (level === 6) {
         state.game.levelName = "Low Fuel";
-        state.plane.startingFuel = 4;
-        state.plane.fuelRemaining = 3;
+        state.plane.startingFuel = 30;
+        state.plane.fuelRemaining = 27;
         state.map.terrain = TERRAIN_DESERT;
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;
@@ -325,15 +285,19 @@ function setMapProps(state) {
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1750 * mupm, 0];
-        const rwEnd = (1750 + 320) * mupm
+        const rwEnd = (1750 + 320) * mupm;
         state.map.rwP1MapCoord = [(1750 + 320) * mupm, 0];
         state.map.glideSlopes.push(
             {
                 p0: [0, 1000 * mupm],
-                p1: [1000 * mupm, 900 * mupm],
+                p1: [900 * mupm, 900 * mupm],
             },
             {
-                p0: [1000 * mupm, 900 * mupm],
+                p0: [900 * mupm, 900 * mupm],
+                p1: [1000 * mupm, 800 * mupm],
+            },
+            {
+                p0: [1000 * mupm, 800 * mupm],
                 p1: [1200 * mupm, 130 * mupm], //  LEVEL_7_MAX_SAFE_X_M
             },
             {
@@ -377,6 +341,9 @@ function setMapProps(state) {
                 return DANGER_STATUS_NONE;
             }
         }
+        state.map.getAutopilotStatus = state => {
+            return state.plane.posMapCoord[1] > (750 * mupm);
+        }
     }
     else if (level === 8) {
         state.game.levelName = "Carrier Landing I";
@@ -393,7 +360,7 @@ function setMapProps(state) {
             xEnd: state.map.carrierRWArrestorCableMapXs.reduce((v1, v2) => v1 > v2 ? v1 : v2),
         };
         state.map.glideSlopes.push({
-            p0: [0, 400 * mupm],
+            p0: [0, 310 * mupm],
             p1: [1512 * mupm, 15 * mupm],
         });
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);

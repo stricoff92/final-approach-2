@@ -49,8 +49,8 @@ function runDisplayLoop() {
         drawScoreScreen(state);
     }
 
+    drawAccelerationEffect(state);
     drawButtons(state);
-    drawClickRing(state);
     window.requestAnimationFrame(runDisplayLoop)
 }
 
@@ -58,25 +58,54 @@ function clearCanvas(state) {
     state.ctx.clearRect(0, 0, state.camera.canvasW * 2, state.camera.canvasH * 2)
 }
 
-function drawClickRing(state) {
-    if(state.game.lastClick.frameCreated !== null && state.game.phase === PHASE_2_LIVE) {
-        if(state.game.frame > state.game.lastClick.frameCreated + CLICK_RING_MAX_FRAME_AGE) {
-            return;
-        }
-        const percentRemaining = (CLICK_RING_MAX_FRAME_AGE - (state.game.frame - state.game.lastClick.frameCreated)) / CLICK_RING_MAX_FRAME_AGE;
+function drawAccelerationEffect(state) {
+    const effectFrameLifespan = 30;
+    const lastUp = state.plane.lastAccelerateUpFrame;
+    const lastDown = state.plane.lastAccelerateDownFrame;
+    const cam = state.camera;
+    let percentComplete;
+    let alpha;
+    if(
+        lastUp
+        && lastUp > (lastDown || 0)
+        && (lastUp + effectFrameLifespan) > state.game.frame
+    ) {
+        percentComplete = (state.game.frame - lastUp) / effectFrameLifespan;
+        alpha = (1 - percentComplete) * 0.25;
         state.ctx.beginPath();
-        state.ctx.strokeStyle = state.game.lastClick.color(Math.max(0.1, 1 * percentRemaining));
-        state.ctx.lineWidth = CLICK_RING_WIDTH;
-        state.ctx.arc(
-            state.game.lastClick.canvasCoord[0],
-            state.game.lastClick.canvasCoord[1],
-            CLICK_RING_MAX_RADIUS_CANVAS_PX * (1 - percentRemaining),
-            0,
-            TWO_PI,
-        );
-        state.ctx.stroke()
+        state.ctx.fillStyle = UP_ACCELERATION_EFFECT_COLOR(alpha);
+        // state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasHalfH);
+        state.ctx.moveTo(cam.canvasHalfW, 0);
+        state.ctx.lineTo(cam.canvasW * 0.25, cam.canvasH * 0.25);
+        state.ctx.lineTo(cam.canvasW * 0.375, cam.canvasH * 0.25);
+        state.ctx.lineTo(cam.canvasW * 0.375, cam.canvasHalfH);
+        state.ctx.lineTo(cam.canvasW * 0.625, cam.canvasHalfH);
+        state.ctx.lineTo(cam.canvasW * 0.625, cam.canvasH * 0.25);
+        state.ctx.lineTo(cam.canvasW * 0.75, cam.canvasH * 0.25);
+        state.ctx.fill();
+    }
+    else if(
+        lastDown
+        && lastDown > (lastUp || 0)
+        && (lastDown + effectFrameLifespan) > state.game.frame
+    ) {
+        percentComplete = (state.game.frame - lastDown) / effectFrameLifespan;
+        alpha = (1 - percentComplete) * 0.33;
+        state.ctx.beginPath();
+        state.ctx.fillStyle = DOWN_ACCELERATION_EFFECT_COLOR(alpha);
+        // state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasHalfH);
+        state.ctx.moveTo(cam.canvasHalfW, cam.canvasH);
+        state.ctx.lineTo(cam.canvasW * 0.25, cam.canvasH * 0.75);
+        state.ctx.lineTo(cam.canvasW * 0.375, cam.canvasH * 0.75);
+        state.ctx.lineTo(cam.canvasW * 0.375, cam.canvasHalfH);
+        state.ctx.lineTo(cam.canvasW * 0.625, cam.canvasHalfH);
+        state.ctx.lineTo(cam.canvasW * 0.625, cam.canvasH * 0.75);
+        state.ctx.lineTo(cam.canvasW * 0.75, cam.canvasH * 0.75);
+        state.ctx.fill();
     }
 }
+
+
 
 function drawButtons(state) {
     state.buttons.forEach(btn => {
@@ -318,6 +347,20 @@ function drawGameScene(state) {
             planeCanvasDims[0],
             planeCanvasDims[1],
         );
+
+        if(
+            state.map.getAutopilotStatus
+            && state.map.getAutopilotStatus(state)
+        ) {
+            const APtextPosX = state.camera.canvasHalfW;// + plane.dimensions[1][0] * mupm / 2 - 20;
+            const APtextPosY = state.camera.canvasHalfH - plane.dimensions[1][1] * mupm / 2 - 25;
+            state.ctx.beginPath()
+            state.ctx.font = "24px Courier New";
+            state.ctx.textBaseline = "bottom";
+            state.ctx.textAlign = "center";
+            state.ctx.fillStyle = "#000";
+            state.ctx.fillText("🤖 AUTO PILOT", APtextPosX, APtextPosY);
+        }
     }
     else {
         _drawCrashingEffect(state);
@@ -438,7 +481,6 @@ function drawGameScene(state) {
         }
     }
 
-    drawHorizontalDistanceArrow(state);
 
     // Draw Previous Points
     if(!plane.touchedDown && !plane.crashFrame) {
@@ -688,12 +730,12 @@ function _drawFuelIndicator(state, nowTS) {
     state.ctx.fillStyle = "#f00";
     state.ctx.font = "bold 20px Courier New";
     state.ctx.textBaseline = "middle";
-    state.ctx.textAlign = "left";
-    state.ctx.fillText(anyLeft?"FUEL":"⚠️ NO FUEL", indicatorCenterX, indicatorY2);
+    state.ctx.textAlign = "right";
+    state.ctx.fillText(anyLeft?"FUEL":"⚠️ NO FUEL", indicatorCenterX - 30, indicatorY2 - 30);
 
     if(anyLeft) {
         // Outer bar
-        const barX1 = indicatorCenterX + 5;
+        const barX1 = indicatorCenterX;
         const percent = plane.fuelRemaining / plane.startingFuel;
         const barLen = Math.min(plane.startingFuel<6?80:130, state.camera.canvasHalfH / 1.6);
         const barY1 = indicatorY2 - barLen;
@@ -707,23 +749,6 @@ function _drawFuelIndicator(state, nowTS) {
         state.ctx.lineWidth = 2;
         state.ctx.rect(barX1, barY1, barW, barLen);
         state.ctx.stroke();
-
-        // Tick marks
-        const yInt = Math.round(barLen / plane.startingFuel);
-        for(let i=1; i<plane.startingFuel; i++) {
-            state.ctx.beginPath();
-            state.ctx.strokeStyle = "#fff";
-            state.ctx.lineWidth = 2;
-            state.ctx.moveTo(
-                barX1,
-                barY1 + yInt * i
-            );
-            state.ctx.lineTo(
-                barX1 + barW,
-                barY1 + yInt * i
-            );
-            state.ctx.stroke();
-        }
 
         const animationLenMS = 700;
         if(state.plane.fuelUsedLastTS && state.plane.fuelUsedLastTS + animationLenMS >= nowTS) {
@@ -1799,68 +1824,6 @@ function drawScoreScreen(state) {
             console.warn("no high score data to show")
         }
     }
-}
-
-function drawHorizontalDistanceArrow(state) {
-    const plane = state.plane;
-    if(
-        !plane.alive
-        || plane.posMapCoord[0] > state.map.rwP0MapCoord[0]
-        || state.game.level !== 7
-    ) {
-        return;
-    }
-
-    // Horizontal Distance Text
-    const mupm = state.map.mapUnitsPerMeter;
-    const distanceToDiveM = Math.round((state.map.glideSlopes[0].p1[0] - plane.posMapCoord[0]) / mupm);
-    const diveSoon = distanceToDiveM < 400;
-    if(distanceToDiveM < 0) {
-        return;
-    }
-    const rwDText1P = [
-        state.camera.canvasHalfW,
-        Math.round(state.camera.canvasH * 0.35),
-    ];
-    state.ctx.beginPath();
-    state.ctx.fillStyle = (diveSoon && state.game.frame % 120 < 60) ? "#f00" : "#000";
-    state.ctx.font = `${diveSoon ? "bold 32" : 20}px Arial`;
-    state.ctx.textBaseline = "bottom";
-    state.ctx.textAlign = "left";
-    state.ctx.fillText("DIVE", ...rwDText1P);
-    const rwDText2P = [
-        rwDText1P[0],
-        rwDText1P[1] + 25,
-    ];
-    state.ctx.beginPath();
-    state.ctx.fillStyle = diveSoon ? "#f00" : "#000";
-    state.ctx.font = "bold 25px Arial";
-    state.ctx.fillText(`${distanceToDiveM.toFixed(0)} M`, ...rwDText2P);
-
-    // Runway Distance Arrow
-    const rwDLineP1 = [
-        rwDText2P[0],
-        rwDText2P[1] + 17,
-    ];
-    const rwDLineP2 = [
-        state.camera.canvasW * 0.9,
-        rwDText2P[1] + 17,
-    ];
-    state.ctx.beginPath();
-    state.ctx.strokeStyle = "#000";
-    state.ctx.lineWidth = 1;
-    state.ctx.moveTo(...rwDLineP1);
-    state.ctx.lineTo(...rwDLineP2);
-    state.ctx.stroke();
-    const altArrowHeadLen = 15;
-    state.ctx.beginPath();
-    state.ctx.moveTo(...rwDLineP2);
-    state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] - altArrowHeadLen / 2);
-    state.ctx.stroke();
-    state.ctx.beginPath();
-    state.ctx.moveTo(...rwDLineP2);
-    state.ctx.lineTo(rwDLineP2[0] - altArrowHeadLen, rwDLineP2[1] + altArrowHeadLen / 2);
-    state.ctx.stroke();
 }
 
 function drawDebugData(state) {

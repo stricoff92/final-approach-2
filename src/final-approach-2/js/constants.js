@@ -27,10 +27,9 @@ const BUTTON_TYPE_MAIN = 1;
 const MAIN_BUTTON_Y_LENGTH = 38;
 
 const COMMAND_QUIT_LEVEL = 0;
-const COMMAND_LEVEL_OUT = 1;
-const COMMAND_FLARE = 2;
 const COMMAND_START_LEVEL = 3;
-const COMMAND_SHOW_HELP = 4;
+const COMMAND_ACCELERATE_UP = 4;
+const COMMAND_ACCELERATE_DOWN = 5;
 
 const COLOR_PURPLE = "#620080";
 const COLOR_BLACK = "#000";
@@ -52,8 +51,6 @@ const CLOUD_GRADIENT_SIZE_M = 30;
 const CLICK_RING_MAX_FRAME_AGE = 20;
 const CLICK_RING_WIDTH = 12;
 const CLICK_RING_MAX_RADIUS_CANVAS_PX = 65;
-const COLOR_CLICK_RING_SINGLE = a => `rgb(0, 138, 57, ${a.toFixed(2)})`;
-const COLOR_CLICK_RING_DOUBLE = a => `rgb(138, 0, 138, ${a.toFixed(2)})`;
 
 const COLOR_SCORE_BOARD_BACKGROUND = a => `rgb(80, 0, 105, ${a.toFixed(2)})`;
 
@@ -91,3 +88,6 @@ const MAX_AFLAME_RADIUS_M = 4;
 const MIN_AFLAME_RADIUS_M = 1.5;
 
 const CARRIER_DECK_SIZE_AFTER_RW_M = 30;
+
+const UP_ACCELERATION_EFFECT_COLOR = a => `rgb(0, 143, 14, ${ a })`;   // green
+const DOWN_ACCELERATION_EFFECT_COLOR = a => `rgb(98, 0, 143, ${ a })`; // purple

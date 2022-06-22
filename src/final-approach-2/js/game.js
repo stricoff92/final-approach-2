@@ -5,7 +5,7 @@ function getHelpImg() {
     return img;
 }
 
-function createNewState(maxCompletedLevel, skipHelpScreen) {
+function createNewState(maxCompletedLevel) {
 
     window._cloudEffects = [];
     window._debrisObjects = [];
@@ -18,9 +18,9 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
         isDebug: urlContainsDebug(),
         ctx,
         helpImg: getHelpImg(),
-        pageTitle: skipHelpScreen ?  {text: "Select A Level", color: COLOR_PURPLE} : null,
+        pageTitle:{text: "Select A Level", color: COLOR_PURPLE},
         game: {
-            phase: skipHelpScreen ? PHASE_0_LOBBY : PHASE_N1_SHOW_HELP,
+            phase: PHASE_0_LOBBY,
             maxCountDownFrames: 60,
             countDownFrames: 0,
             frame: 0,
@@ -32,11 +32,6 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             gameStartTS: null,
             lastFrameTS: performance.now(),
             acceptControlCommands: false,
-            lastClick: {
-                canvasCoord: null,
-                frameCreated: null,
-                color: null,
-            },
             score: {
                 total: null,
                 scorePhaseStartedTS: null,
@@ -71,19 +66,14 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             posMapCoord: null,
             horizontalMS: null,
             verticalMS: null,
-            lastLevelOutTS: null,
-            lastLevelOutFrame: null,
-            leveledOutInitialHorizontalMS: null,
-            leveledOutTerminalHorizontalMS: null,
-            leveledOutHorizontalAccelerationMS2: null,
-            leveledOutTerminalVerticalMS: null,
-            leveledOutVerticalAccelerationMS2Curve: null,
-            flare: IS_NOT_FLARING,
-            lastFlareTS: null,
-            lastFlareFrame: null,
-            flareTerminalHorizontalMS: null,
-            flareHorizontalAccelerationMS2: null,
-            flareVerticalAccelerationMS2Curve: null,
+            lastAccelerateUpFrame: null,
+            lastAccelerateDownFrame: null,
+            upAccelerationPerCmdMS: null,
+            levelOnNextManeuver: false,
+            downAccelerationPerCmdMS: null,
+            terminalVerticalMS: null,
+            verticalAccelerationMS: null,
+            flare: IS_FLARING,
             touchDownFlareMinMS: null,
             minTouchdownVerticalMS: null,
             carrierRWArrestorCableCaught: null,
@@ -130,13 +120,14 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             carrierMaxMapX: null,
             carrierRWArrestorCableMapXs: null,
             getDangerStatus: state => {},
+            getAutopilotStatus: state => {},
             glideSlopes: [],
             tireStrikes: [],
             aaFire: [],
             aaFireP0: null,
             sunImg: null,
         },
-        buttons: skipHelpScreen ? availableLevels.map(levelNumber => {
+        buttons: availableLevels.map(levelNumber => {
             const disabled = levelNumber > (maxCompletedLevel + 1);
             const btn = {
                 type: BUTTON_TYPE_GRID,
@@ -151,7 +142,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
                 }
             };
             return btn;
-        }) : [],
+        }),
     }
 }
 
@@ -268,13 +259,8 @@ function runDataLoop() {
             }
         }
         if (!isButtonClick && state.game.phase === PHASE_2_LIVE) {
-            const cmd = isArrow ? (nextClick.isTopHalfOfScreenClick ? COMMAND_FLARE : COMMAND_LEVEL_OUT) : isBottomHalfClick ? COMMAND_LEVEL_OUT : COMMAND_FLARE;
+            const cmd = isArrow ? (nextClick.isTopHalfOfScreenClick ? COMMAND_ACCELERATE_UP : COMMAND_ACCELERATE_DOWN) : isBottomHalfClick ? COMMAND_ACCELERATE_DOWN : COMMAND_ACCELERATE_UP;
             window.addCommand({ cmd });
-            state.game.lastClick = {
-                canvasCoord: deepCopy(nextClick.clickCanvasCoord),
-                frameCreated: state.game.frame,
-                color: cmd === COMMAND_FLARE ? COLOR_CLICK_RING_DOUBLE : COLOR_CLICK_RING_SINGLE,
-            };
         }
         else if (state.game.phase === PHASE_N1_SHOW_HELP) {
             state.game.phase = PHASE_0_LOBBY;
@@ -353,37 +339,37 @@ function runDataLoop() {
 
         // Process commands
         const cmdCt = commands.length;
+        const acceptCommands = Boolean(
+            state.game.acceptControlCommands
+            && !state.map.getAutopilotStatus(state)
+        );
         for(let i=0; i<cmdCt; i++) {
             let cmd = commands[i];
             let maneuverPerformed = false;
             if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
                     updateCameraCanvasMetaData(
-                        createNewState(state.game.maxCompletedLevel, true)
+                        createNewState(state.game.maxCompletedLevel)
                     )
                 );
                 setTimeout(runDataLoop);
                 return;
             }
-            else if(cmd.cmd === COMMAND_LEVEL_OUT && state.game.acceptControlCommands) {
+            else if(cmd.cmd === COMMAND_ACCELERATE_UP && acceptCommands) {
                 if(state.plane.startingFuel !== null) {
                     if(state.plane.fuelRemaining > 0) {
-                        state.plane.lastLevelOutTS = performance.now();
-                        state.plane.lastLevelOutFrame = state.game.frame;
+                        state.plane.lastAccelerateUpFrame = state.game.frame;
                         state.plane.fuelRemaining--;
                         state.plane.fuelUsedLastTS = nowTS;
                         maneuverPerformed = true;
                     }
                 } else {
-                    state.plane.lastLevelOutTS = performance.now();
-                    state.plane.lastLevelOutFrame = state.game.frame;
+                    state.plane.lastAccelerateUpFrame = state.game.frame;
                     maneuverPerformed = true;
                 }
             }
-            else if(cmd.cmd === COMMAND_FLARE && state.game.acceptControlCommands) {
-                state.plane.flare = IS_FLARING;
-                state.plane.lastFlareTS = performance.now();
-                state.plane.lastFlareFrame = state.game.frame;
+            else if(cmd.cmd === COMMAND_ACCELERATE_DOWN && acceptCommands) {
+                state.plane.lastAccelerateDownFrame = state.game.frame;
                 maneuverPerformed = true;
             }
             if(
@@ -510,22 +496,6 @@ function runDataLoop() {
             state.buttons = [];
             state = setPlaneProps(state);
             state = setMapProps(state);
-        }
-        if(
-            nextCmd.cmd === COMMAND_SHOW_HELP
-            && state.game.phase === PHASE_0_LOBBY
-        ) {
-            state.game.phase = PHASE_N1_SHOW_HELP;
-            state.pageTitle = null;
-            state.buttons = [{
-                type: BUTTON_TYPE_MAIN,
-                boxCoord: null,
-                text: 'Menu',
-                handler: () => {
-                    location.reload(); // fix this
-                    return;
-                },
-            }];
         }
     }
 
