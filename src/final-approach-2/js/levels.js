@@ -262,8 +262,8 @@ function setMapProps(state) {
     }
     else if (level === 6) {
         state.game.levelName = "Low Fuel";
-        state.plane.startingFuel = 4;
-        state.plane.fuelRemaining = 3;
+        state.plane.startingFuel = 25;
+        state.plane.fuelRemaining = 25;
         state.map.terrain = TERRAIN_DESERT;
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;

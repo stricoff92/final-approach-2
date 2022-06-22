@@ -730,12 +730,12 @@ function _drawFuelIndicator(state, nowTS) {
     state.ctx.fillStyle = "#f00";
     state.ctx.font = "bold 20px Courier New";
     state.ctx.textBaseline = "middle";
-    state.ctx.textAlign = "left";
-    state.ctx.fillText(anyLeft?"FUEL":"⚠️ NO FUEL", indicatorCenterX, indicatorY2);
+    state.ctx.textAlign = "right";
+    state.ctx.fillText(anyLeft?"FUEL":"⚠️ NO FUEL", indicatorCenterX - 30, indicatorY2 - 30);
 
     if(anyLeft) {
         // Outer bar
-        const barX1 = indicatorCenterX + 5;
+        const barX1 = indicatorCenterX;
         const percent = plane.fuelRemaining / plane.startingFuel;
         const barLen = Math.min(plane.startingFuel<6?80:130, state.camera.canvasHalfH / 1.6);
         const barY1 = indicatorY2 - barLen;
@@ -749,23 +749,6 @@ function _drawFuelIndicator(state, nowTS) {
         state.ctx.lineWidth = 2;
         state.ctx.rect(barX1, barY1, barW, barLen);
         state.ctx.stroke();
-
-        // Tick marks
-        const yInt = Math.round(barLen / plane.startingFuel);
-        for(let i=1; i<plane.startingFuel; i++) {
-            state.ctx.beginPath();
-            state.ctx.strokeStyle = "#fff";
-            state.ctx.lineWidth = 2;
-            state.ctx.moveTo(
-                barX1,
-                barY1 + yInt * i
-            );
-            state.ctx.lineTo(
-                barX1 + barW,
-                barY1 + yInt * i
-            );
-            state.ctx.stroke();
-        }
 
         const animationLenMS = 700;
         if(state.plane.fuelUsedLastTS && state.plane.fuelUsedLastTS + animationLenMS >= nowTS) {
