@@ -295,17 +295,18 @@ function runDataLoop() {
             state.game.acceptControlCommands = false;
             state.plane.alive = false;
             state.plane.aflame = true;
+            const aaFireP1 = [
+                state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
+                state.plane.posMapCoord[1] + (getRandomFloat(-1, 1) * mupm),
+            ];
             state.map.aaFire.push({
                 createdTS: nowTS,
                 createdFrame: state.game.frame,
                 fatal: true,
                 p0: state.map.aaFireP0,
-                p1: [
-                    state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
-                    state.plane.posMapCoord[1] + (getRandomFloat(-1, 1) * mupm),
-                ],
+                p1: aaFireP1,
             });
-            console.log({ instantDEATH:  state.map.aaFire})
+            createAAFireDebrisObjects(state, aaFireP1);
         }
 
         // Process commands
@@ -351,16 +352,18 @@ function runDataLoop() {
                 state.game.acceptControlCommands = false;
                 state.plane.alive = false;
                 state.plane.aflame = true;
+                const aaFireP1 = [
+                    state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
+                    state.plane.posMapCoord[1] + (getRandomFloat(-1, 1) * mupm),
+                ];
                 state.map.aaFire.push({
                     createdTS: nowTS,
                     createdFrame: state.game.frame,
                     fatal: true,
                     p0: state.map.aaFireP0,
-                    p1: [
-                        state.plane.posMapCoord[0] + (getRandomFloat(-1, 1) * mupm),
-                        state.plane.posMapCoord[1] + (getRandomFloat(-1, 1) * mupm),
-                    ],
+                    p1: aaFireP1,
                 });
+                createAAFireDebrisObjects(state, aaFireP1);
             }
         }
 
@@ -377,22 +380,24 @@ function runDataLoop() {
                     return getRandomFloat(-7.5, -5) * mupm;
                 }
             }
+            const aaFireP1 = [
+                state.plane.posMapCoord[0] + getNearby(),
+                state.plane.posMapCoord[1] + getNearby(),
+            ];
             state.map.aaFire.push({
                 createdTS: nowTS,
                 createdFrame: state.game.frame,
                 fatal: false,
                 p0: state.map.aaFireP0,
-                p1: [
-                    state.plane.posMapCoord[0] + getNearby(),
-                    state.plane.posMapCoord[1] + getNearby(),
-                ],
+                p1: aaFireP1,
             });
+            createAAFireDebrisObjects(state, aaFireP1);
         }
 
         if(state.plane.crashFrame) {
             state.plane.crashFrame++;
-            adjustCrashDebrisPositions(state);
         }
+        adjustDebrisPositions(state);
 
         // Adjust state for plane flying through the air
         if(!state.plane.touchedDown && !state.plane.crashFrame) {
@@ -766,13 +771,13 @@ function adjustMapWindValues(state) {
 }
 
 function createCrashDebrisObjects(state) {
-    if(window._debrisObjects.length) {
-        throw NOT_IMPLEMENTED;
-    }
     const mupm = state.map.mapUnitsPerMeter;
     const count = getRandomInt(10, 21);
+    const createdAt = performance.now();
     for(let i=0; i < count; i++) {
         window._debrisObjects.push({
+            createdAt,
+            lifespanMS: 2000,
             mapCoords: [
                 state.plane.posMapCoord[0] + getRandomFloat(-3.5, 3.5) * mupm,
                 state.plane.posMapCoord[1] + getRandomFloat(-3.5, 3.5) * mupm,
@@ -787,11 +792,38 @@ function createCrashDebrisObjects(state) {
     }
 }
 
-function adjustCrashDebrisPositions(state) {
+function createAAFireDebrisObjects(state, mapCoord) {
+    const mupm = state.map.mapUnitsPerMeter;
+    const count = getRandomInt(5, 10);
+    const createdAt = performance.now();
+    for(let i=0; i < count; i++) {
+        window._debrisObjects.push({
+            createdAt,
+            lifespanMS: 1000,
+            mapCoords: [
+                mapCoord[0] + getRandomFloat(-0.5, 0.5) * mupm,
+                mapCoord[1] + getRandomFloat(-0.5, 0.5) * mupm,
+            ],
+            radius: getRandomFloat(0.1, 0.3) * mupm,
+            xVeloctyMS: getRandomFloat(15, 25) * (Math.random() < 0.5 ? -1 : 1),
+            yVelocityMS: state.plane.verticalMS * getRandomFloat(-4, 4),
+        });
+    }
+}
+
+function adjustDebrisPositions(state) {
     const fps = state.game.dataFPS;
     const mupm = state.map.mapUnitsPerMeter;
+    const ixsToRemove = [];
     for(let i in window._debrisObjects) {
-        window._debrisObjects[i].mapCoords[0] += (window._debrisObjects[i].xVeloctyMS * mupm / fps);
-        window._debrisObjects[i].mapCoords[1] += (window._debrisObjects[i].yVelocityMS * mupm / fps);
+        if(state.game.lastFrameTS > window._debrisObjects[i].createdAt + window._debrisObjects[i].lifespanMS) {
+            ixsToRemove.push(i);
+        } else {
+            window._debrisObjects[i].mapCoords[0] += (window._debrisObjects[i].xVeloctyMS * mupm / fps);
+            window._debrisObjects[i].mapCoords[1] += (window._debrisObjects[i].yVelocityMS * mupm / fps);
+        }
+    }
+    if(ixsToRemove.length) {
+        window._debrisObjects = window._debrisObjects.filter((_o, ix) => ixsToRemove.indexOf(ix) == -1)
     }
 }
