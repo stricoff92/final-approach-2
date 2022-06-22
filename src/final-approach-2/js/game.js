@@ -120,6 +120,7 @@ function createNewState(maxCompletedLevel) {
             aaFire: [],
             aaFireP0: null,
             sunImg: null,
+            jungleCamoTruckImg: null,
         },
         buttons: availableLevels.map(levelNumber => {
             const disabled = levelNumber > (maxCompletedLevel + 1);

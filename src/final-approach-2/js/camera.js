@@ -542,7 +542,6 @@ function _drawTutorialText(state, nowTS) {
         state.ctx.fillText(line, textX, textY);
         textY += textYInt;
     });
-
 }
 
 function _drawcarrierLandingHUD(state, nowTS) {
