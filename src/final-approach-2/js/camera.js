@@ -339,6 +339,25 @@ function drawGameScene(state) {
         _drawCrashingEffect(state);
     }
 
+    // Draw Debris
+    window._debrisObjects.forEach(debris => {
+        let doCanvasCoord = mapCoordToCanvasCoord(
+            debris.mapCoords, state.plane.posMapCoord, state.camera,
+        );
+        console.log({
+            doCanvasCoord,
+            mapCoord: debris.mapCoords,
+        })
+        state.ctx.beginPath()
+        state.ctx.fillStyle = "#000";
+        state.ctx.arc(
+            doCanvasCoord[0], doCanvasCoord[1],
+            debris.radius,
+            0, TWO_PI,
+        );
+        state.ctx.fill();
+    });
+
     _drawCloudEffects(
         state,
         scBottomLeftMapCoord[1],
@@ -542,7 +561,6 @@ function _drawTutorialText(state, nowTS) {
         state.ctx.fillText(line, textX, textY);
         textY += textYInt;
     });
-
 }
 
 function _drawcarrierLandingHUD(state, nowTS) {
@@ -924,20 +942,6 @@ function _drawCrashingEffect(state) {
         );
         state.ctx.fill();
     }
-
-    window._debrisObjects.forEach(debris => {
-        let doCanvasCoord = mapCoordToCanvasCoord(
-            debris.mapCoords, state.plane.posMapCoord, state.camera,
-        );
-        state.ctx.beginPath()
-        state.ctx.fillStyle = "#000";
-        state.ctx.arc(
-            doCanvasCoord[0], doCanvasCoord[1],
-            debris.radius,
-            0, TWO_PI,
-        );
-        state.ctx.fill();
-    });
 }
 
 function _drawWindIndicator(state) {
@@ -1140,8 +1144,8 @@ function _drawCloudEffects(
         let ceCanvasCoord = mapCoordToCanvasCoord(
             ce.mapCoord, state.plane.posMapCoord, state.camera,
         );
-        if(ixToRemove && (ceCanvasCoord + ce.radiusX) < 0) {
-            ixToRemove.push(i);
+        if(ixToRemove && (ceCanvasCoord[0] + ce.radiusX) < 0) {
+            ixToRemove.push(parseInt(i));
         }
         else {
             state.ctx.beginPath();
@@ -1157,8 +1161,8 @@ function _drawCloudEffects(
     }
     if(ixToRemove && ixToRemove.length) {
         window._cloudEffects = window._cloudEffects.filter((_ce, ix) => {
-            return ixToRemove.indexOf(ix) != -1
-        })
+            return ixToRemove.indexOf(ix) == -1
+        });
     }
 }
 
