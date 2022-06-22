@@ -502,6 +502,10 @@ function runDataLoop() {
     return;
 }
 
+const shakeSizeCurve = tdMs => Math.max(
+    0.03,
+    Math.abs(tdMs) / 15
+);
 
 function processGroundInteractions(state) {
     if(window._fa2_isPaused) {
@@ -568,7 +572,11 @@ function processGroundInteractions(state) {
                                 planeBottomMapCoordY,
                             ]),
                             createdTS: performance.now(),
-                            shakeMeters: 0.03,
+                            shakeMeters: (
+                                plane.carrierRWArrestorCableCaught !== null
+                                ? shakeSizeCurve(state.plane.touchdownStats.verticalMS / 1.5)
+                                : 0.1
+                            ),
                         });
                         console.log("👉 end of flare");
                     }
@@ -705,10 +713,6 @@ function processGroundInteractions(state) {
             console.log("👉 big bounce");
         }
         if (addRubberStrike) {
-            const shakeSizeCurve = tdMs => Math.max(
-                0.03,
-                Math.abs(tdMs) / 15
-            );
             state.map.tireStrikes.push({
                 originMapPoint: deepCopy([
                     plane.posMapCoord[0],
