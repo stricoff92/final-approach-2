@@ -59,7 +59,7 @@ function clearCanvas(state) {
 }
 
 function drawAccelerationEffect(state) {
-    const effectFrameLifespan = 45;
+    const effectFrameLifespan = 30;
     const lastUp = state.plane.lastAccelerateUpFrame;
     const lastDown = state.plane.lastAccelerateDownFrame;
     const cam = state.camera;
