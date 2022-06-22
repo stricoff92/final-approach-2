@@ -49,6 +49,7 @@ function runDisplayLoop() {
         drawScoreScreen(state);
     }
 
+    drawAccelerationEffect(state);
     drawButtons(state);
     window.requestAnimationFrame(runDisplayLoop)
 }
@@ -56,6 +57,55 @@ function runDisplayLoop() {
 function clearCanvas(state) {
     state.ctx.clearRect(0, 0, state.camera.canvasW * 2, state.camera.canvasH * 2)
 }
+
+function drawAccelerationEffect(state) {
+    const effectFrameLifespan = 45;
+    const lastUp = state.plane.lastAccelerateUpFrame;
+    const lastDown = state.plane.lastAccelerateDownFrame;
+    const cam = state.camera;
+    let percentComplete;
+    let alpha;
+    if(
+        lastUp
+        && lastUp > (lastDown || 0)
+        && (lastUp + effectFrameLifespan) > state.game.frame
+    ) {
+        percentComplete = (state.game.frame - lastUp) / effectFrameLifespan;
+        alpha = (1 - percentComplete) * 0.25;
+        state.ctx.beginPath();
+        state.ctx.fillStyle = UP_ACCELERATION_EFFECT_COLOR(alpha);
+        // state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasHalfH);
+        state.ctx.moveTo(cam.canvasHalfW, 0);
+        state.ctx.lineTo(cam.canvasW * 0.25, cam.canvasH * 0.25);
+        state.ctx.lineTo(cam.canvasW * 0.375, cam.canvasH * 0.25);
+        state.ctx.lineTo(cam.canvasW * 0.375, cam.canvasHalfH);
+        state.ctx.lineTo(cam.canvasW * 0.625, cam.canvasHalfH);
+        state.ctx.lineTo(cam.canvasW * 0.625, cam.canvasH * 0.25);
+        state.ctx.lineTo(cam.canvasW * 0.75, cam.canvasH * 0.25);
+        state.ctx.fill();
+    }
+    else if(
+        lastDown
+        && lastDown > (lastUp || 0)
+        && (lastDown + effectFrameLifespan) > state.game.frame
+    ) {
+        percentComplete = (state.game.frame - lastDown) / effectFrameLifespan;
+        alpha = (1 - percentComplete) * 0.33;
+        state.ctx.beginPath();
+        state.ctx.fillStyle = DOWN_ACCELERATION_EFFECT_COLOR(alpha);
+        // state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasHalfH);
+        state.ctx.moveTo(cam.canvasHalfW, cam.canvasH);
+        state.ctx.lineTo(cam.canvasW * 0.25, cam.canvasH * 0.75);
+        state.ctx.lineTo(cam.canvasW * 0.375, cam.canvasH * 0.75);
+        state.ctx.lineTo(cam.canvasW * 0.375, cam.canvasHalfH);
+        state.ctx.lineTo(cam.canvasW * 0.625, cam.canvasHalfH);
+        state.ctx.lineTo(cam.canvasW * 0.625, cam.canvasH * 0.75);
+        state.ctx.lineTo(cam.canvasW * 0.75, cam.canvasH * 0.75);
+        state.ctx.fill();
+    }
+}
+
+
 
 function drawButtons(state) {
     state.buttons.forEach(btn => {

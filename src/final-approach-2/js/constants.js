@@ -88,3 +88,6 @@ const MAX_AFLAME_RADIUS_M = 4;
 const MIN_AFLAME_RADIUS_M = 1.5;
 
 const CARRIER_DECK_SIZE_AFTER_RW_M = 30;
+
+const UP_ACCELERATION_EFFECT_COLOR = a => `rgb(0, 143, 14, ${ a })`;   // green
+const DOWN_ACCELERATION_EFFECT_COLOR = a => `rgb(98, 0, 143, ${ a })`; // purple
