@@ -1139,8 +1139,8 @@ function _drawCloudEffects(
         let ceCanvasCoord = mapCoordToCanvasCoord(
             ce.mapCoord, state.plane.posMapCoord, state.camera,
         );
-        if(ixToRemove && (ceCanvasCoord + ce.radiusX) < 0) {
-            ixToRemove.push(i);
+        if(ixToRemove && (ceCanvasCoord[0] + ce.radiusX) < 0) {
+            ixToRemove.push(parseInt(i));
         }
         else {
             state.ctx.beginPath();
@@ -1156,9 +1156,10 @@ function _drawCloudEffects(
     }
     if(ixToRemove && ixToRemove.length) {
         window._cloudEffects = window._cloudEffects.filter((_ce, ix) => {
-            return ixToRemove.indexOf(ix) != -1
+            return ixToRemove.indexOf(ix) == -1
         })
     }
+    console.log(window._cloudEffects.length)
 }
 
 function drawTireStrikes(state, nowTS) {

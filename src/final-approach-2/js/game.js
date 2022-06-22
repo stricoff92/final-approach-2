@@ -367,11 +367,12 @@ function runDataLoop() {
             }
         }
 
+        const belowClouds = state.plane.posMapCoord[1] < state.map.cloudLayer.bottomY;
         if(
             dangerStatus
             && dangerStatus === DANGER_STATUS_ON_LEVEL
-            && state.game.frame % 16 === 0
-            && Math.random() > 0.33
+            && state.game.frame % (belowClouds ? 16 : 45) === 0
+            && Math.random() > (belowClouds ? 0.33 : 0.5)
         ) {
             const getNearby = () => {
                 if(Math.random() > 0.5) {
@@ -735,7 +736,6 @@ function adjustMapWindValues(state) {
     if(state.map.windMaxDeltaPerSecond === null){
         return state;
     }
-
     const fps = state.game.dataFPS;
     let delta;
     if(state.map.windXVel < state.map.windXTarg) {
@@ -804,9 +804,9 @@ function createAAFireDebrisObjects(state, mapCoord) {
                 mapCoord[0] + getRandomFloat(-0.5, 0.5) * mupm,
                 mapCoord[1] + getRandomFloat(-0.5, 0.5) * mupm,
             ],
-            radius: getRandomFloat(0.1, 0.3) * mupm,
+            radius: getRandomFloat(0.5, 1) * mupm,
             xVeloctyMS: getRandomFloat(15, 25) * (Math.random() < 0.5 ? -1 : 1),
-            yVelocityMS: state.plane.verticalMS * getRandomFloat(-4, 4),
+            yVelocityMS: getRandomFloat(-4, 4),
         });
     }
 }
@@ -817,13 +817,13 @@ function adjustDebrisPositions(state) {
     const ixsToRemove = [];
     for(let i in window._debrisObjects) {
         if(state.game.lastFrameTS > window._debrisObjects[i].createdAt + window._debrisObjects[i].lifespanMS) {
-            ixsToRemove.push(i);
+            ixsToRemove.push(parseInt(i));
         } else {
             window._debrisObjects[i].mapCoords[0] += (window._debrisObjects[i].xVeloctyMS * mupm / fps);
             window._debrisObjects[i].mapCoords[1] += (window._debrisObjects[i].yVelocityMS * mupm / fps);
         }
     }
     if(ixsToRemove.length) {
-        window._debrisObjects = window._debrisObjects.filter((_o, ix) => ixsToRemove.indexOf(ix) == -1)
+        window._debrisObjects = window._debrisObjects.filter((_o, ix) => ixsToRemove.indexOf(ix) == -1);
     }
 }

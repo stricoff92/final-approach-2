@@ -324,9 +324,9 @@ function setMapProps(state) {
             // In dive zone
             else if(
                 py > (LEVEL_7_MAX_SAFE_X_M * mupm)
-                && py < cloudBottomY
+                // && py < cloudBottomY
                 && px < rwEnd
-                && px > 1000 * mupm
+                // && px > 1000 * mupm
             ) {
                 return DANGER_STATUS_ON_LEVEL;
             }
