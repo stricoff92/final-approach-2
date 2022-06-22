@@ -794,19 +794,20 @@ function createCrashDebrisObjects(state) {
 
 function createAAFireDebrisObjects(state, mapCoord) {
     const mupm = state.map.mapUnitsPerMeter;
-    const count = getRandomInt(5, 10);
+    const count = getRandomInt(8, 15);
     const createdAt = performance.now();
     for(let i=0; i < count; i++) {
         window._debrisObjects.push({
             createdAt,
+            isAAFire: true,
             lifespanMS: 1000,
             mapCoords: [
                 mapCoord[0] + getRandomFloat(-0.5, 0.5) * mupm,
                 mapCoord[1] + getRandomFloat(-0.5, 0.5) * mupm,
             ],
-            radius: getRandomFloat(0.5, 1) * mupm,
-            xVeloctyMS: getRandomFloat(15, 25) * (Math.random() < 0.5 ? -1 : 1),
-            yVelocityMS: getRandomFloat(-4, 4),
+            radius: getRandomFloat(0.14, 0.35) * mupm,
+            xVeloctyMS: getRandomFloat(40, 60) * (Math.random() < 0.5 ? -1 : 1),
+            yVelocityMS: getRandomFloat(40, 60) * (Math.random() < 0.5 ? -1 : 1),
         });
     }
 }

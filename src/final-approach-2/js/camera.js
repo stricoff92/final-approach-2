@@ -339,6 +339,25 @@ function drawGameScene(state) {
         _drawCrashingEffect(state);
     }
 
+    // Draw Debris
+    window._debrisObjects.forEach(debris => {
+        let doCanvasCoord = mapCoordToCanvasCoord(
+            debris.mapCoords, state.plane.posMapCoord, state.camera,
+        );
+        console.log({
+            doCanvasCoord,
+            mapCoord: debris.mapCoords,
+        })
+        state.ctx.beginPath()
+        state.ctx.fillStyle = "#000";
+        state.ctx.arc(
+            doCanvasCoord[0], doCanvasCoord[1],
+            debris.radius,
+            0, TWO_PI,
+        );
+        state.ctx.fill();
+    });
+
     _drawCloudEffects(
         state,
         scBottomLeftMapCoord[1],
@@ -923,20 +942,6 @@ function _drawCrashingEffect(state) {
         );
         state.ctx.fill();
     }
-
-    window._debrisObjects.forEach(debris => {
-        let doCanvasCoord = mapCoordToCanvasCoord(
-            debris.mapCoords, state.plane.posMapCoord, state.camera,
-        );
-        state.ctx.beginPath()
-        state.ctx.fillStyle = "#000";
-        state.ctx.arc(
-            doCanvasCoord[0], doCanvasCoord[1],
-            debris.radius,
-            0, TWO_PI,
-        );
-        state.ctx.fill();
-    });
 }
 
 function _drawWindIndicator(state) {
@@ -1157,7 +1162,7 @@ function _drawCloudEffects(
     if(ixToRemove && ixToRemove.length) {
         window._cloudEffects = window._cloudEffects.filter((_ce, ix) => {
             return ixToRemove.indexOf(ix) == -1
-        })
+        });
     }
 }
 
