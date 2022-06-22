@@ -240,7 +240,11 @@ function drawGameScene(state) {
             );
             state.ctx.beginPath();
             state.ctx.strokeStyle = gsColor;
-            state.ctx.lineWidth = gsLineWidth * (gs.bold ? 3.5 : 1);
+            if(state.game.level !== 1) {
+                state.ctx.lineWidth = gsLineWidth * (gs.bold ? 3.5 : 1);
+            } else {
+                state.ctx.lineWidth = state.game.frame % 60 > 30 ? 7: 2
+            }
             state.ctx.moveTo(...gsCanvasP0);
             state.ctx.lineTo(...gsCanvasP1);
             state.ctx.stroke();
@@ -478,7 +482,10 @@ function drawGameScene(state) {
         _drawFuelIndicator(state, nowTS);
     }
 
-    if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
+    if(state.game.level === 1) {
+        _drawTutorialText(state, nowTS);
+    }
+    else if(nowTS > (state.game.gameStartTS + LEVEL_NAME_TOTAL_DURATION)) {
         if(plane.alive && !plane.touchedDown) {
             _drawWindIndicator(state);
             if(state.game.level > 7 && plane.posMapCoord[1] < state.map.cloudLayer.bottomY) {
@@ -488,6 +495,54 @@ function drawGameScene(state) {
     } else {
         _drawLevelName(state, nowTS);
     }
+}
+
+function _drawLevelName(state, nowTS) {
+    const elapsedTime = nowTS - state.game.gameStartTS;
+    const alpha = (elapsedTime < LEVEL_NAME_DISPLAY_DURATION_MS
+        ? 1
+        : 1 - ((elapsedTime - LEVEL_NAME_DISPLAY_DURATION_MS) / LEVEL_NAME_DISPLAY_FADEOUT_MS));
+    state.ctx.beginPath()
+    state.ctx.fillStyle = `rgb(0, 0, 0, ${ alpha } )`;
+    state.ctx.textBaseline = "bottom";
+    state.ctx.textAlign = "center";
+    state.ctx.font = "italic bold 32px Garamond";
+    state.ctx.fillText(
+        "\"" + state.game.levelName + "\"",
+        state.camera.canvasHalfW,
+        state.camera.canvasH / 5
+    );
+}
+
+function _drawTutorialText(state, nowTS) {
+    const textTTLMS = 10000;
+    const textFadeOutMS = 1000;
+    if(nowTS > (state.game.gameStartTS + textTTLMS)) {
+        return;
+    }
+    const ageMS = nowTS - state.game.gameStartTS;
+    const lines = [
+        "Follow the",
+        "pink line."
+    ];
+    state.ctx.beginPath();
+    state.ctx.textBaseline = "middle";
+    state.ctx.textAlign = "center";
+    state.ctx.font = "bold 40px Arial";
+    if(ageMS < (textTTLMS - textFadeOutMS)) {
+        state.ctx.fillStyle = state.game.frame % 60 > 30 ? "#ea00ff" : "#000";
+    } else {
+       const alpha = 1 - (ageMS - (textTTLMS - textFadeOutMS)) / textFadeOutMS;
+       state.ctx.fillStyle = `rgb(0, 0, 0, ${ alpha })`;
+    }
+    const textX = state.camera.canvasHalfW;
+    let textY = state.camera.canvasHalfH / 4;
+    const textYInt = 35;
+    lines.forEach(line => {
+        state.ctx.fillText(line, textX, textY);
+        textY += textYInt;
+    });
+
 }
 
 function _drawcarrierLandingHUD(state, nowTS) {
@@ -883,23 +938,6 @@ function _drawCrashingEffect(state) {
         );
         state.ctx.fill();
     });
-}
-
-function _drawLevelName(state, nowTS) {
-    const elapsedTime = nowTS - state.game.gameStartTS;
-    const alpha = (elapsedTime < LEVEL_NAME_DISPLAY_DURATION_MS
-        ? 1
-        : 1 - ((elapsedTime - LEVEL_NAME_DISPLAY_DURATION_MS) / LEVEL_NAME_DISPLAY_FADEOUT_MS));
-    state.ctx.beginPath()
-    state.ctx.fillStyle = `rgb(0, 0, 0, ${ alpha } )`;
-    state.ctx.textBaseline = "bottom";
-    state.ctx.textAlign = "center";
-    state.ctx.font = "italic bold 32px Garamond";
-    state.ctx.fillText(
-        "\"" + state.game.levelName + "\"",
-        state.camera.canvasHalfW,
-        state.camera.canvasH / 5
-    );
 }
 
 function _drawWindIndicator(state) {
