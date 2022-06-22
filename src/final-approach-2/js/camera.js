@@ -764,7 +764,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
 function _drawFuelIndicator(state, nowTS) {
     const plane = state.plane;
     const mupm = state.map.mapUnitsPerMeter;
-    const indicatorCenterX = state.camera.canvasHalfW + (plane.dimensions[0][0] / 2 * mupm);
+    const indicatorCenterX = state.camera.canvasHalfW - (plane.dimensions[0][0] / 2 * mupm);
     const indicatorY2 = state.camera.canvasHalfH - (plane.dimensions[0][1] / 2 * mupm) - 5;
     const anyLeft = plane.fuelRemaining > 0;
 
@@ -1296,7 +1296,9 @@ function _drawCarrierRunway(state, nowTS) {
     const rwHeight = state.map.rwVisualWidthM * mupm;
 
     // Boat Map coords
-    const mapMidY = state.map.rwP0MapCoord[1] - ((state.map.rwVisualWidthM / 2  * mupm) + (2.5 * mupm));
+    const mapMidY = state.map.rwP0MapCoord[1] - (
+        (state.map.rwVisualWidthM / 2  * mupm) + (2.5 * mupm)
+    );
     const boatMapTopLeft = [
         rwMapTopLeft[0],
         rwMapTopLeft[1] + 2.5 * mupm
