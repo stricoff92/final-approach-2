@@ -297,7 +297,6 @@ function drawGameScene(state) {
         const showVisualSkake = isTireStrike || isAAFire;
         let xAmnt = 0, yAmnt = 0;
         if(showVisualSkake) {
-            console.log({shakeMeters: lastTireStrike.shakeMeters})
             if(isTireStrike) {
                 xAmnt = (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0);
                 yAmnt = (showVisualSkake ? getRandomFloat(-1 * lastTireStrike.shakeMeters, lastTireStrike.shakeMeters) * state.map.mapUnitsPerMeter : 0);
