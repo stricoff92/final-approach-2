@@ -1159,7 +1159,6 @@ function _drawCloudEffects(
             return ixToRemove.indexOf(ix) == -1
         })
     }
-    console.log(window._cloudEffects.length)
 }
 
 function drawTireStrikes(state, nowTS) {
