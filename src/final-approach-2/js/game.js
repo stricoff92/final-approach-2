@@ -69,6 +69,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             lastAccelerateUpFrame: null,
             lastAccelerateDownFrame: null,
             upAccelerationPerCmdMS: null,
+            levelOnNextManeuver: false,
             downAccelerationPerCmdMS: null,
             terminalVerticalMS: null,
             verticalAccelerationMS: null,
@@ -119,6 +120,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             carrierMaxMapX: null,
             carrierRWArrestorCableMapXs: null,
             getDangerStatus: state => {},
+            getAutopilotStatus: state => {},
             glideSlopes: [],
             tireStrikes: [],
             aaFire: [],
@@ -337,6 +339,10 @@ function runDataLoop() {
 
         // Process commands
         const cmdCt = commands.length;
+        const acceptCommands = Boolean(
+            state.game.acceptControlCommands
+            && !state.map.getAutopilotStatus(state)
+        );
         for(let i=0; i<cmdCt; i++) {
             let cmd = commands[i];
             let maneuverPerformed = false;
@@ -349,7 +355,7 @@ function runDataLoop() {
                 setTimeout(runDataLoop);
                 return;
             }
-            else if(cmd.cmd === COMMAND_ACCELERATE_UP && state.game.acceptControlCommands) {
+            else if(cmd.cmd === COMMAND_ACCELERATE_UP && acceptCommands) {
                 if(state.plane.startingFuel !== null) {
                     if(state.plane.fuelRemaining > 0) {
                         state.plane.lastAccelerateUpFrame = state.game.frame;
@@ -362,8 +368,9 @@ function runDataLoop() {
                     maneuverPerformed = true;
                 }
             }
-            else if(cmd.cmd === COMMAND_ACCELERATE_DOWN && state.game.acceptControlCommands) {
+            else if(cmd.cmd === COMMAND_ACCELERATE_DOWN && acceptCommands) {
                 state.plane.lastAccelerateDownFrame = state.game.frame;
+                maneuverPerformed = true;
             }
             if(
                 maneuverPerformed

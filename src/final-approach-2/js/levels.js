@@ -1,15 +1,54 @@
 
+function AP_dangerousAirspace(state) {
+    const fps = state.game.dataFPS;
+    const plane = state.plane;
+    const mupm = state.map.mapUnitsPerMeter;
+    state.plane.posMapCoord[0] += (
+        (state.plane.horizontalMS * mupm / fps)
+        + (state.map.windXVel === null ? 0 : state.map.windXVel * mupm / fps)
+    );
+    const newYPos = getGlideSlopeY(state.map.glideSlopes, plane.posMapCoord[0]);
+    const oldYPos = deepCopy(state.plane.posMapCoord[1]);
+    state.plane.posMapCoord[1] = newYPos;
+    state.plane.verticalMS = (newYPos - oldYPos) / mupm * fps;
+    state.plane.levelOnNextManeuver = true;
+    return state;
+}
+
+function autoPilot(state) {
+    if(state.game.level === 7) {
+        return AP_dangerousAirspace(state);
+    }
+    else {throw NOT_IMPLEMENTED;}
+}
+
+
 function innerAdjustPlanePosition(state) {
     if(window._fa2_isPaused) {
         return state;
     }
+    if(
+        state.map.getAutopilotStatus
+        && state.map.getAutopilotStatus(state)
+    ) {
+        return autoPilot(state);
+    }
     const fps = state.game.dataFPS;
     const plane = state.plane;
-    const mupm = state.map.mapUnitsPerMeter
-    const nowTS = performance.now();
+    const mupm = state.map.mapUnitsPerMeter;
 
     let newVerticalMS;
     if(
+        state.plane.levelOnNextManeuver
+        && (
+            plane.lastAccelerateUpFrame === state.game.frame
+            || plane.lastAccelerateDownFrame === state.game.frame
+        )
+    ) {
+        state.plane.levelOnNextManeuver = false;
+        newVerticalMS = 0;
+    }
+    else if(
         plane.lastAccelerateUpFrame === state.game.frame
     ) {
         newVerticalMS = Math.min(
@@ -92,7 +131,7 @@ function setPlaneProps(state) {
 
         state.plane.horizontalMS = knotsToMS(130.69);
         state.plane.verticalMS = feetPerMinToMS(-700);
-        state.plane.terminalVerticalMS = feetPerMinToMS(-25000);
+        state.plane.terminalVerticalMS = feetPerMinToMS(-50000);
         state.plane.verticalAccelerationMS = feetPerMinToMS(-800);
 
         state.plane.upAccelerationPerCmdMS = feetPerMinToMS(750);
@@ -113,9 +152,7 @@ function setPlaneProps(state) {
             [9.7, 3.8],  // flare    (nose us)
         );
     }
-    else {
-        throw NOT_IMPLEMENTED;
-    }
+    else {throw NOT_IMPLEMENTED;}
     return state;
 }
 
@@ -248,7 +285,7 @@ function setMapProps(state) {
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;
         state.map.rwP0MapCoord = [1750 * mupm, 0];
-        const rwEnd = (1750 + 320) * mupm
+        const rwEnd = (1750 + 320) * mupm;
         state.map.rwP1MapCoord = [(1750 + 320) * mupm, 0];
         state.map.glideSlopes.push(
             {
@@ -300,6 +337,9 @@ function setMapProps(state) {
                 return DANGER_STATUS_NONE;
             }
         }
+        state.map.getAutopilotStatus = state => {
+            return state.plane.posMapCoord[1] > (850 * mupm);
+        }
     }
     else if (level === 8) {
         state.game.levelName = "Carrier Landing I";
@@ -316,7 +356,7 @@ function setMapProps(state) {
             xEnd: state.map.carrierRWArrestorCableMapXs.reduce((v1, v2) => v1 > v2 ? v1 : v2),
         };
         state.map.glideSlopes.push({
-            p0: [0, 400 * mupm],
+            p0: [0, 310 * mupm],
             p1: [1512 * mupm, 15 * mupm],
         });
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
