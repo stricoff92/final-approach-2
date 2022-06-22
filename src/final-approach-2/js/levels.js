@@ -262,8 +262,8 @@ function setMapProps(state) {
     }
     else if (level === 6) {
         state.game.levelName = "Low Fuel";
-        state.plane.startingFuel = 25;
-        state.plane.fuelRemaining = 25;
+        state.plane.startingFuel = 30;
+        state.plane.fuelRemaining = 27;
         state.map.terrain = TERRAIN_DESERT;
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 9;
@@ -290,10 +290,14 @@ function setMapProps(state) {
         state.map.glideSlopes.push(
             {
                 p0: [0, 1000 * mupm],
-                p1: [1000 * mupm, 900 * mupm],
+                p1: [900 * mupm, 900 * mupm],
             },
             {
-                p0: [1000 * mupm, 900 * mupm],
+                p0: [900 * mupm, 900 * mupm],
+                p1: [1000 * mupm, 800 * mupm],
+            },
+            {
+                p0: [1000 * mupm, 800 * mupm],
                 p1: [1200 * mupm, 130 * mupm], //  LEVEL_7_MAX_SAFE_X_M
             },
             {
@@ -338,7 +342,7 @@ function setMapProps(state) {
             }
         }
         state.map.getAutopilotStatus = state => {
-            return state.plane.posMapCoord[1] > (850 * mupm);
+            return state.plane.posMapCoord[1] > (750 * mupm);
         }
     }
     else if (level === 8) {

@@ -5,7 +5,7 @@ function getHelpImg() {
     return img;
 }
 
-function createNewState(maxCompletedLevel, skipHelpScreen) {
+function createNewState(maxCompletedLevel) {
 
     window._cloudEffects = [];
     window._debrisObjects = [];
@@ -18,9 +18,9 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
         isDebug: urlContainsDebug(),
         ctx,
         helpImg: getHelpImg(),
-        pageTitle: skipHelpScreen ?  {text: "Select A Level", color: COLOR_PURPLE} : null,
+        pageTitle:{text: "Select A Level", color: COLOR_PURPLE},
         game: {
-            phase: skipHelpScreen ? PHASE_0_LOBBY : PHASE_N1_SHOW_HELP,
+            phase: PHASE_0_LOBBY,
             maxCountDownFrames: 60,
             countDownFrames: 0,
             frame: 0,
@@ -127,7 +127,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
             aaFireP0: null,
             sunImg: null,
         },
-        buttons: skipHelpScreen ? availableLevels.map(levelNumber => {
+        buttons: availableLevels.map(levelNumber => {
             const disabled = levelNumber > (maxCompletedLevel + 1);
             const btn = {
                 type: BUTTON_TYPE_GRID,
@@ -142,7 +142,7 @@ function createNewState(maxCompletedLevel, skipHelpScreen) {
                 }
             };
             return btn;
-        }) : [],
+        }),
     }
 }
 
@@ -349,7 +349,7 @@ function runDataLoop() {
             if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
                     updateCameraCanvasMetaData(
-                        createNewState(state.game.maxCompletedLevel, true)
+                        createNewState(state.game.maxCompletedLevel)
                     )
                 );
                 setTimeout(runDataLoop);
