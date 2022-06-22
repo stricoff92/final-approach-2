@@ -528,7 +528,7 @@ function _drawTutorialText(state, nowTS) {
     state.ctx.beginPath();
     state.ctx.textBaseline = "middle";
     state.ctx.textAlign = "center";
-    state.ctx.font = "bold 34px Arial";
+    state.ctx.font = "bold 40px Arial";
     if(ageMS < (textTTLMS - textFadeOutMS)) {
         state.ctx.fillStyle = state.game.frame % 60 > 30 ? "#ea00ff" : "#000";
     } else {
