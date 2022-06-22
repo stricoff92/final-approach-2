@@ -1,9 +1,4 @@
 
-function getHelpImg() {
-    const img = new Image();
-    img.src = "img/how-to-play.svg";
-    return img;
-}
 
 function createNewState(maxCompletedLevel) {
 
@@ -17,7 +12,6 @@ function createNewState(maxCompletedLevel) {
     return {
         isDebug: urlContainsDebug(),
         ctx,
-        helpImg: getHelpImg(),
         pageTitle:{text: "Select A Level", color: COLOR_PURPLE},
         game: {
             phase: PHASE_0_LOBBY,
@@ -261,30 +255,6 @@ function runDataLoop() {
         if (!isButtonClick && state.game.phase === PHASE_2_LIVE) {
             const cmd = isArrow ? (nextClick.isTopHalfOfScreenClick ? COMMAND_ACCELERATE_UP : COMMAND_ACCELERATE_DOWN) : isBottomHalfClick ? COMMAND_ACCELERATE_DOWN : COMMAND_ACCELERATE_UP;
             window.addCommand({ cmd });
-        }
-        else if (state.game.phase === PHASE_N1_SHOW_HELP) {
-            state.game.phase = PHASE_0_LOBBY;
-            state.pageTitle = {
-                text: "Select A Level",
-                color: COLOR_PURPLE,
-            };
-            const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-            state.buttons = availableLevels.map(levelNumber => {
-                const disabled = levelNumber > (state.game.maxCompletedLevel + 1);
-                const btn = {
-                    type: BUTTON_TYPE_GRID,
-                    text: disabled ? '🔒' : `Level ${levelNumber}`,
-                    boxCoord: null,
-                    disabled,
-                    handler: disabled ? ()=>{} : () => {
-                        window.addCommand({
-                            cmd: COMMAND_START_LEVEL,
-                            args: [ levelNumber ],
-                        });
-                    }
-                };
-                return btn;
-            });
         }
     }
 

@@ -4,7 +4,6 @@ const CANVAS_ID = "game-canvas";
 
 const TWO_PI = Math.PI * 2;
 
-const PHASE_N1_SHOW_HELP = -1;
 const PHASE_0_LOBBY = 0;
 const PHASE_1_COUNTDOWN = 1;
 const PHASE_2_LIVE = 2;
