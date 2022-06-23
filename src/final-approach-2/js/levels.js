@@ -448,15 +448,17 @@ function setMapProps(state) {
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         // state.plane.posMapCoord = [1400 * mupm, 65 * mupm];
 
+        const getVar = () => getRandomFloat(-0.15 , 0.15);
         state.map.npcs.push({
             img: state.plane.assets[0],
             type: NPC_TYPE_JET,
+            inFront: false,
             dimensions: state.plane.dimensions[0],
             afterBurner: false,
             horizontalMS: state.plane.horizontalMS,
             posMapCoord:[
-                state.plane.posMapCoord[0] - (8 * mupm),
-                state.plane.posMapCoord[1] + (3 * mupm),
+                state.plane.posMapCoord[0] - ((7 + getVar()) * mupm),
+                state.plane.posMapCoord[1] + ((3 + getVar()) * mupm),
             ],
             autopilot: [
                 {
@@ -479,12 +481,13 @@ function setMapProps(state) {
         }, {
             img: state.plane.assets[0],
             type: NPC_TYPE_JET,
+            inFront: false,
             dimensions: state.plane.dimensions[0],
             afterBurner: false,
             horizontalMS: state.plane.horizontalMS,
             posMapCoord:[
-                state.plane.posMapCoord[0] - (4 * mupm),
-                state.plane.posMapCoord[1] + (1.5 * mupm),
+                state.plane.posMapCoord[0] - ((3.5 + getVar()) * mupm),
+                state.plane.posMapCoord[1] + ((1.5 + getVar()) * mupm),
             ],
             autopilot: [
                 {
@@ -493,6 +496,62 @@ function setMapProps(state) {
                     verticalMS: 0,
                 },{
                     startX: 185 * mupm + 1,
+                    endX: 200 * mupm,
+                    verticalMS: 1,
+                    afterBurner: true,
+                }, {
+                    startX: 200 * mupm + 1,
+                    endX: 800 * mupm,
+                    verticalMS: 3,
+                    afterBurner: true,
+                }
+            ],
+        }, {
+            img: state.plane.assets[0],
+            type: NPC_TYPE_JET,
+            inFront: true,
+            dimensions: state.plane.dimensions[0],
+            afterBurner: false,
+            horizontalMS: state.plane.horizontalMS,
+            posMapCoord:[
+                state.plane.posMapCoord[0] + ((3.5 + getVar()) * mupm),
+                state.plane.posMapCoord[1] - ((1.5 + getVar()) * mupm),
+            ],
+            autopilot: [
+                {
+                    startX: -100 * mupm,
+                    endX: 188 * mupm,
+                    verticalMS: 0,
+                },{
+                    startX: 188 * mupm + 1,
+                    endX: 200 * mupm,
+                    verticalMS: 1,
+                    afterBurner: true,
+                }, {
+                    startX: 200 * mupm + 1,
+                    endX: 800 * mupm,
+                    verticalMS: 3,
+                    afterBurner: true,
+                }
+            ],
+        }, {
+            img: state.plane.assets[0],
+            type: NPC_TYPE_JET,
+            inFront: true,
+            dimensions: state.plane.dimensions[0],
+            afterBurner: false,
+            horizontalMS: state.plane.horizontalMS,
+            posMapCoord:[
+                state.plane.posMapCoord[0] + ((7 + getVar()) * mupm),
+                state.plane.posMapCoord[1] - ((3 + getVar()) * mupm),
+            ],
+            autopilot: [
+                {
+                    startX: -100 * mupm,
+                    endX: 190 * mupm,
+                    verticalMS: 0,
+                },{
+                    startX: 190 * mupm + 1,
                     endX: 200 * mupm,
                     verticalMS: 1,
                     afterBurner: true,

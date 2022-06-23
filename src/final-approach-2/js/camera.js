@@ -252,7 +252,7 @@ function drawGameScene(state) {
     }
 
     if (state.map.npcs.length) {
-        _drawNPCs(state);
+        _drawNPCs(state, false);
     }
 
     let planeCanvasX1, planeCanvasY1;
@@ -329,7 +329,7 @@ function drawGameScene(state) {
             state.map.getAutopilotStatus
             && state.map.getAutopilotStatus(state)
         ) {
-            const APtextPosX = state.camera.canvasHalfW + 30;
+            const APtextPosX = state.camera.canvasHalfW + 50;
             const APtextPosY = state.camera.canvasHalfH - plane.dimensions[1][1] * mupm / 2 - 25;
             state.ctx.beginPath()
             state.ctx.font = "24px Courier New";
@@ -341,6 +341,10 @@ function drawGameScene(state) {
     }
     else {
         _drawCrashingEffect(state);
+    }
+
+    if (state.map.npcs.length) {
+        _drawNPCs(state, true);
     }
 
     // Draw Debris
@@ -516,9 +520,9 @@ function drawGameScene(state) {
     }
 }
 
-function _drawNPCs(state) {
+function _drawNPCs(state, inFront) {
     const mupm = state.map.mapUnitsPerMeter;
-    state.map.npcs.forEach(npc => {
+    state.map.npcs.filter(npc => npc.inFront == inFront).forEach(npc => {
         const imgW = npc.dimensions[0] * mupm;
         const imgH = npc.dimensions[1] * mupm;
         const mapTopLeft = [
@@ -558,7 +562,7 @@ function _drawNPCs(state) {
                     abCanvasY + getRandomFloat(-0.25, 0.25) * mupm,
                     maxR - (abCIX * 0.1 * mupm),
                     0, TWO_PI,
-                )
+                );
                 state.ctx.fill();
             });
         }
