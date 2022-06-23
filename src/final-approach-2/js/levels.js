@@ -1,5 +1,5 @@
 
-function AP_dangerousAirspace(state) {
+function _AP_follow_GS(state) {
     const fps = state.game.dataFPS;
     const plane = state.plane;
     const mupm = state.map.mapUnitsPerMeter;
@@ -11,13 +11,27 @@ function AP_dangerousAirspace(state) {
     const oldYPos = deepCopy(state.plane.posMapCoord[1]);
     state.plane.posMapCoord[1] = newYPos;
     state.plane.verticalMS = (newYPos - oldYPos) / mupm * fps;
+    return state;
+}
+
+function AP_dangerousAirspace(state) {
+    state = _AP_follow_GS(state);
     state.plane.levelOnNextManeuver = true;
+    return state;
+}
+
+function AP_ChoppySeas(state) {
+    state = _AP_follow_GS(state);
+    const flareAfterX = state.map.glideSlopes[0].p1[0] - (25 * state.map.mapUnitsPerMeter);
+    state.plane.flare = state.plane.posMapCoord[0] > flareAfterX ? IS_FLARING : IS_NOT_FLARING;
     return state;
 }
 
 function autoPilot(state) {
     if(state.game.level === 7) {
         return AP_dangerousAirspace(state);
+    } else if (state.game.level === 10) {
+        return AP_ChoppySeas(state);
     }
     else {throw NOT_IMPLEMENTED;}
 }
@@ -399,9 +413,49 @@ function setMapProps(state) {
         state.map.carrierMinMapX = state.map.rwP0MapCoord[0];
         state.map.carrierMaxMapX = state.map.rwP1MapCoord[0] + CARRIER_DECK_SIZE_AFTER_RW_M * mupm;
     }
-    else {
-        throw NOT_IMPLEMENTED;
+    else if (level === 10) {
+        state.game.levelName = "Choppy Seas";
+        state.plane.flare = IS_NOT_FLARING;
+        state.map.terrain = TERRAIN_OCEAN;
+        state.map.rwType = RUNWAY_TYPE_CARRIER;
+        state.map.rwVisualWidthM = 5;
+        state.map.rwP0MapCoord = [2500 * mupm, 15 * mupm];
+        state.map.rwP1MapCoord = [2565 * mupm, 15 * mupm];
+        state.map.carrierRWArrestorCableMapXs = [
+            2501, 2508, 2515, 2520
+        ].map(v => v * mupm);
+        state.map.carrierRWArrestingGearBounds = {
+            xStart: state.map.carrierRWArrestorCableMapXs.reduce((v1, v2) => v1 < v2 ? v1 : v2),
+            xEnd: state.map.carrierRWArrestorCableMapXs.reduce((v1, v2) => v1 > v2 ? v1 : v2),
+        };
+        state.map.glideSlopes.push({
+            p0: [0, 1000 * mupm],
+            p1: [375 * mupm, 1000 * mupm],
+        }, {
+            p0: [375 * mupm, 1000 * mupm],
+            p1: [1600 * mupm, 200 * mupm],
+        }, {
+            p0: [1600 * mupm, 200 * mupm],
+            p1: [
+                state.map.rwP0MapCoord[0] + (12 * mupm), // Will update every frame
+                state.map.rwP0MapCoord[1],               //
+            ],
+        });
+        state.map.getAutopilotStatus = state => {
+            const APXEnd = state.map.glideSlopes[0].p1[0] + (10 * mupm);
+            return state.plane.posMapCoord[0] < APXEnd;
+        }
+        state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
+        // state.plane.posMapCoord = [1400 * mupm, 65 * mupm];
+        state.map.cloudLayer = {
+            topY: 850 * mupm,
+            bottomY: 700 * mupm,
+            isDark: true,
+        };
+        state.map.carrierMinMapX = state.map.rwP0MapCoord[0];
+        state.map.carrierMaxMapX = state.map.rwP1MapCoord[0] + CARRIER_DECK_SIZE_AFTER_RW_M * mupm;
     }
+    else {throw NOT_IMPLEMENTED;}
     if(
         state.map.windXMin < (WIND_MAX_MAGNITUDE_MS * -1)
         || state.map.windXMax > WIND_MAX_MAGNITUDE_MS
