@@ -90,3 +90,6 @@ const CARRIER_DECK_SIZE_AFTER_RW_M = 30;
 
 const UP_ACCELERATION_EFFECT_COLOR = a => `rgb(0, 143, 14, ${ a })`;   // green
 const DOWN_ACCELERATION_EFFECT_COLOR = a => `rgb(98, 0, 143, ${ a })`; // purple
+
+const NPC_TYPE_JET = 0;
+const NPC_AB_COLOR = a => `rgb(255, 111, 0, ${ a })`

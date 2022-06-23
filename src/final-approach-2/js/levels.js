@@ -447,6 +447,66 @@ function setMapProps(state) {
         }
         state.plane.posMapCoord = deepCopy(state.map.glideSlopes[0].p0);
         // state.plane.posMapCoord = [1400 * mupm, 65 * mupm];
+
+        state.map.npcs.push({
+            img: state.plane.assets[0],
+            type: NPC_TYPE_JET,
+            dimensions: state.plane.dimensions[0],
+            afterBurner: false,
+            posMapCoord:[
+                state.plane.posMapCoord[0] - (8 * mupm),
+                state.plane.posMapCoord[1] + (3 * mupm),
+            ],
+            autopilot: [
+                {
+                    startX: -100 * mupm,
+                    endX: 150 * mupm,
+                    verticalMS: 0,
+                    horizontalMS: state.plane.horizontalMS,
+                }, {
+                    startX: 150 * mupm + 1,
+                    endX: 200 * mupm,
+                    verticalMS: 0,
+                    horizontalMS: state.plane.horizontalMS,
+                    afterBurner: true,
+                },{
+                    startX: 200 * mupm + 1,
+                    endX: 400 * mupm,
+                    verticalMS: 4,
+                    horizontalMS: state.plane.horizontalMS * getRandomFloat(1.4, 1.43),
+                    afterBurner: true,
+                }
+            ],
+        }, {
+            img: state.plane.assets[0],
+            type: NPC_TYPE_JET,
+            dimensions: state.plane.dimensions[0],
+            afterBurner: false,
+            posMapCoord:[
+                state.plane.posMapCoord[0] - (4 * mupm),
+                state.plane.posMapCoord[1] + (1.5 * mupm),
+            ],
+            autopilot: [
+                {
+                    startX: -100 * mupm,
+                    endX: 153 * mupm,
+                    verticalMS: 0,
+                    horizontalMS: state.plane.horizontalMS,
+                },{
+                    startX: 153 * mupm + 1,
+                    endX: 200 * mupm,
+                    verticalMS: 0,
+                    horizontalMS: state.plane.horizontalMS,
+                    afterBurner: true,
+                }, {
+                    startX: 200 * mupm + 1,
+                    endX: 400 * mupm,
+                    verticalMS: 4,
+                    horizontalMS: state.plane.horizontalMS * getRandomFloat(1.4, 1.43),
+                    afterBurner: true,
+                }
+            ],
+        });
         state.map.cloudLayer = {
             topY: 850 * mupm,
             bottomY: 700 * mupm,

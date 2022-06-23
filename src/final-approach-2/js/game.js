@@ -115,6 +115,7 @@ function createNewState(maxCompletedLevel) {
             carrierRWArrestorCableMapXs: null,
             getDangerStatus: state => {},
             getAutopilotStatus: state => {},
+            npcs: [],
             glideSlopes: [],
             tireStrikes: [],
             aaFire: [],
@@ -404,6 +405,11 @@ function runDataLoop() {
         if(!state.plane.touchedDown && !state.plane.crashFrame) {
             state = adjustMapWindValues(state);
             state = state.plane.adjustPlanePosition(state);
+        }
+
+        // Adjust state of NPC planes
+        if(state.map.npcs.length) {
+            state = adjustNPCPositions(state);
         }
 
         // check for ground contact and adjust state for plane
@@ -827,4 +833,37 @@ function adjustDebrisPositions(state) {
     if(ixsToRemove.length) {
         window._debrisObjects = window._debrisObjects.filter((_o, ix) => ixsToRemove.indexOf(ix) == -1);
     }
+}
+
+function adjustNPCPositions(state) {
+    const mupm = state.map.mapUnitsPerMeter;
+    const fps = state.game.dataFPS;
+    const npcIXsToRemove = [];
+    for(let i in state.map.npcs) {
+        let pX = state.map.npcs[i].posMapCoord[0];
+        let vX, vY, ab, foundAP = false;
+        for(let j in state.map.npcs[i].autopilot) {
+            ap = state.map.npcs[i].autopilot[j];
+            if(pX >= ap.startX && pX <= ap.endX) {
+                vX = ap.horizontalMS;
+                vY = ap.verticalMS;
+                ab = Boolean(ap.afterBurner);
+                foundAP = true;
+                break;
+            }
+        }
+        if(foundAP) {
+            state.map.npcs[i].afterBurner = ab;
+            state.map.npcs[i].posMapCoord[0] = (state.map.npcs[i].posMapCoord[0] + (vX / fps * mupm));
+            state.map.npcs[i].posMapCoord[1] = (state.map.npcs[i].posMapCoord[1] + (vY / fps * mupm));;
+        } else {
+            npcIXsToRemove.push(parseInt(i));
+        }
+    }
+    if(npcIXsToRemove.length) {
+        state.map.npcs = state.map.npcs.filter((_npc, ix) => {
+            return npcIXsToRemove.indexOf(ix) == -1;
+        });
+    }
+    return state;
 }

@@ -251,6 +251,10 @@ function drawGameScene(state) {
         });
     }
 
+    if (state.map.npcs.length) {
+        _drawNPCs(state);
+    }
+
     let planeCanvasX1, planeCanvasY1;
     if(!plane.crashFrame) {
 
@@ -325,7 +329,7 @@ function drawGameScene(state) {
             state.map.getAutopilotStatus
             && state.map.getAutopilotStatus(state)
         ) {
-            const APtextPosX = state.camera.canvasHalfW;// + plane.dimensions[1][0] * mupm / 2 - 20;
+            const APtextPosX = state.camera.canvasHalfW + 30;
             const APtextPosY = state.camera.canvasHalfH - plane.dimensions[1][1] * mupm / 2 - 25;
             state.ctx.beginPath()
             state.ctx.font = "24px Courier New";
@@ -344,10 +348,6 @@ function drawGameScene(state) {
         let doCanvasCoord = mapCoordToCanvasCoord(
             debris.mapCoords, state.plane.posMapCoord, state.camera,
         );
-        console.log({
-            doCanvasCoord,
-            mapCoord: debris.mapCoords,
-        })
         state.ctx.beginPath()
         state.ctx.fillStyle = "#000";
         state.ctx.arc(
@@ -514,6 +514,55 @@ function drawGameScene(state) {
     } else {
         _drawLevelName(state, nowTS);
     }
+}
+
+function _drawNPCs(state) {
+    const mupm = state.map.mapUnitsPerMeter;
+    state.map.npcs.forEach(npc => {
+        const imgW = npc.dimensions[0] * mupm;
+        const imgH = npc.dimensions[1] * mupm;
+        const mapTopLeft = [
+            npc.posMapCoord[0] - imgW / 2,
+            npc.posMapCoord[1] + imgH / 2,
+        ];
+        const canvasCoord = mapCoordToCanvasCoord(
+            mapTopLeft, state.plane.posMapCoord, state.camera,
+        )
+        state.ctx.drawImage(
+            npc.img, canvasCoord[0], canvasCoord[1], imgW, imgH,
+        )
+        if(npc.afterBurner) {
+            const basePoint = canvasCoord[0] - 1 * mupm;
+            const abXCanvasPoints = [
+                basePoint,
+                basePoint - getRandomFloat(0.8, 1) * mupm,
+                basePoint - getRandomFloat(1, 2) * mupm,
+                basePoint - getRandomFloat(2, 3) * mupm,
+                basePoint - getRandomFloat(3, 4) * mupm,
+                basePoint - getRandomFloat(4, 5) * mupm,
+            ];
+            const maxR = 1 * mupm;
+            const abCanvasY = mapCoordToCanvasCoord(
+                [
+                    npc.posMapCoord[0] - imgW / 2,
+                    npc.posMapCoord[1],
+                ], state.plane.posMapCoord, state.camera,
+            )[1];
+            abXCanvasPoints.forEach((canvasX, abCIX) => {
+                state.ctx.beginPath();
+                state.ctx.fillStyle = NPC_AB_COLOR(
+                    [0.8, 0.6, 0.5, 0.3, 0.25, 0.15][abCIX]
+                );
+                state.ctx.arc(
+                    canvasX,
+                    abCanvasY + getRandomFloat(-0.25, 0.25) * mupm,
+                    maxR - (abCIX * 0.1 * mupm),
+                    0, TWO_PI,
+                )
+                state.ctx.fill();
+            });
+        }
+    });
 }
 
 function _drawLevelName(state, nowTS) {
