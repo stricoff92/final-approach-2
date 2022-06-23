@@ -453,6 +453,7 @@ function setMapProps(state) {
             type: NPC_TYPE_JET,
             dimensions: state.plane.dimensions[0],
             afterBurner: false,
+            horizontalMS: state.plane.horizontalMS,
             posMapCoord:[
                 state.plane.posMapCoord[0] - (8 * mupm),
                 state.plane.posMapCoord[1] + (3 * mupm),
@@ -460,20 +461,18 @@ function setMapProps(state) {
             autopilot: [
                 {
                     startX: -100 * mupm,
-                    endX: 175 * mupm,
+                    endX: 190 * mupm,
                     verticalMS: 0,
                     horizontalMS: state.plane.horizontalMS,
                 }, {
-                    startX: 175 * mupm + 1,
+                    startX: 190 * mupm + 1,
                     endX: 200 * mupm,
-                    verticalMS: 0,
-                    horizontalMS: state.plane.horizontalMS,
+                    verticalMS: 1,
                     afterBurner: true,
                 },{
                     startX: 200 * mupm + 1,
                     endX: 400 * mupm,
-                    verticalMS: 4,
-                    horizontalMS: state.plane.horizontalMS * getRandomFloat(1.4, 1.43),
+                    verticalMS: 3,
                     afterBurner: true,
                 }
             ],
@@ -482,6 +481,7 @@ function setMapProps(state) {
             type: NPC_TYPE_JET,
             dimensions: state.plane.dimensions[0],
             afterBurner: false,
+            horizontalMS: state.plane.horizontalMS,
             posMapCoord:[
                 state.plane.posMapCoord[0] - (4 * mupm),
                 state.plane.posMapCoord[1] + (1.5 * mupm),
@@ -489,20 +489,17 @@ function setMapProps(state) {
             autopilot: [
                 {
                     startX: -100 * mupm,
-                    endX: 178 * mupm,
+                    endX: 185 * mupm,
                     verticalMS: 0,
-                    horizontalMS: state.plane.horizontalMS,
                 },{
-                    startX: 178 * mupm + 1,
+                    startX: 185 * mupm + 1,
                     endX: 200 * mupm,
-                    verticalMS: 0,
-                    horizontalMS: state.plane.horizontalMS,
+                    verticalMS: 1,
                     afterBurner: true,
                 }, {
                     startX: 200 * mupm + 1,
                     endX: 400 * mupm,
-                    verticalMS: 4,
-                    horizontalMS: state.plane.horizontalMS * getRandomFloat(1.4, 1.43),
+                    verticalMS: 3,
                     afterBurner: true,
                 }
             ],

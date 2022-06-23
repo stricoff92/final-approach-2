@@ -845,9 +845,10 @@ function adjustNPCPositions(state) {
         for(let j in state.map.npcs[i].autopilot) {
             ap = state.map.npcs[i].autopilot[j];
             if(pX >= ap.startX && pX <= ap.endX) {
-                vX = ap.horizontalMS;
-                vY = ap.verticalMS;
                 ab = Boolean(ap.afterBurner);
+                vY = ap.verticalMS;
+                vX = state.map.npcs[i].horizontalMS + (ab ? 1.2 * mupm / fps : 0);
+                state.map.npcs[i].horizontalMS = vX;
                 foundAP = true;
                 break;
             }
