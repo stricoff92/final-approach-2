@@ -460,11 +460,11 @@ function setMapProps(state) {
             autopilot: [
                 {
                     startX: -100 * mupm,
-                    endX: 150 * mupm,
+                    endX: 175 * mupm,
                     verticalMS: 0,
                     horizontalMS: state.plane.horizontalMS,
                 }, {
-                    startX: 150 * mupm + 1,
+                    startX: 175 * mupm + 1,
                     endX: 200 * mupm,
                     verticalMS: 0,
                     horizontalMS: state.plane.horizontalMS,
@@ -489,11 +489,11 @@ function setMapProps(state) {
             autopilot: [
                 {
                     startX: -100 * mupm,
-                    endX: 153 * mupm,
+                    endX: 178 * mupm,
                     verticalMS: 0,
                     horizontalMS: state.plane.horizontalMS,
                 },{
-                    startX: 153 * mupm + 1,
+                    startX: 178 * mupm + 1,
                     endX: 200 * mupm,
                     verticalMS: 0,
                     horizontalMS: state.plane.horizontalMS,
