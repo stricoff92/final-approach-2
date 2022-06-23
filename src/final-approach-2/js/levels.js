@@ -471,7 +471,7 @@ function setMapProps(state) {
                     afterBurner: true,
                 },{
                     startX: 200 * mupm + 1,
-                    endX: 400 * mupm,
+                    endX: 800 * mupm,
                     verticalMS: 3,
                     afterBurner: true,
                 }
@@ -498,7 +498,7 @@ function setMapProps(state) {
                     afterBurner: true,
                 }, {
                     startX: 200 * mupm + 1,
-                    endX: 400 * mupm,
+                    endX: 800 * mupm,
                     verticalMS: 3,
                     afterBurner: true,
                 }

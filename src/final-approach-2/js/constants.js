@@ -93,3 +93,6 @@ const DOWN_ACCELERATION_EFFECT_COLOR = a => `rgb(98, 0, 143, ${ a })`; // purple
 
 const NPC_TYPE_JET = 0;
 const NPC_AB_COLOR = a => `rgb(255, 111, 0, ${ a })`
+
+const PREVIOUS_POINT_COLOR = "#a6a6a6";
+const PREVIOUS_POINT_R_PX = 5;

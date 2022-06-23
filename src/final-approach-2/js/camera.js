@@ -483,10 +483,10 @@ function drawGameScene(state) {
                 mapCoord, plane.posMapCoord, state.camera
             );
             state.ctx.beginPath();
-            state.ctx.fillStyle = "#a6a6a6";
+            state.ctx.fillStyle = PREVIOUS_POINT_COLOR;
             state.ctx.arc(
                 canvasCoord[0], canvasCoord[1],
-                5,
+                PREVIOUS_POINT_R_PX,
                 0, TWO_PI,
             );
             state.ctx.fill();
@@ -563,6 +563,24 @@ function _drawNPCs(state) {
             });
         }
     });
+    const ppMaxAge = 1000;
+    for(let i in state.map.npcPreviousPoints) {
+        let pp = state.map.npcPreviousPoints[i];
+        if(state.game.frame > pp.createdFrame + ppMaxAge) {
+            continue;
+        }
+        let ppCC = mapCoordToCanvasCoord(
+            pp.posMapCoord, state.plane.posMapCoord, state.camera,
+        )
+        state.ctx.beginPath();
+        state.ctx.fillStyle = PREVIOUS_POINT_COLOR;
+        state.ctx.arc(
+            ppCC[0], ppCC[1],
+            PREVIOUS_POINT_R_PX,
+            0, TWO_PI,
+        );
+        state.ctx.fill();
+    }
 }
 
 function _drawLevelName(state, nowTS) {

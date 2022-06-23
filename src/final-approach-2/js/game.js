@@ -116,6 +116,7 @@ function createNewState(maxCompletedLevel) {
             getDangerStatus: state => {},
             getAutopilotStatus: state => {},
             npcs: [],
+            npcPreviousPoints: [],
             glideSlopes: [],
             tireStrikes: [],
             aaFire: [],
@@ -856,7 +857,14 @@ function adjustNPCPositions(state) {
         if(foundAP) {
             state.map.npcs[i].afterBurner = ab;
             state.map.npcs[i].posMapCoord[0] = (state.map.npcs[i].posMapCoord[0] + (vX / fps * mupm));
-            state.map.npcs[i].posMapCoord[1] = (state.map.npcs[i].posMapCoord[1] + (vY / fps * mupm));;
+            state.map.npcs[i].posMapCoord[1] = (state.map.npcs[i].posMapCoord[1] + (vY / fps * mupm));
+
+            if (state.game.frame % 10 === 0) {
+                state.map.npcPreviousPoints.push({
+                    posMapCoord: deepCopy(state.map.npcs[i].posMapCoord),
+                    createdFrame: state.game.frame,
+                });
+            }
         } else {
             npcIXsToRemove.push(parseInt(i));
         }
