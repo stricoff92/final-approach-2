@@ -26,7 +26,7 @@ function setCookie(cname, cvalue, exdays) {
     }
     console.log("setting cookie " + cname + "=" + cvalue);
     const d = new Date();
-    const defaultExDays = 90;
+    const defaultExDays = 180;
     d.setTime(d.getTime() + ((exdays || defaultExDays) * 24 * 60 * 60 * 1000));
     let expires = "expires="+ d.toUTCString();
     document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
