@@ -429,10 +429,6 @@ function runDataLoop() {
         if(state.plane.halted && state.game.phase !== PHASE_3_SCORESCREEN) {
             state = calculateScore(state);
             state.game.phase = PHASE_3_SCORESCREEN;
-            state.game.maxCompletedLevel = Math.max(
-                state.game.level,
-                state.game.maxCompletedLevel,
-            );
             const totalScore = state.game.score.total;
             if(state.game.score.isNewHighScore) {
                 setCookie(
