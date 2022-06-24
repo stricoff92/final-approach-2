@@ -467,12 +467,12 @@ function setMapProps(state) {
                     verticalMS: 0,
                     horizontalMS: state.plane.horizontalMS,
                 }, {
-                    startX: 190 * mupm + 1,
+                    startX: 190 * mupm,
                     endX: 200 * mupm,
                     verticalMS: 1,
                     afterBurner: true,
                 },{
-                    startX: 200 * mupm + 1,
+                    startX: 200 * mupm,
                     endX: 800 * mupm,
                     verticalMS: 3,
                     afterBurner: true,
@@ -495,12 +495,12 @@ function setMapProps(state) {
                     endX: 185 * mupm,
                     verticalMS: 0,
                 },{
-                    startX: 185 * mupm + 1,
+                    startX: 185 * mupm,
                     endX: 200 * mupm,
                     verticalMS: 1,
                     afterBurner: true,
                 }, {
-                    startX: 200 * mupm + 1,
+                    startX: 200 * mupm,
                     endX: 800 * mupm,
                     verticalMS: 3,
                     afterBurner: true,
@@ -523,12 +523,12 @@ function setMapProps(state) {
                     endX: 188 * mupm,
                     verticalMS: 0,
                 },{
-                    startX: 188 * mupm + 1,
+                    startX: 188 * mupm,
                     endX: 200 * mupm,
                     verticalMS: 1,
                     afterBurner: true,
                 }, {
-                    startX: 200 * mupm + 1,
+                    startX: 200 * mupm,
                     endX: 800 * mupm,
                     verticalMS: 3,
                     afterBurner: true,
@@ -551,12 +551,12 @@ function setMapProps(state) {
                     endX: 190 * mupm,
                     verticalMS: 0,
                 },{
-                    startX: 190 * mupm + 1,
+                    startX: 190 * mupm,
                     endX: 200 * mupm,
                     verticalMS: 1,
                     afterBurner: true,
                 }, {
-                    startX: 200 * mupm + 1,
+                    startX: 200 * mupm,
                     endX: 800 * mupm,
                     verticalMS: 3,
                     afterBurner: true,
