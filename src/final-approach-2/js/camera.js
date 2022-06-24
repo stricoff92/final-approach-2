@@ -1973,6 +1973,24 @@ function drawDebugData(state) {
         yPointer -= yInterval;
     }
 
+    // Could layer boundaries
+    const cloudTopY = mapCoordToCanvasCoord(
+        [0, state.map.cloudLayer.topY], state.plane.posMapCoord, state.camera,
+    )[1];
+    const cloudBottomY = mapCoordToCanvasCoord(
+        [0, state.map.cloudLayer.bottomY], state.plane.posMapCoord, state.camera,
+    )[1];
+    state.ctx.beginPath();
+    state.ctx.lineWidth = 8;
+    state.ctx.strokeStyle = "rgb(0, 255, 0, 0.666)";
+    state.ctx.moveTo(0, cloudTopY)
+    state.ctx.lineTo(state.camera.canvasW, cloudTopY);
+    state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.moveTo(0, cloudBottomY);
+    state.ctx.lineTo(state.camera.canvasW, cloudBottomY);
+    state.ctx.stroke();
+
     // Draw map scape
     if(state.map.mapUnitsPerMeter && state.camera.canvasH) {
         const msXOffset = 25;

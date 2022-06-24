@@ -330,6 +330,7 @@ function setMapProps(state) {
         state.map.cloudLayer = {
             topY: cloudTopY,
             bottomY: cloudBottomY,
+            isStorm: true,
         };
         state.map.aaFireP0 = [1000 * mupm, 0];
         state.map.getDangerStatus = state => {
