@@ -86,6 +86,7 @@ function createNewState() {
                 isSmooth: false,
                 isRough: false,
                 bounces: 0,
+                bounceVerticalMS: [],
             },
             adjustPlanePosition: state => {},
             previousPoints: [],
@@ -698,7 +699,10 @@ function processGroundInteractions(state) {
             state.plane.verticalMS = 0;
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + planeBottomDiffY;
             state.plane.touchdownStats.isSmooth = plane.touchdownStats.bounces === 0;
-            state.plane.touchdownStats.verticalMS = touchdownMS;
+            state.plane.touchdownStats.bounceVerticalMS.push(touchdownMS);
+            state.plane.touchdownStats.verticalMS = state.plane.touchdownStats.bounceVerticalMS.reduce((v1, v2) => {
+                return Math.abs(v1) > Math.abs(v2) ? v1 : v2;
+            });
             state.plane.touchdownStats.runwayUsedStartX = plane.posMapCoord[0];
             const lastGSIX = state.map.glideSlopes.length - 1;
             state.plane.touchdownStats.distanceToGlideSlopeM = Math.abs(
@@ -721,6 +725,7 @@ function processGroundInteractions(state) {
             state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 0.8;
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + (state.plane.posMapCoord[1] - planeBottomMapCoordY);
             state.plane.touchdownStats.bounces++;
+            state.plane.touchdownStats.bounceVerticalMS.push(touchdownMS);
             console.log("👉 small bounce");
         } else {
             // big bounce off runway
@@ -728,6 +733,7 @@ function processGroundInteractions(state) {
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + (state.plane.posMapCoord[1] - planeBottomMapCoordY);
             state.plane.touchdownStats.isRough = true;
             state.plane.touchdownStats.bounces++;
+            state.plane.touchdownStats.bounceVerticalMS.push(touchdownMS);
             console.log("👉 big bounce");
         }
         if (addRubberStrike) {
