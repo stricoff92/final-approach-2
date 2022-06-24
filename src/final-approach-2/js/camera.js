@@ -296,9 +296,13 @@ function drawGameScene(state) {
         const aaFireLlen = state.map.aaFire.length;
         const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
         const lastAAFire = aaFireLlen > 0 ? state.map.aaFire[aaFireLlen - 1] : null;
+        const isWindShake = Boolean(
+            state.map.windShakeUntilTS != null
+            && state.map.windShakeUntilTS >= nowTS
+        );
         const isAAFire = Boolean(lastAAFire !== null && lastAAFire.createdTS + shakeLifespanAAFMS >= nowTS);
         const isTireStrike = Boolean(!isAAFire && lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanTSMS >= nowTS);
-        const showVisualSkake = isTireStrike || isAAFire;
+        const showVisualSkake = isTireStrike || isAAFire || isWindShake;
         let xAmnt = 0, yAmnt = 0;
         if(showVisualSkake) {
             if(isTireStrike) {
@@ -308,6 +312,10 @@ function drawGameScene(state) {
                 const mult = isAAFire.fatal ? 1.6 : 1;
                 xAmnt = getRandomFloat(-0.925 * mult, 0.925 * mult) * mupm;
                 yAmnt = getRandomFloat(-0.925 * mult, 0.925 * mult) * mupm;
+            } else if (isWindShake) {
+                const posOrNeg = v => Math.random() > 0.5 ? v * -1 : v;
+                xAmnt = posOrNeg(state.map.windShakeMeters) * mupm * getRandomFloat(0.8, 1);
+                yAmnt = posOrNeg(state.map.windShakeMeters) * mupm * getRandomFloat(0.8, 1);
             } else {
                 throw NOT_IMPLEMENTED;
             }

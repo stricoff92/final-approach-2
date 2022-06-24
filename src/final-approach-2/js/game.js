@@ -105,6 +105,8 @@ function createNewState(maxCompletedLevel) {
             windXMax: null,
             windXTarg: null,
             windBelowCloudLayerOnly: false,
+            windShakeUntilTS: null,
+            windShakeMeters: null,
             cloudLayer: null,
             rwP0MapCoord: null,
             rwP1MapCoord: null,
@@ -781,6 +783,8 @@ function adjustMapWindValues(state) {
             state.map.windXMin,
             state.map.windXMax,
         );
+        state.map.windShakeUntilTS = performance.now() + getRandomInt(500, 900);
+        state.map.windShakeMeters = state.map.windXTarg / getRandomFloat(30, 40);
     }
     return state;
 }
