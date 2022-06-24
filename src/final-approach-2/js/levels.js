@@ -571,7 +571,7 @@ function setMapProps(state) {
         });
         state.map.cloudLayer = {
             topY: 850 * mupm,
-            bottomY: 700 * mupm,
+            bottomY: 650 * mupm,
             isDark: true,
         };
         state.map.carrierMinMapX = state.map.rwP0MapCoord[0];
