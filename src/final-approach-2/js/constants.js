@@ -19,6 +19,7 @@ const IS_FLARING = 1;
 const TERRAIN_FOREST = 0; // Green
 const TERRAIN_DESERT = 1; // Orange
 const TERRAIN_OCEAN = 2;  // Blue
+const TERRAIN_STORMY_OCEAN = 3;  // Blue
 
 const BUTTON_TYPE_GRID = 0;
 const BUTTON_TYPE_MAIN = 1;
@@ -36,6 +37,7 @@ const COLOR_SKY = "#e3e3ff";
 const COLOR_GROUND_FOREST = "#bcd4ab";
 const COLOR_GROUD_DESERT = "#dbd6af";
 const COLOR_SURFACE_OCEAN = "#362ae8";
+const COLOR_SURFACE_OCEAN_DARK = "#1b157a";
 const COLOR_HUD_LIGHT_GREEN = "#daf0d3";
 const COLOR_HUD_LIGHT_GREEN_A = "rgb(218, 240, 211, 0.5)";
 
@@ -45,6 +47,7 @@ const COLOR_CARRIER_RUNWAY = "#c9c6bf";
 const COLOR_CARRIER_WINDOW = "#958efa";
 
 const COLOR_CLOUD_LAYER = a => `rgb(219, 219, 219, ${a.toFixed(2)})`;
+const COLOR_CLOUD_LAYER_DARK = a => `rgb(169, 169, 169, ${a.toFixed(2)})`;
 const CLOUD_GRADIENT_SIZE_M = 30;
 
 const CLICK_RING_MAX_FRAME_AGE = 20;
@@ -90,3 +93,9 @@ const CARRIER_DECK_SIZE_AFTER_RW_M = 30;
 
 const UP_ACCELERATION_EFFECT_COLOR = a => `rgb(0, 143, 14, ${ a })`;   // green
 const DOWN_ACCELERATION_EFFECT_COLOR = a => `rgb(98, 0, 143, ${ a })`; // purple
+
+const NPC_TYPE_JET = 0;
+const NPC_AB_COLOR = a => `rgb(255, 111, 0, ${ a })`
+
+const PREVIOUS_POINT_COLOR = "#a6a6a6";
+const PREVIOUS_POINT_R_PX = 5;

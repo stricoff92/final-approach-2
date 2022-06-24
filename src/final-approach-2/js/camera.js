@@ -251,6 +251,10 @@ function drawGameScene(state) {
         });
     }
 
+    if (state.map.npcs.length) {
+        _drawNPCs(state, false);
+    }
+
     let planeCanvasX1, planeCanvasY1;
     if(!plane.crashFrame) {
 
@@ -292,9 +296,13 @@ function drawGameScene(state) {
         const aaFireLlen = state.map.aaFire.length;
         const lastTireStrike = tireStrikeLen > 0 ? state.map.tireStrikes[tireStrikeLen - 1] : null;
         const lastAAFire = aaFireLlen > 0 ? state.map.aaFire[aaFireLlen - 1] : null;
+        const isWindShake = Boolean(
+            state.map.windShakeUntilTS != null
+            && state.map.windShakeUntilTS >= nowTS
+        );
         const isAAFire = Boolean(lastAAFire !== null && lastAAFire.createdTS + shakeLifespanAAFMS >= nowTS);
         const isTireStrike = Boolean(!isAAFire && lastTireStrike !== null && lastTireStrike.createdTS + shakeLifespanTSMS >= nowTS);
-        const showVisualSkake = isTireStrike || isAAFire;
+        const showVisualSkake = isTireStrike || isAAFire || isWindShake;
         let xAmnt = 0, yAmnt = 0;
         if(showVisualSkake) {
             if(isTireStrike) {
@@ -304,6 +312,10 @@ function drawGameScene(state) {
                 const mult = isAAFire.fatal ? 1.6 : 1;
                 xAmnt = getRandomFloat(-0.925 * mult, 0.925 * mult) * mupm;
                 yAmnt = getRandomFloat(-0.925 * mult, 0.925 * mult) * mupm;
+            } else if (isWindShake) {
+                const posOrNeg = v => Math.random() > 0.5 ? v * -1 : v;
+                xAmnt = posOrNeg(state.map.windShakeMeters) * mupm * getRandomFloat(0.8, 1);
+                yAmnt = posOrNeg(state.map.windShakeMeters) * mupm * getRandomFloat(0.8, 1);
             } else {
                 throw NOT_IMPLEMENTED;
             }
@@ -325,7 +337,7 @@ function drawGameScene(state) {
             state.map.getAutopilotStatus
             && state.map.getAutopilotStatus(state)
         ) {
-            const APtextPosX = state.camera.canvasHalfW;// + plane.dimensions[1][0] * mupm / 2 - 20;
+            const APtextPosX = state.camera.canvasHalfW + 50;
             const APtextPosY = state.camera.canvasHalfH - plane.dimensions[1][1] * mupm / 2 - 25;
             state.ctx.beginPath()
             state.ctx.font = "24px Courier New";
@@ -339,15 +351,15 @@ function drawGameScene(state) {
         _drawCrashingEffect(state);
     }
 
+    if (state.map.npcs.length) {
+        _drawNPCs(state, true);
+    }
+
     // Draw Debris
     window._debrisObjects.forEach(debris => {
         let doCanvasCoord = mapCoordToCanvasCoord(
             debris.mapCoords, state.plane.posMapCoord, state.camera,
         );
-        console.log({
-            doCanvasCoord,
-            mapCoord: debris.mapCoords,
-        })
         state.ctx.beginPath()
         state.ctx.fillStyle = "#000";
         state.ctx.arc(
@@ -483,10 +495,10 @@ function drawGameScene(state) {
                 mapCoord, plane.posMapCoord, state.camera
             );
             state.ctx.beginPath();
-            state.ctx.fillStyle = "#a6a6a6";
+            state.ctx.fillStyle = PREVIOUS_POINT_COLOR;
             state.ctx.arc(
                 canvasCoord[0], canvasCoord[1],
-                5,
+                PREVIOUS_POINT_R_PX,
                 0, TWO_PI,
             );
             state.ctx.fill();
@@ -513,6 +525,73 @@ function drawGameScene(state) {
         }
     } else {
         _drawLevelName(state, nowTS);
+    }
+}
+
+function _drawNPCs(state, inFront) {
+    const mupm = state.map.mapUnitsPerMeter;
+    state.map.npcs.filter(npc => npc.inFront == inFront).forEach(npc => {
+        const imgW = npc.dimensions[0] * mupm;
+        const imgH = npc.dimensions[1] * mupm;
+        const mapTopLeft = [
+            npc.posMapCoord[0] - imgW / 2,
+            npc.posMapCoord[1] + imgH / 2,
+        ];
+        const canvasCoord = mapCoordToCanvasCoord(
+            mapTopLeft, state.plane.posMapCoord, state.camera,
+        )
+        state.ctx.drawImage(
+            npc.img, canvasCoord[0], canvasCoord[1], imgW, imgH,
+        )
+        if(npc.afterBurner) {
+            const basePoint = canvasCoord[0] - 1 * mupm;
+            const abXCanvasPoints = [
+                basePoint,
+                basePoint - getRandomFloat(0.8, 1) * mupm,
+                basePoint - getRandomFloat(1, 2) * mupm,
+                basePoint - getRandomFloat(2, 3) * mupm,
+                basePoint - getRandomFloat(3, 4) * mupm,
+                basePoint - getRandomFloat(4, 5) * mupm,
+            ];
+            const maxR = 1 * mupm;
+            const abCanvasY = mapCoordToCanvasCoord(
+                [
+                    npc.posMapCoord[0] - imgW / 2,
+                    npc.posMapCoord[1],
+                ], state.plane.posMapCoord, state.camera,
+            )[1];
+            abXCanvasPoints.forEach((canvasX, abCIX) => {
+                state.ctx.beginPath();
+                state.ctx.fillStyle = NPC_AB_COLOR(
+                    [0.8, 0.6, 0.5, 0.3, 0.25, 0.15][abCIX]
+                );
+                state.ctx.arc(
+                    canvasX,
+                    abCanvasY + getRandomFloat(-0.25, 0.25) * mupm,
+                    maxR - (abCIX * 0.1 * mupm),
+                    0, TWO_PI,
+                );
+                state.ctx.fill();
+            });
+        }
+    });
+    const ppMaxAge = 1000;
+    for(let i in state.map.npcPreviousPoints) {
+        let pp = state.map.npcPreviousPoints[i];
+        if(state.game.frame > pp.createdFrame + ppMaxAge) {
+            continue;
+        }
+        let ppCC = mapCoordToCanvasCoord(
+            pp.posMapCoord, state.plane.posMapCoord, state.camera,
+        )
+        state.ctx.beginPath();
+        state.ctx.fillStyle = PREVIOUS_POINT_COLOR;
+        state.ctx.arc(
+            ppCC[0], ppCC[1],
+            PREVIOUS_POINT_R_PX,
+            0, TWO_PI,
+        );
+        state.ctx.fill();
     }
 }
 
@@ -764,7 +843,7 @@ function _drawcarrierLandingHUD(state, nowTS) {
 function _drawFuelIndicator(state, nowTS) {
     const plane = state.plane;
     const mupm = state.map.mapUnitsPerMeter;
-    const indicatorCenterX = state.camera.canvasHalfW + (plane.dimensions[0][0] / 2 * mupm);
+    const indicatorCenterX = state.camera.canvasHalfW - (plane.dimensions[0][0] / 2 * mupm);
     const indicatorY2 = state.camera.canvasHalfH - (plane.dimensions[0][1] / 2 * mupm) - 5;
     const anyLeft = plane.fuelRemaining > 0;
 
@@ -824,6 +903,7 @@ function _drawHorizonAndCloudsLayer(state) {
     const toCloudsGradientStart = cl.topY + gradientSize;
     const fromCloudsGradientEnd = cl.bottomY - gradientSize;
 
+    const color = cl.isDark ? COLOR_CLOUD_LAYER_DARK : COLOR_CLOUD_LAYER;
     if(cloudsBelow) {
         state.ctx.beginPath();
         state.ctx.fillStyle = COLOR_SKY;
@@ -845,7 +925,7 @@ function _drawHorizonAndCloudsLayer(state) {
         if(planeYPos < toCloudsGradientStart) {
             const percentGray = (toCloudsGradientStart - planeYPos) / gradientSize;
             state.ctx.beginPath();
-            state.ctx.fillStyle = COLOR_CLOUD_LAYER(percentGray);
+            state.ctx.fillStyle = color(percentGray);
             state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
             state.ctx.fill();
         }
@@ -858,6 +938,8 @@ function _drawHorizonAndCloudsLayer(state) {
             state.ctx.fillStyle = COLOR_GROUD_DESERT;
         } else if (state.map.terrain === TERRAIN_OCEAN) {
             state.ctx.fillStyle = COLOR_SURFACE_OCEAN;
+        } else if (state.map.terrain === TERRAIN_STORMY_OCEAN) {
+            state.ctx.fillStyle = COLOR_SURFACE_OCEAN_DARK;
         } else { throw NOT_IMPLEMENTED; }
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
@@ -865,14 +947,14 @@ function _drawHorizonAndCloudsLayer(state) {
         if(planeYPos > fromCloudsGradientEnd) {
             const percentGray = (planeYPos - fromCloudsGradientEnd) / gradientSize;
             state.ctx.beginPath();
-            state.ctx.fillStyle = COLOR_CLOUD_LAYER(percentGray);
+            state.ctx.fillStyle = color(percentGray);
             state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
             state.ctx.fill();
         }
     }
     else {
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_CLOUD_LAYER(1);
+        state.ctx.fillStyle = color(1);
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
     }
@@ -945,15 +1027,26 @@ function _drawCrashingEffect(state) {
 }
 
 function _drawWindIndicator(state) {
-    if(state.map.windMaxDeltaPerSecond === null) {
+    if(
+        state.map.windMaxDeltaPerSecond === null
+        || (
+            state.map.windMaxDeltaPerSecond != null
+            && state.map.windBelowCloudLayerOnly
+            && state.plane.posMapCoord[1] > state.map.cloudLayer.bottomY
+        )
+    ) {
         return;
     }
-    const windArrowY1 = state.camera.canvasH / 4;
+    const fillColor = Boolean(
+        state.map.terrain === TERRAIN_OCEAN
+        || state.map.terrain === TERRAIN_STORMY_OCEAN
+    ) ? "#fff" : COLOR_PURPLE;
+    const windArrowY1 = state.camera.canvasH / 6;
     const windLabelY1 = windArrowY1 - 5;
     state.ctx.beginPath();
     state.ctx.textBaseline = "bottom";
     state.ctx.textAlign = "center";
-    state.ctx.fillStyle = COLOR_PURPLE;
+    state.ctx.fillStyle = fillColor;
     state.ctx.font = "bold 28px Courier New";
     state.ctx.fillText("WIND", state.camera.canvasHalfW, windLabelY1);
     if(Math.abs(state.map.windXVel) < 0.1) {
@@ -969,7 +1062,7 @@ function _drawWindIndicator(state) {
         // Head wind, forward arrow.
         const arrowLength = arrowMaxLenth * (state.map.windXVel / WIND_MAX_MAGNITUDE_MS);
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.fillStyle = fillColor;
         state.ctx.rect(
             state.camera.canvasHalfW, windArrowY1,
             arrowLength, arrowHeight,
@@ -978,7 +1071,7 @@ function _drawWindIndicator(state) {
         // Arrow head
         const arrowHeadPointX = state.camera.canvasHalfW + arrowLength + 12;
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.fillStyle = fillColor;
         state.ctx.moveTo(
             state.camera.canvasHalfW + (arrowLength - headBuff),
             arrowHeadTopY,
@@ -998,7 +1091,7 @@ function _drawWindIndicator(state) {
         const arrowLength = arrowMaxLenth * (-1 * state.map.windXVel / WIND_MAX_MAGNITUDE_MS);
         const arrowX1 = state.camera.canvasHalfW - arrowLength;
         state.ctx.beginPath()
-        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.fillStyle = fillColor;
         state.ctx.rect(
             arrowX1, windArrowY1,
             arrowLength, arrowHeight,
@@ -1007,7 +1100,7 @@ function _drawWindIndicator(state) {
         // Arrow head
         const arrowHeadPointX = state.camera.canvasHalfW - (arrowLength + 12);
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.fillStyle = fillColor;
         state.ctx.moveTo(
             state.camera.canvasHalfW - (arrowLength - headBuff),
             arrowHeadTopY,
@@ -1124,7 +1217,9 @@ function _drawCloudEffects(
     const planeYPos = state.plane.posMapCoord[1];
     const mupm = state.map.mapUnitsPerMeter;
 
-    if(state.game.frame % 12 === 0 && (canvasMinMapCoordY <= cl.topY && canvasMaxMapCoordY >= cl.bottomY)) {
+    const fillColor = cl.isDark ? "rgb(165, 165, 165, 0.25)" : "rgb(200, 200, 200, 0.25)";
+    const clGenInt = cl.isDark ? 5 : 12;
+    if(state.game.frame % clGenInt === 0 && (canvasMinMapCoordY <= cl.topY && canvasMaxMapCoordY >= cl.bottomY)) {
         const newCloudRadius = getRandomFloat(5 * mupm, 18 * mupm);
         const newCloudPosY = getRandomFloat(
             canvasMinMapCoordY - newCloudRadius * 0.7,
@@ -1149,7 +1244,7 @@ function _drawCloudEffects(
         }
         else {
             state.ctx.beginPath();
-            state.ctx.fillStyle = "rgb(200, 200, 200, 0.25)";
+            state.ctx.fillStyle = fillColor;
             state.ctx.ellipse(
                 ceCanvasCoord[0], ceCanvasCoord[1],
                 ce.radiusX, ce.radiusY,
@@ -1296,7 +1391,9 @@ function _drawCarrierRunway(state, nowTS) {
     const rwHeight = state.map.rwVisualWidthM * mupm;
 
     // Boat Map coords
-    const mapMidY = state.map.rwP0MapCoord[1] - ((state.map.rwVisualWidthM / 2  * mupm) + (2.5 * mupm));
+    const mapMidY = state.map.rwP0MapCoord[1] - (
+        (state.map.rwVisualWidthM / 2  * mupm) + (2.5 * mupm)
+    );
     const boatMapTopLeft = [
         rwMapTopLeft[0],
         rwMapTopLeft[1] + 2.5 * mupm
@@ -1875,6 +1972,24 @@ function drawDebugData(state) {
         state.ctx.fillText(`windXTarg: ${state.map.windXTarg.toFixed(2)}`, xOffset, yPointer);
         yPointer -= yInterval;
     }
+
+    // Could layer boundaries
+    const cloudTopY = mapCoordToCanvasCoord(
+        [0, state.map.cloudLayer.topY], state.plane.posMapCoord, state.camera,
+    )[1];
+    const cloudBottomY = mapCoordToCanvasCoord(
+        [0, state.map.cloudLayer.bottomY], state.plane.posMapCoord, state.camera,
+    )[1];
+    state.ctx.beginPath();
+    state.ctx.lineWidth = 8;
+    state.ctx.strokeStyle = "rgb(0, 255, 0, 0.666)";
+    state.ctx.moveTo(0, cloudTopY)
+    state.ctx.lineTo(state.camera.canvasW, cloudTopY);
+    state.ctx.stroke();
+    state.ctx.beginPath();
+    state.ctx.moveTo(0, cloudBottomY);
+    state.ctx.lineTo(state.camera.canvasW, cloudBottomY);
+    state.ctx.stroke();
 
     // Draw map scape
     if(state.map.mapUnitsPerMeter && state.camera.canvasH) {

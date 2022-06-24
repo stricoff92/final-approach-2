@@ -104,6 +104,9 @@ function createNewState(maxCompletedLevel) {
             windXMin: null,
             windXMax: null,
             windXTarg: null,
+            windBelowCloudLayerOnly: false,
+            windShakeUntilTS: null,
+            windShakeMeters: null,
             cloudLayer: null,
             rwP0MapCoord: null,
             rwP1MapCoord: null,
@@ -115,6 +118,8 @@ function createNewState(maxCompletedLevel) {
             carrierRWArrestorCableMapXs: null,
             getDangerStatus: state => {},
             getAutopilotStatus: state => {},
+            npcs: [],
+            npcPreviousPoints: [],
             glideSlopes: [],
             tireStrikes: [],
             aaFire: [],
@@ -404,6 +409,11 @@ function runDataLoop() {
         if(!state.plane.touchedDown && !state.plane.crashFrame) {
             state = adjustMapWindValues(state);
             state = state.plane.adjustPlanePosition(state);
+        }
+
+        // Adjust state of NPC planes
+        if(state.map.npcs.length) {
+            state = adjustNPCPositions(state);
         }
 
         // check for ground contact and adjust state for plane
@@ -733,7 +743,14 @@ function processGroundInteractions(state) {
 }
 
 function adjustMapWindValues(state) {
-    if(state.map.windMaxDeltaPerSecond === null){
+    if(
+        state.map.windMaxDeltaPerSecond === null
+        || (
+            state.map.windMaxDeltaPerSecond != null
+            && state.map.windBelowCloudLayerOnly
+            && state.plane.posMapCoord[1] > state.map.cloudLayer.bottomY
+        )
+    ){
         return state;
     }
     const fps = state.game.dataFPS;
@@ -766,6 +783,8 @@ function adjustMapWindValues(state) {
             state.map.windXMin,
             state.map.windXMax,
         );
+        state.map.windShakeUntilTS = performance.now() + getRandomInt(500, 900);
+        state.map.windShakeMeters = state.map.windXTarg / getRandomFloat(30, 40);
     }
     return state;
 }
@@ -827,4 +846,45 @@ function adjustDebrisPositions(state) {
     if(ixsToRemove.length) {
         window._debrisObjects = window._debrisObjects.filter((_o, ix) => ixsToRemove.indexOf(ix) == -1);
     }
+}
+
+function adjustNPCPositions(state) {
+    const mupm = state.map.mapUnitsPerMeter;
+    const fps = state.game.dataFPS;
+    const npcIXsToRemove = [];
+    for(let i in state.map.npcs) {
+        let pX = state.map.npcs[i].posMapCoord[0];
+        let vX, vY, ab, foundAP = false;
+        for(let j in state.map.npcs[i].autopilot) {
+            let ap = state.map.npcs[i].autopilot[j];
+            if(pX >= ap.startX && pX < ap.endX) {
+                ab = Boolean(ap.afterBurner);
+                vY = ap.verticalMS;
+                vX = state.map.npcs[i].horizontalMS + (ab ? 1.2 * mupm / fps : 0);
+                state.map.npcs[i].horizontalMS = vX;
+                foundAP = true;
+                break;
+            }
+        }
+        if(foundAP) {
+            state.map.npcs[i].afterBurner = ab;
+            state.map.npcs[i].posMapCoord[0] = (state.map.npcs[i].posMapCoord[0] + (vX / fps * mupm));
+            state.map.npcs[i].posMapCoord[1] = (state.map.npcs[i].posMapCoord[1] + (vY / fps * mupm));
+
+            if (state.game.frame % 10 === 0) {
+                state.map.npcPreviousPoints.push({
+                    posMapCoord: deepCopy(state.map.npcs[i].posMapCoord),
+                    createdFrame: state.game.frame,
+                });
+            }
+        } else {
+            npcIXsToRemove.push(parseInt(i));
+        }
+    }
+    if(npcIXsToRemove.length) {
+        state.map.npcs = state.map.npcs.filter((_npc, ix) => {
+            return npcIXsToRemove.indexOf(ix) == -1;
+        });
+    }
+    return state;
 }
