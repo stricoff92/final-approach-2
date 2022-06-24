@@ -104,6 +104,7 @@ function createNewState(maxCompletedLevel) {
             windXMin: null,
             windXMax: null,
             windXTarg: null,
+            windBelowCloudLayerOnly: false,
             cloudLayer: null,
             rwP0MapCoord: null,
             rwP1MapCoord: null,
@@ -740,7 +741,14 @@ function processGroundInteractions(state) {
 }
 
 function adjustMapWindValues(state) {
-    if(state.map.windMaxDeltaPerSecond === null){
+    if(
+        state.map.windMaxDeltaPerSecond === null
+        || (
+            state.map.windMaxDeltaPerSecond != null
+            && state.map.windBelowCloudLayerOnly
+            && state.plane.posMapCoord[1] > state.map.cloudLayer.bottomY
+        )
+    ){
         return state;
     }
     const fps = state.game.dataFPS;

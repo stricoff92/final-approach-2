@@ -416,7 +416,13 @@ function setMapProps(state) {
     else if (level === 10) {
         state.game.levelName = "Choppy Seas";
         state.plane.flare = IS_NOT_FLARING;
-        state.map.terrain = TERRAIN_OCEAN;
+        state.map.terrain = TERRAIN_STORMY_OCEAN;
+        state.map.windXVel = 0; // +=tailwind, -=headwind
+        state.map.windMaxDeltaPerSecond = 12;
+        state.map.windXMin = -15;
+        state.map.windXMax = 15;
+        state.map.windXTarg = 0;
+        state.map.windBelowCloudLayerOnly = true;
         state.map.rwType = RUNWAY_TYPE_CARRIER;
         state.map.rwVisualWidthM = 5;
         state.map.rwP0MapCoord = [2500 * mupm, 15 * mupm];

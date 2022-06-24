@@ -895,6 +895,7 @@ function _drawHorizonAndCloudsLayer(state) {
     const toCloudsGradientStart = cl.topY + gradientSize;
     const fromCloudsGradientEnd = cl.bottomY - gradientSize;
 
+    const color = cl.isDark ? COLOR_CLOUD_LAYER_DARK : COLOR_CLOUD_LAYER;
     if(cloudsBelow) {
         state.ctx.beginPath();
         state.ctx.fillStyle = COLOR_SKY;
@@ -916,7 +917,7 @@ function _drawHorizonAndCloudsLayer(state) {
         if(planeYPos < toCloudsGradientStart) {
             const percentGray = (toCloudsGradientStart - planeYPos) / gradientSize;
             state.ctx.beginPath();
-            state.ctx.fillStyle = COLOR_CLOUD_LAYER(percentGray);
+            state.ctx.fillStyle = color(percentGray);
             state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
             state.ctx.fill();
         }
@@ -929,6 +930,8 @@ function _drawHorizonAndCloudsLayer(state) {
             state.ctx.fillStyle = COLOR_GROUD_DESERT;
         } else if (state.map.terrain === TERRAIN_OCEAN) {
             state.ctx.fillStyle = COLOR_SURFACE_OCEAN;
+        } else if (state.map.terrain === TERRAIN_STORMY_OCEAN) {
+            state.ctx.fillStyle = COLOR_SURFACE_OCEAN_DARK;
         } else { throw NOT_IMPLEMENTED; }
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
@@ -936,14 +939,14 @@ function _drawHorizonAndCloudsLayer(state) {
         if(planeYPos > fromCloudsGradientEnd) {
             const percentGray = (planeYPos - fromCloudsGradientEnd) / gradientSize;
             state.ctx.beginPath();
-            state.ctx.fillStyle = COLOR_CLOUD_LAYER(percentGray);
+            state.ctx.fillStyle = color(percentGray);
             state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
             state.ctx.fill();
         }
     }
     else {
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_CLOUD_LAYER(1);
+        state.ctx.fillStyle = color(1);
         state.ctx.rect(0, 0, state.camera.canvasW, state.camera.canvasH)
         state.ctx.fill();
     }
@@ -1016,10 +1019,17 @@ function _drawCrashingEffect(state) {
 }
 
 function _drawWindIndicator(state) {
-    if(state.map.windMaxDeltaPerSecond === null) {
+    if(
+        state.map.windMaxDeltaPerSecond === null
+        || (
+            state.map.windMaxDeltaPerSecond != null
+            && state.map.windBelowCloudLayerOnly
+            && state.plane.posMapCoord[1] > state.map.cloudLayer.bottomY
+        )
+    ) {
         return;
     }
-    const windArrowY1 = state.camera.canvasH / 4;
+    const windArrowY1 = state.camera.canvasH / 6;
     const windLabelY1 = windArrowY1 - 5;
     state.ctx.beginPath();
     state.ctx.textBaseline = "bottom";
@@ -1195,7 +1205,9 @@ function _drawCloudEffects(
     const planeYPos = state.plane.posMapCoord[1];
     const mupm = state.map.mapUnitsPerMeter;
 
-    if(state.game.frame % 12 === 0 && (canvasMinMapCoordY <= cl.topY && canvasMaxMapCoordY >= cl.bottomY)) {
+    const fillColor = cl.isDark ? "rgb(165, 165, 165, 0.25)" : "rgb(200, 200, 200, 0.25)";
+    const clGenInt = cl.isDark ? 5 : 12;
+    if(state.game.frame % clGenInt === 0 && (canvasMinMapCoordY <= cl.topY && canvasMaxMapCoordY >= cl.bottomY)) {
         const newCloudRadius = getRandomFloat(5 * mupm, 18 * mupm);
         const newCloudPosY = getRandomFloat(
             canvasMinMapCoordY - newCloudRadius * 0.7,
@@ -1220,7 +1232,7 @@ function _drawCloudEffects(
         }
         else {
             state.ctx.beginPath();
-            state.ctx.fillStyle = "rgb(200, 200, 200, 0.25)";
+            state.ctx.fillStyle = fillColor;
             state.ctx.ellipse(
                 ceCanvasCoord[0], ceCanvasCoord[1],
                 ce.radiusX, ce.radiusY,
