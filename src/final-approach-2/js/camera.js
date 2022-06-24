@@ -1037,12 +1037,16 @@ function _drawWindIndicator(state) {
     ) {
         return;
     }
+    const fillColor = Boolean(
+        state.map.terrain === TERRAIN_OCEAN
+        || state.map.terrain === TERRAIN_STORMY_OCEAN
+    ) ? "#fff" : COLOR_PURPLE;
     const windArrowY1 = state.camera.canvasH / 6;
     const windLabelY1 = windArrowY1 - 5;
     state.ctx.beginPath();
     state.ctx.textBaseline = "bottom";
     state.ctx.textAlign = "center";
-    state.ctx.fillStyle = COLOR_PURPLE;
+    state.ctx.fillStyle = fillColor;
     state.ctx.font = "bold 28px Courier New";
     state.ctx.fillText("WIND", state.camera.canvasHalfW, windLabelY1);
     if(Math.abs(state.map.windXVel) < 0.1) {
@@ -1058,7 +1062,7 @@ function _drawWindIndicator(state) {
         // Head wind, forward arrow.
         const arrowLength = arrowMaxLenth * (state.map.windXVel / WIND_MAX_MAGNITUDE_MS);
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.fillStyle = fillColor;
         state.ctx.rect(
             state.camera.canvasHalfW, windArrowY1,
             arrowLength, arrowHeight,
@@ -1067,7 +1071,7 @@ function _drawWindIndicator(state) {
         // Arrow head
         const arrowHeadPointX = state.camera.canvasHalfW + arrowLength + 12;
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.fillStyle = fillColor;
         state.ctx.moveTo(
             state.camera.canvasHalfW + (arrowLength - headBuff),
             arrowHeadTopY,
@@ -1087,7 +1091,7 @@ function _drawWindIndicator(state) {
         const arrowLength = arrowMaxLenth * (-1 * state.map.windXVel / WIND_MAX_MAGNITUDE_MS);
         const arrowX1 = state.camera.canvasHalfW - arrowLength;
         state.ctx.beginPath()
-        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.fillStyle = fillColor;
         state.ctx.rect(
             arrowX1, windArrowY1,
             arrowLength, arrowHeight,
@@ -1096,7 +1100,7 @@ function _drawWindIndicator(state) {
         // Arrow head
         const arrowHeadPointX = state.camera.canvasHalfW - (arrowLength + 12);
         state.ctx.beginPath();
-        state.ctx.fillStyle = COLOR_PURPLE;
+        state.ctx.fillStyle = fillColor;
         state.ctx.moveTo(
             state.camera.canvasHalfW - (arrowLength - headBuff),
             arrowHeadTopY,
