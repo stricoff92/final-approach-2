@@ -223,7 +223,7 @@ function setMapProps(state) {
         state.map.rwType = RUNWAY_TYPE_DIRT;
         state.map.rwVisualWidthM = 4.5;
         state.map.rwP0MapCoord = [1000 * mupm, 0];
-        state.map.rwP1MapCoord = [1130 * mupm, 0];
+        state.map.rwP1MapCoord = [1160 * mupm, 0];
         state.map.glideSlopes.push({
             p0: [0, 250 * mupm],
             p1: [1013 * mupm, 0],
@@ -330,7 +330,6 @@ function setMapProps(state) {
         state.map.cloudLayer = {
             topY: cloudTopY,
             bottomY: cloudBottomY,
-            isStorm: true,
         };
         state.map.aaFireP0 = [1000 * mupm, 0];
         state.map.getDangerStatus = state => {
@@ -578,6 +577,7 @@ function setMapProps(state) {
             topY: 850 * mupm,
             bottomY: 650 * mupm,
             isDark: true,
+            isStorm: true,
         };
         state.map.carrierMinMapX = state.map.rwP0MapCoord[0];
         state.map.carrierMaxMapX = state.map.rwP1MapCoord[0] + CARRIER_DECK_SIZE_AFTER_RW_M * mupm;
