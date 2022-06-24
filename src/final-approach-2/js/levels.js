@@ -83,6 +83,10 @@ function innerAdjustPlanePosition(state) {
         )
     }
 
+    if(state.map.windXVel) {
+        newVerticalMS = Math.min(0, newVerticalMS - (state.map.windXVel / 1.5 / fps));
+    }
+
     state.plane.verticalMS = newVerticalMS;
     state.plane.posMapCoord[0] += (
         (state.plane.horizontalMS * mupm / fps)
