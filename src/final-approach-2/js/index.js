@@ -63,11 +63,8 @@ document.addEventListener("DOMContentLoaded", function() {
         window._click_queue.push(data);
     }
 
-    const maxCompletedLevel = parseInt(
-        getCookie(getCNamMaxCompletedLevel()) || "0"
-    );
 
-    const state = updateCameraCanvasMetaData(createNewState(maxCompletedLevel));
+    const state = updateCameraCanvasMetaData(createNewState());
     console.log("camera state updated")
     window.setGameState(state);
 

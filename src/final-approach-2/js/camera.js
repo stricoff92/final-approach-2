@@ -1802,7 +1802,7 @@ function drawScoreScreen(state) {
     state.ctx.fillStyle = "#fff";
     state.ctx.font = "normal 36px Arial";
     state.ctx.fillText(
-        "Level " + state.game.level + " ✅",
+        getStarText(state.game.score.starCount),
         state.camera.canvasHalfW,
         yOffset
     );
@@ -1841,7 +1841,7 @@ function drawScoreScreen(state) {
     state.ctx.textAlign = "right";
     state.ctx.font = "normal 24px Arial";
     state.ctx.fillText(
-        (state.game.score.verticalSpeed.emphasize ? "⭐ " : "")
+        (state.game.score.verticalSpeed.emphasize ? "✨ " : "")
         + state.game.score.verticalSpeed.value,
         col2XOffset,
         yOffset,
@@ -1864,7 +1864,7 @@ function drawScoreScreen(state) {
     state.ctx.textAlign = "right";
     state.ctx.font = "normal 24px Arial";
     state.ctx.fillText(
-        (state.game.score.accuracy.emphasize ? "⭐ " : "")
+        (state.game.score.accuracy.emphasize ? "✨ " : "")
         + state.game.score.accuracy.value,
         col2XOffset,
         yOffset,

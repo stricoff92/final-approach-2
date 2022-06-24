@@ -2,6 +2,10 @@
 const NOT_IMPLEMENTED = "Not Implemented";
 const CANVAS_ID = "game-canvas";
 
+const LEVELS = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+];
+
 const TWO_PI = Math.PI * 2;
 
 const PHASE_0_LOBBY = 0;
