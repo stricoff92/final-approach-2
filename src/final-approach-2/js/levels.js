@@ -138,7 +138,7 @@ function setPlaneProps(state) {
 
     } else if(state.game.level <= 10) {
         // F18
-        state.plane.asset = PLANE_C152;
+        state.plane.asset = PLANE_F18;
         state.plane.dimensions = [],
         state.plane.rwNegAccelerationMS = knotsToMS(-15);
         state.plane.minTouchdownVerticalMS = feetPerMinToMS(-1500);
@@ -599,63 +599,70 @@ function setMapProps(state) {
 
 function calculateScore(state) {
     const level = state.game.level;
-    const levelMultiplier = level == 1 ? 1 : (1 + level / 15)
     const tdStats = state.plane.touchdownStats;
 
     const currentHighScore = getCookie(getCNameHighScore(level));
 
     // Overall
+    state.game.score.overall.max = 600;
     if(tdStats.isSmooth) {
-        if(tdStats.isFlaired) {
-            state.game.score.overall.value = "Smooth";
-            state.game.score.overall.points = 600 * levelMultiplier;
-        }
-        else {
-            state.game.score.overall.value = "Good";
-            state.game.score.overall.points = 400 * levelMultiplier;
-        }
+        state.game.score.overall.value = "Smooth";
+        state.game.score.overall.points = 600;
     }
     else if (tdStats.isRough) {
         state.game.score.overall.value = "Rough";
-        state.game.score.overall.points = 0 * levelMultiplier;
+        state.game.score.overall.points = 0;
     }
     else {
         state.game.score.overall.value = "Ok";
-        state.game.score.overall.points = 200 * levelMultiplier;
+        state.game.score.overall.points = Math.max(
+            100,
+            600 - (tdStats.bounces * 150)
+        );
     }
 
     // Vertical Speed
-    let vsScoreCurve;
-    if (state.plane.asset === PLANE_C152) {
-        vsScoreCurve = vms => Math.max(0, -40 * Math.pow(vms, 2) + 600)
-    }
-    else {
-        throw NOT_IMPLEMENTED;
-    }
+    let vsScoreCurve = vms => Math.max(0, -40 * Math.pow(vms, 2) + 600)
     state.game.score.verticalSpeed.value = `${tdStats.verticalMS.toFixed(2)} M/S`;
-    state.game.score.verticalSpeed.points = vsScoreCurve(tdStats.verticalMS) * levelMultiplier;
-    state.game.score.verticalSpeed.emphasize = Math.abs(tdStats.verticalMS) <= 0.15;
+    state.game.score.verticalSpeed.points = vsScoreCurve(tdStats.verticalMS);
+    state.game.score.verticalSpeed.emphasize = Math.abs(tdStats.verticalMS) <= 0.25;
+    state.game.score.verticalSpeed.max = vsScoreCurve(0);
 
     // Accuracy
-    let accScoreCurve;
-    if (state.plane.asset === PLANE_C152) {
-        accScoreCurve = distance => {
-            const aBonus = Math.abs(distance) <= 1 ? 2.5 : 1;
-            return Math.max(0, -0.2 * Math.pow(distance, 2) + 600) * aBonus;
+    const accScoreCurve = distance => {
+        if(distance < 15) {
+            return Math.max(0, -2 * Math.pow(distance, 2) + 600);
+        } else {
+            return Math.max(0, -1 * distance + 100);
         }
     }
-    else {
-        throw NOT_IMPLEMENTED;
-    }
     state.game.score.accuracy.value = `${tdStats.distanceToGlideSlopeM.toFixed(2)} M`;
-    state.game.score.accuracy.points = accScoreCurve(tdStats.distanceToGlideSlopeM) * levelMultiplier;
+    state.game.score.accuracy.points = accScoreCurve(tdStats.distanceToGlideSlopeM);
     state.game.score.accuracy.emphasize = tdStats.distanceToGlideSlopeM <= 1;
+    state.game.score.accuracy.max = accScoreCurve(0);
 
+    // Total
     state.game.score.total = Math.round(
         state.game.score.accuracy.points
         + state.game.score.verticalSpeed.points
         + state.game.score.overall.points
     );
+
+    // Assign Star Count
+    const maxScore = Math.round(
+        state.game.score.accuracy.max
+        + state.game.score.verticalSpeed.max
+        + state.game.score.overall.max
+    );
+    const threeStarCutoff = maxScore * 0.875;
+    const twoStarCutoff = maxScore * 0.55;
+    if(state.game.score.total >= threeStarCutoff) {
+        state.game.score.starCount = 3;
+    } else if(state.game.score.total >= twoStarCutoff) {
+        state.game.score.starCount = 2;
+    } else {
+        state.game.score.starCount = 1;
+    }
 
     state.game.score.isNewHighScore = Boolean(
         currentHighScore === null
@@ -664,6 +671,5 @@ function calculateScore(state) {
     state.game.score.currentHighScore = currentHighScore;
 
     state.game.score.scorePhaseStartedTS = deepCopy(state.game.lastFrameTS);
-    console.log({ score: state.game.score });
     return state;
 }

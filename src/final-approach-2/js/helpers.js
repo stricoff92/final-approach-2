@@ -119,3 +119,18 @@ function knotsToMS(k) {
 function mPSToKnots(ms) {
     return ms * 2;
 }
+
+function getStarText(ct) {
+    console.log({ct});
+    if(ct == 1) {
+        return "⭐";
+    } else if (ct == 2) {
+        return "⭐⭐";
+    } else if(ct == 3) {
+        return "⭐⭐⭐";
+    }
+    else {
+        console.log({ct});
+        throw NOT_IMPLEMENTED;
+    }
+}

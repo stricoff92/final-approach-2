@@ -1,14 +1,13 @@
 
 
-function createNewState(maxCompletedLevel) {
+function createNewState() {
 
     window._cloudEffects = [];
     window._debrisObjects = [];
 
     const canvas = document.getElementById(CANVAS_ID);
     const ctx = canvas.getContext("2d")
-    maxCompletedLevel = maxCompletedLevel || 0;
-    const availableLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const availableLevels = LEVELS;
     return {
         isDebug: urlContainsDebug(),
         ctx,
@@ -18,7 +17,6 @@ function createNewState(maxCompletedLevel) {
             maxCountDownFrames: 60,
             countDownFrames: 0,
             frame: 0,
-            maxCompletedLevel,
             availableLevels,
             dataFPS: null,
             level: null,
@@ -28,22 +26,26 @@ function createNewState(maxCompletedLevel) {
             acceptControlCommands: false,
             score: {
                 total: null,
+                starCount: null,
                 scorePhaseStartedTS: null,
                 isNewHighScore: false,
                 currentHighScore: null,
                 overall: {
                     value: null,
                     points: null,
+                    max: null,
                 },
                 verticalSpeed: {
                     value: null,
                     points: null,
                     emphasize: false,
+                    max: null,
                 },
                 accuracy: {
                     value: null,
                     points: null,
                     emphasize: false,
+                    max: null,
                 },
             }
         },
@@ -83,8 +85,8 @@ function createNewState(maxCompletedLevel) {
                 verticalMS: null,
                 isSmooth: false,
                 isRough: false,
-                isFlaired: false,
                 bounces: 0,
+                bounceVerticalMS: [],
             },
             adjustPlanePosition: state => {},
             previousPoints: [],
@@ -128,10 +130,12 @@ function createNewState(maxCompletedLevel) {
             jungleCamoTruckImg: null,
         },
         buttons: availableLevels.map(levelNumber => {
-            const disabled = levelNumber > (maxCompletedLevel + 1);
+            const disabled = false;
+            let starCt = getCookie(getCNameStarCount(levelNumber));
+            starCt = starCt !== null ? parseInt(starCt) : null;
             const btn = {
                 type: BUTTON_TYPE_GRID,
-                text: disabled ? '🔒' : `Level ${levelNumber}`,
+                text: disabled ? '🔒' : starCt === null ? `Level ${levelNumber}` : `${levelNumber} ${getStarText(starCt)}`,
                 boxCoord: null,
                 disabled,
                 handler: disabled ? ()=>{console.log("btn disabled")} : () => {
@@ -326,7 +330,7 @@ function runDataLoop() {
             if(cmd.cmd === COMMAND_QUIT_LEVEL) {
                 window.setGameState(
                     updateCameraCanvasMetaData(
-                        createNewState(state.game.maxCompletedLevel)
+                        createNewState()
                     )
                 );
                 setTimeout(runDataLoop);
@@ -425,19 +429,15 @@ function runDataLoop() {
         if(state.plane.halted && state.game.phase !== PHASE_3_SCORESCREEN) {
             state = calculateScore(state);
             state.game.phase = PHASE_3_SCORESCREEN;
-            state.game.maxCompletedLevel = Math.max(
-                state.game.level,
-                state.game.maxCompletedLevel,
-            );
             const totalScore = state.game.score.total;
-            setCookie(
-                getCNamMaxCompletedLevel(),
-                state.game.maxCompletedLevel.toFixed(0),
-            );
             if(state.game.score.isNewHighScore) {
                 setCookie(
                     getCNameHighScore(state.game.level),
                     totalScore.toFixed(0),
+                );
+                setCookie(
+                    getCNameStarCount(state.game.level),
+                    state.game.score.starCount.toFixed(0),
                 );
             }
         }
@@ -695,8 +695,10 @@ function processGroundInteractions(state) {
             state.plane.verticalMS = 0;
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + planeBottomDiffY;
             state.plane.touchdownStats.isSmooth = plane.touchdownStats.bounces === 0;
-            state.plane.touchdownStats.verticalMS = touchdownMS;
-            state.plane.touchdownStats.isFlaired = plane.flare === IS_FLARING;
+            state.plane.touchdownStats.bounceVerticalMS.push(touchdownMS);
+            state.plane.touchdownStats.verticalMS = state.plane.touchdownStats.bounceVerticalMS.reduce((v1, v2) => {
+                return Math.abs(v1) > Math.abs(v2) ? v1 : v2;
+            });
             state.plane.touchdownStats.runwayUsedStartX = plane.posMapCoord[0];
             const lastGSIX = state.map.glideSlopes.length - 1;
             state.plane.touchdownStats.distanceToGlideSlopeM = Math.abs(
@@ -719,6 +721,7 @@ function processGroundInteractions(state) {
             state.plane.verticalMS = Math.abs(state.plane.verticalMS) * 0.8;
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + (state.plane.posMapCoord[1] - planeBottomMapCoordY);
             state.plane.touchdownStats.bounces++;
+            state.plane.touchdownStats.bounceVerticalMS.push(touchdownMS);
             console.log("👉 small bounce");
         } else {
             // big bounce off runway
@@ -726,6 +729,7 @@ function processGroundInteractions(state) {
             state.plane.posMapCoord[1] = state.map.rwP0MapCoord[1] + (state.plane.posMapCoord[1] - planeBottomMapCoordY);
             state.plane.touchdownStats.isRough = true;
             state.plane.touchdownStats.bounces++;
+            state.plane.touchdownStats.bounceVerticalMS.push(touchdownMS);
             console.log("👉 big bounce");
         }
         if (addRubberStrike) {
