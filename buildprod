@@ -11,7 +11,7 @@ echo "🤖 transpiling files"
 echo "🤖 copying non js files"
 rsync -av --progress src/ build/ --exclude js
 
-echo "🤖 adding cache buster to urls"
-python3 addcb.py
+# echo "🤖 adding cache buster to urls"
+# python3 addcb.py
 
 echo "🤖 bye!"
